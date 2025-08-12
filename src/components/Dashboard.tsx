@@ -37,25 +37,25 @@ interface KeyRecord {
 const mockData: KeyRecord[] = [
   {
     id: "1",
-    professorName: "Prof. Maria Silva",
-    room: "Sala 101",
-    time: "08:00 - 10:00",
-    subject: "Matemática",
-    course: "Engenharia",
+    professorName: "Prof. Moises Lima",
+    room: "Laboratório 07 - Desenvolvimento Web",
+    time: "13:00 - 17:00",
+    subject: "Desenvolvimento Web",
+    course: "Desenvolvimento de Sistemas",
     status: "em_uso",
-    withdrawalTime: "07:45",
+    withdrawalTime: "13:10",
     requiresLogin: true
   },
   {
     id: "2", 
-    professorName: "Prof. João Santos",
-    room: "Lab 203",
-    time: "10:00 - 12:00",
-    subject: "Física",
-    course: "Ciências",
+    professorName: "Prof. Icaro Alvim",
+    room: "Laboratório 03 - Programação de app",
+    time: "18:40 - 21:10",
+    subject: "Programação de app",
+    course: "Desenvolvimento de Sistemas",
     status: "devolvida",
-    withdrawalTime: "09:30",
-    returnTime: "11:45",
+    withdrawalTime: "18:35",
+    returnTime: "21:20",
     requiresLogin: false
   },
   {
