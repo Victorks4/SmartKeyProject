@@ -106,10 +106,6 @@ export function Dashboard() {
               Monitore e controle a retirada de chaves por professores
             </p>
           </div>
-          <Button variant="hero" size="lg" className="gap-2">
-            <Plus className="h-5 w-5" />
-            Nova Retirada
-          </Button>
         </div>
 
         {/* Stats Cards */}
@@ -176,6 +172,7 @@ export function Dashboard() {
                   <TableHead>Retirada</TableHead>
                   <TableHead>Devolução</TableHead>
                   <TableHead>Tipo</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -199,6 +196,17 @@ export function Dashboard() {
                       <Badge variant={record.requiresLogin ? "default" : "outline"}>
                         {record.requiresLogin ? "Com Login" : "Livre"}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        disabled={record.status === 'em_uso'}
+                        className="gap-1"
+                      >
+                        <Key className="h-3 w-3" />
+                        Retirar
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
