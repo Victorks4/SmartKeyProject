@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Plus
 } from "lucide-react";
+import ExemploComponent from "./ExemploComponent";
 
 interface KeyRecord {
   id: string;
@@ -99,7 +100,7 @@ export function Dashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <Key className="h-8 w-8 text-primary" />
+              <img src="/chave-unscreen.gif" alt="Chave animada" className="h-12 w-12" />
               Sistema de Controle de Chaves
             </h1>
             <p className="text-muted-foreground mt-2">
@@ -151,6 +152,8 @@ export function Dashboard() {
           </Card>
         </div>
 
+
+
         {/* Main Table */}
         <Card className="bg-gradient-card border-0 shadow-card">
           <CardHeader>
@@ -171,7 +174,6 @@ export function Dashboard() {
                   <TableHead>Status</TableHead>
                   <TableHead>Retirada</TableHead>
                   <TableHead>Devolução</TableHead>
-                  <TableHead>Tipo</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -192,11 +194,6 @@ export function Dashboard() {
                     <TableCell>{getStatusBadge(record.status)}</TableCell>
                     <TableCell>{record.withdrawalTime}</TableCell>
                     <TableCell>{record.returnTime || "-"}</TableCell>
-                    <TableCell>
-                      <Badge variant={record.requiresLogin ? "default" : "outline"}>
-                        {record.requiresLogin ? "Com Login" : "Livre"}
-                      </Badge>
-                    </TableCell>
                     <TableCell>
                       <Button 
                         variant="outline" 

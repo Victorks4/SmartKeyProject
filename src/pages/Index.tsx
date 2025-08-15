@@ -9,7 +9,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center gap-3">
             <Key className="h-6 w-6 text-primary" />
-            <span className="text-lg font-semibold">Sistema de Chaves</span>
+            <span className="text-lg font-semibold">SenaiKey</span>
           </div>
         </div>
       </nav>
