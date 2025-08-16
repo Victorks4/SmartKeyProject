@@ -3,92 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exemplo de Uso das Imagens</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .image-example {
-            margin: 20px 0;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .image-example img {
-            max-width: 100%;
-            height: auto;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .code {
-            background: #f4f4f4;
-            padding: 10px;
-            border-radius: 4px;
-            font-family: monospace;
-            margin: 10px 0;
-        }
-    </style>
-</head>
-<body>
-    <h1>Exemplo de Uso das Imagens da Pasta Public</h1>
+    <title>Exemplo de Uso das Imagens - SENAI Key System</title>
     
-    <div class="image-example">
-        <h2>1. GIF da Chave (chave-unscreen.gif)</h2>
-        <p>Este é o GIF animado da chave usado no header do dashboard:</p>
-        <img src="public/chave-unscreen.gif" alt="Chave animada" style="width: 100px; height: 100px;">
-        <div class="code">
-            &lt;img src="public/chave-unscreen.gif" alt="Chave animada" class="h-12 w-12"&gt;
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="paineladm.css">
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid">
+            <div class="navbar-brand d-flex align-items-center">
+                <img src="public/senailogo.png" alt="Logo SENAI" class="me-2" style="height: 40px;">
+                <div class="d-flex flex-column">
+                    <span class="fw-bold fs-5">SENAIKey</span>
+                    <span class="small text-light">Key System</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex align-items-center mb-4">
+                    <i class="bi bi-images fs-1 text-primary me-3"></i>
+                    <div>
+                        <h1 class="h2 mb-1 fw-bold">Exemplo de Uso das Imagens</h1>
+                        <p class="text-muted mb-0">Como referenciar corretamente as imagens na pasta public</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Exemplo da Logo SENAI -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-image me-2"></i>
+                            Logo SENAI
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="public/senailogo.png" alt="Logo SENAI" class="img-fluid mb-3" style="max-height: 200px;">
+                        <h6 class="fw-bold">Caminho da Imagem:</h6>
+                        <code class="bg-light p-2 rounded d-block">public/senailogo.png</code>
+                        <p class="text-muted mt-2 mb-0">
+                            Esta é a logo oficial do SENAI que aparece no cabeçalho do sistema.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exemplo da Chave Animada -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-key me-2"></i>
+                            Chave Animada (GIF)
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="public/chave-unscreen.gif" alt="Chave animada" class="img-fluid mb-3" style="max-height: 200px;">
+                        <h6 class="fw-bold">Caminho da Imagem:</h6>
+                        <code class="bg-light p-2 rounded d-block">public/chave-unscreen.gif</code>
+                        <p class="text-muted mt-2 mb-0">
+                            GIF animado da chave que aparece no título principal do sistema.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exemplo do Placeholder -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-image me-2"></i>
+                            Imagem Placeholder
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="public/placeholder.svg" alt="Placeholder" class="img-fluid mb-3" style="max-height: 200px;">
+                        <h6 class="fw-bold">Caminho da Imagem:</h6>
+                        <code class="bg-light p-2 rounded d-block">public/placeholder.svg</code>
+                        <p class="text-muted mt-2 mb-0">
+                            Imagem SVG placeholder para uso em desenvolvimento e testes.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações sobre a Estrutura -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-folder me-2"></i>
+                            Estrutura de Pastas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="fw-bold">Organização do Projeto:</h6>
+                        <div class="bg-light p-3 rounded">
+                            <pre class="mb-0"><code>SmartKeyProject/
+├── paineladm.html
+├── paineladm.css
+├── paineladm.js
+├── public/
+│   ├── senailogo.png
+│   ├── chave-unscreen.gif
+│   └── placeholder.svg
+└── README-conversao.md</code></pre>
+                        </div>
+                        <p class="text-muted mt-3 mb-0">
+                            Todas as imagens devem estar na pasta <code>public/</code> e serem referenciadas com caminhos relativos.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botão de Voltar -->
+        <div class="row">
+            <div class="col-12 text-center">
+                <a href="paineladm.html" class="btn btn-primary btn-lg">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    Voltar para o Painel Administrativo
+                </a>
+            </div>
         </div>
     </div>
 
-    <div class="image-example">
-        <h2>2. Placeholder SVG (placeholder.svg)</h2>
-        <p>Este é o SVG placeholder que pode ser usado para imagens temporárias:</p>
-        <img src="public/placeholder.svg" alt="Placeholder" style="width: 200px; height: 150px;">
-        <div class="code">
-            &lt;img src="public/placeholder.svg" alt="Placeholder"&gt;
-        </div>
-    </div>
-
-    <div class="image-example">
-        <h2>Como Usar no Dashboard</h2>
-        <p>Para adicionar novas imagens ao dashboard, você pode:</p>
-        <ol>
-            <li>Colocar a imagem na pasta <code>public/</code></li>
-            <li>Referenciar usando o caminho <code>public/nome-da-imagem.extensao</code></li>
-            <li>Usar classes CSS para dimensionar e estilizar</li>
-        </ol>
-        
-        <h3>Exemplo de Adição de Nova Imagem:</h3>
-        <div class="code">
-            &lt;!-- Adicionar no HTML --&gt;<br>
-            &lt;img src="public/sua-imagem.jpg" alt="Descrição" class="h-8 w-8"&gt;<br><br>
-            
-            &lt;!-- Adicionar no CSS --&gt;<br>
-            .h-8 { height: 2rem; }<br>
-            .w-8 { width: 2rem; }
-        </div>
-    </div>
-
-    <div class="image-example">
-        <h2>Estrutura de Pastas</h2>
-        <p>Seu projeto agora tem esta estrutura:</p>
-        <div class="code">
-            SmartKeyProject/<br>
-            ├── dashboard.html          # Página principal<br>
-            ├── dashboard.css           # Estilos<br>
-            ├── dashboard.js            # Funcionalidade<br>
-            ├── public/                 # Pasta de imagens<br>
-            │   ├── chave-unscreen.gif<br>
-            │   ├── placeholder.svg<br>
-            │   └── robots.txt<br>
-            └── README-conversao.md     # Documentação
-        </div>
-    </div>
-
-    <p><a href="dashboard.html">← Voltar para o Dashboard</a></p>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
