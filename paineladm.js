@@ -52,7 +52,7 @@ const mockData = [
     },
     {
         id: "5",
-        professorName: "Prof. Maria Santos",
+        professorName: "Maria Santos Cerqueira",
         room: "Sala 401",
         time: "15:30 - 17:30",
         subject: "Física",
@@ -180,7 +180,7 @@ function renderTable() {
             </td>
             <td>${record.course}</td>
             <td>
-                <span class="badge bg-info text-dark fw-bold">${record.turmaNumber}</span>
+                <span class="badge fw-bold text-dark">${record.turmaNumber}</span>
             </td>
             <td>${record.withdrawalTime}</td>
             <td>${getStatusBadge(record.status)}</td>

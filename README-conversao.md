@@ -130,7 +130,7 @@ const mockData = [
 - **Formato**: Alfanumérico (letras + números)
 - **Exemplos**: "2024A", "2024B", "2024C", "2024D", "2024E"
 - **Máximo**: 5 caracteres
-- **Exibição**: Badge azul destacado na tabela
+- **Exibição**: Badge simples com fonte em negrito
 
 ### Cards de Estatísticas
 O sistema agora exibe **3 cards principais**:
