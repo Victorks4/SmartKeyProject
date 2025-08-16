@@ -7,6 +7,7 @@ const mockData = [
         time: "13:00 - 17:00",
         subject: "Desenvolvimento Web",
         course: "Desenvolvimento de Sistemas",
+        turmaNumber: "91134",
         status: "em_uso",
         withdrawalTime: "13:10",
         requiresLogin: true
@@ -18,10 +19,11 @@ const mockData = [
         time: "18:40 - 21:10",
         subject: "Programação de app",
         course: "Desenvolvimento de Sistemas",
+        turmaNumber: "2024B",
         status: "devolvida",
         withdrawalTime: "13:10",
         returnTime: "21:20",
-        requiresLogin: false
+        requiresLogin: true
     },
     {
         id: "3",
@@ -30,8 +32,34 @@ const mockData = [
         time: "14:00 - 16:00",
         subject: "História",
         course: "Humanidades",
+        turmaNumber: "2024C",
         status: "retirada",
         withdrawalTime: "13:10",
+        requiresLogin: true
+    },
+    {
+        id: "4",
+        professorName: "Prof. Carlos Silva",
+        room: "Laboratório 05 - Matemática",
+        time: "08:00 - 10:00",
+        subject: "Matemática Aplicada",
+        course: "Engenharia",
+        turmaNumber: "2024D",
+        status: "devolvida",
+        withdrawalTime: "08:05",
+        returnTime: "10:15",
+        requiresLogin: true
+    },
+    {
+        id: "5",
+        professorName: "Prof. Maria Santos",
+        room: "Sala 401",
+        time: "15:30 - 17:30",
+        subject: "Física",
+        course: "Ciências Exatas",
+        turmaNumber: "2024E",
+        status: "em_uso",
+        withdrawalTime: "15:35",
         requiresLogin: true
     }
 ];
@@ -93,8 +121,7 @@ function renderStatsCards() {
     const stats = {
         total: mockData.length,
         emUso: mockData.filter(r => r.status === 'em_uso').length,
-        devolvidas: mockData.filter(r => r.status === 'devolvida').length,
-        retiradas: mockData.filter(r => r.status === 'retirada').length
+        devolvidas: mockData.filter(r => r.status === 'devolvida').length
     };
 
     const cards = [
@@ -115,17 +142,11 @@ function renderStatsCards() {
             value: stats.devolvidas,
             icon: 'bi-check-circle-fill',
             iconClass: 'success'
-        },
-        {
-            title: 'Faltam Devolver',
-            value: stats.retiradas,
-            icon: 'bi-exclamation-triangle-fill',
-            iconClass: 'warning'
         }
     ];
 
     const cardsHTML = cards.map(card => `
-        <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
+        <div class="col-lg-4 col-md-6 col-sm-12 mb-3">
             <div class="stats-card">
                 <div class="stats-card-header">
                     <span class="stats-card-title">${card.title}</span>
@@ -158,6 +179,9 @@ function renderTable() {
                 ${record.subject}
             </td>
             <td>${record.course}</td>
+            <td>
+                <span class="badge bg-info text-dark fw-bold">${record.turmaNumber}</span>
+            </td>
             <td>${record.withdrawalTime}</td>
             <td>${getStatusBadge(record.status)}</td>
             <td class="text-center">

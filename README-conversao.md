@@ -60,14 +60,14 @@ Este projeto contém a versão convertida do componente React Painel Administrat
 ✅ **Cards de Estatísticas Dinâmicos**
 - Total de Registros
 - Em uso
-- Devolvidas  
-- Faltam Devolver
+- Devolvidas
 
 ✅ **Tabela de Registros Interativa**
-- Dados mock realistas
+- Dados mock realistas com números de turma
 - Status badges coloridos
 - Botões de ação inteligentes
 - Hover effects responsivos
+- Coluna de número da turma (até 5 dígitos)
 
 ✅ **Botões de Ação Inteligentes**
 - **Retirar**: Aparece quando a chave está disponível (status: retirada ou devolvida)
@@ -103,6 +103,41 @@ Este projeto contém a versão convertida do componente React Painel Administrat
 - **Documentação extensa** e comunidade ativa
 - **Compatibilidade** com todos os navegadores modernos
 
+## Estrutura de Dados
+
+O sistema agora inclui números de turma de até 5 dígitos:
+
+```javascript
+const mockData = [
+    {
+        id: "1",
+        professorName: "Prof. Moises Lima",
+        room: "Laboratório 07 - Desenvolvimento Web",
+        time: "13:00 - 17:00",
+        subject: "Desenvolvimento Web",
+        course: "Desenvolvimento de Sistemas",
+        turmaNumber: "2024A",        // Número da turma (até 5 dígitos)
+        status: "em_uso",            // "em_uso" | "devolvida" | "retirada"
+        withdrawalTime: "13:10",
+        returnTime: "21:20",         // opcional
+        requiresLogin: true
+    }
+    // ... mais registros
+];
+```
+
+### Formato dos Números de Turma
+- **Formato**: Alfanumérico (letras + números)
+- **Exemplos**: "2024A", "2024B", "2024C", "2024D", "2024E"
+- **Máximo**: 5 caracteres
+- **Exibição**: Badge azul destacado na tabela
+
+### Cards de Estatísticas
+O sistema agora exibe **3 cards principais**:
+- **Total de Registros**: Número total de chaves no sistema
+- **Em uso**: Chaves atualmente retiradas por professores
+- **Devolvidas**: Chaves que foram devolvidas
+
 ## Estrutura do Projeto Limpo
 
 ```
@@ -110,7 +145,6 @@ SmartKeyProject/
 ├── paineladm.html          # Página principal com Bootstrap
 ├── paineladm.css           # Estilos customizados complementares
 ├── paineladm.js            # Lógica JavaScript otimizada
-├── demo-bootstrap.html     # Demonstração das melhorias Bootstrap
 ├── exemplo-imagens.html    # Exemplo de uso das imagens
 ├── README-conversao.md     # Documentação da conversão
 ├── public/
