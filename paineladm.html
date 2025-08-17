@@ -15,6 +15,19 @@
     <link rel="stylesheet" href="paineladm.css">
 </head>
 <body class="bg-light">
+    <!-- Overlay de login -->
+    <div id="overlay" class="overlay">
+        <div class="popup">
+            <h2>Login do Administrador</h2>
+            <input type="text" id="username" placeholder="Digite seu login">
+            <input type="password" id="senha" placeholder="Digite sua senha">
+            <button id="btn-login" onclick="login()">Entrar</button>
+            <p id="msg-erro" class="msg-erro font-size-14px "></p>
+        </div>
+    </div>
+
+    <!-- fim do overlay-->
+     <!-- inicio do navbar-->
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
         <div class="container-fluid">

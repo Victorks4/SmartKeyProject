@@ -1,4 +1,21 @@
 // Dados mock (equivalente ao mockData do React)
+
+function login(){
+    const username = document.getElementById('username').value;
+    const senha = document.getElementById('senha').value;
+    if(username === 'admin' && senha === 'adm@123'){
+        document.getElementById('overlay').style.display = 'none';
+        // Inicializar o painel após login bem-sucedido
+        initializePainelAdm();
+    } else {
+        // Mostrar mensagem de erro
+        document.getElementById('msg-erro').textContent = 'Usuário ou senha incorretos!';
+        document.getElementById('msg-erro').style.color = 'red';
+    }
+}
+
+
+
 const mockData = [
     {
         id: "1",
@@ -262,11 +279,32 @@ function initializePainelAdm() {
     }
 }
 
-// Inicializar o painel quando a página carregar
-initializePainelAdm();
+// Não inicializar automaticamente - apenas após login
+// initializePainelAdm();
 
-// Adicionar funcionalidade aos botões do header
+// Adicionar funcionalidade aos botões do header e eventos de login
 document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar evento de Enter para os campos de login
+    const usernameInput = document.getElementById('username');
+    const senhaInput = document.getElementById('senha');
+    
+    if (usernameInput && senhaInput) {
+        usernameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                senhaInput.focus();
+            }
+        });
+        
+        senhaInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+        
+        // Focar no primeiro campo quando a página carregar
+        usernameInput.focus();
+    }
+    
     // Botão Adicionar
     const addButton = document.querySelector('button[title="Adicionar Nova Chave"]');
     if (addButton) {
