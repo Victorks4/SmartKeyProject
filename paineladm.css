@@ -9,6 +9,15 @@
     --bs-info: #0dcaf0;
 }
 
+.main-content {
+    max-width: 1640px;
+    width: 100%;
+}
+
+td {
+    max-width: 270px;
+}
+
 /* Estilos customizados para os cards de estatísticas */
 .stats-card {
     background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);

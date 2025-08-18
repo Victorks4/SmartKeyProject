@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Sistema de Controle de Chaves</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+        
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="teacherPanel.css">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+</head>
+<body class="bg-light d-flex flex-column">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid">
+            <div class="navbar-brand d-flex align-items-center">
+                <img src="public/senailogo.png" alt="Logo SENAI" class="me-2" style="height: 40px;">
+                <h1 class="h2 mb-1 fw-bold text-white" style="position: relative; left: 550px;">Sistema de Controle de Chaves</h1>
+                <img src="public/chave-unscreen.gif" alt="Chave animada" class="me-3" style="height: 48px; position: relative; left: 40px; bottom: 7px;">
+                <div class="d-flex flex-column">
+
+                </div>
+            </div>
+            <button onclick="showAdmLogin()" id="btnAdm" class="btn navbar-nav ms-auto">
+                <span class="navbar-text text-light">
+                    <i class="bi bi-person-circle me-1"></i>
+                    Administrador
+                </span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="main-content align-self-center py-5">
+        <!-- Cabeçalho -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-foreground flex items-center gap-3">
+                    <i class="bi bi-building me-2 text-primary"></i>
+                    Dashboard do Professor
+                </h1>
+            </div>            
+            <span class="text-sm text-muted-foreground">
+                Mudança automática às 12:00
+            </span>
+        </div>
+
+        <!-- Abas de Turno -->
+        <div class="row-actions d-flex items-center justify-between mb-3">
+            <div class="tabs" id="shiftTabs"></div>
+            <div class="toolbar">
+                <button id="sortToggle" class="btn btn-outline" aria-pressed="false" title="Ordenar alfabeticamente">
+                    <div class="sort-btn d-flex align-items-center justify-content-baseline gap-2">
+                        <i id="sortIcon" data-lucide="sort-asc"></i> <p>A‑Z</p>
+                    </div>
+                </button>
+
+                <span class="divider"></span>
+
+                <button class="btn btn-outline" onclick="openThirdPartyForm()">
+                    <i data-lucide="plus"></i> Registrar Terceiro
+                </button>
+            </div>                
+        </div>
+
+        <!-- Conteúdo por Turno -->
+        <div class="card shadow-sm border-0 p-4" id="shiftContent"></div>
+    </div>
+
+    <!-- Modal: Login Professor -->
+    <div class="modal" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+        <div class="modal-content">
+            <div class="modal-header login-header">
+                <div class="modal-title d-flex align-items-start" id="loginTitle">
+                    <i class="bi bi-key-fill"></i>
+                    <h2>Login do Professor</h2>
+                </div>                
+                
+                <button class="btn-close-popup" onclick="closeLogin()" aria-label="Fechar">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <label class="text-sm font-medium">Nome Completo *
+                <div class="input-item">
+                    <i class="bi bi-person"></i>
+                    <input 
+                        type="text" 
+                        id="loginName" 
+                        placeholder="Insira seu Nome Completo"
+                    >
+                </div>
+            </label>
+            <label class="text-sm font-medium">ID do Professor *
+                <div class="input-item">
+                    <i class="bi bi-card-list"></i>
+                    <input 
+                        type="text" 
+                        id="loginId" 
+                        placeholder="Insira seu ID">
+                </div>
+            </label>
+
+            <div class="modal-actions">
+                <button id="cancel-btn" class="btn btn-outline" onclick="closeLogin()">
+                    Cancelar
+                </button>
+                <button id="btn-retirar-chave" class="btn btn-outline" onclick="confirmLogin()">
+                    Retirar a chave
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Registrar Terceiro -->
+    <div class="modal" id="thirdPartyModal" role="dialog" aria-modal="true" aria-labelledby="tpTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="tpTitle">
+                    <i class="bi bi-person-fill-add"></i>
+                    <h2>Registro de Terceiros</h2>
+                </div>
+
+                <button class="btn-close-popup" onclick="closeThirdPartyForm()" aria-label="Fechar">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <label class="text-sm font-medium">Nome Completo *
+                <div class="input-item">
+                    <i class="bi bi-person"></i>
+                    <input 
+                        type="text" 
+                        id="tpFullName" 
+                        placeholder="Nome completo do terceiro"
+                    >
+                </div>
+            </label>
+
+            <label class="text-sm font-medium">Motivo *
+                <div class="input-item">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <input 
+                        type="text" 
+                        id="tpPurpose"
+                        placeholder="Motivo para retirar a chave"
+                    >
+                </div>
+            </label>
+            
+            <label class="text-sm font-medium">Informações de Contato *
+                <div class="input-item">
+                    <i class="bi bi-telephone"></i>
+                    <input 
+                        type="text" 
+                        id="tpContact" 
+                        placeholder="Numero de telefone ou e-mail"
+                    >
+                </div>
+            </label>
+
+            <label class="text-sm font-medium">Notas Adicionais
+                <textarea 
+                    id="tpNotes" 
+                    rows="3" 
+                    placeholder="Insira notas adicionais aqui">
+                </textarea>
+            </label>
+
+            <div class="modal-actions">
+                <button id="cancel-btn" class="btn btn-outline" onclick="closeThirdPartyForm()">
+                    Cancelar
+                </button>
+                <button id="btn-register" class="btn btn-outline" onclick="saveThirdParty()">
+                    Registrar Terceiro
+                </button>
+            </div>
+        </div>
+    </div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="teacherPanel.js"></script>
+</body>
+</html>
