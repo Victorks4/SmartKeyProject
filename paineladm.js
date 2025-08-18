@@ -10,10 +10,9 @@ function login(){
     } else {
         // Mostrar mensagem de erro
         document.getElementById('msg-erro').textContent = 'Usuário ou senha incorretos!';
-        document.getElementById('msg-erro').style.color = 'red';
+        document.getElementById('msg-erro').stylSe.color = 'red';
     }
 }
-
 
 
 const mockData = [
@@ -185,21 +184,21 @@ function renderTable() {
     
     const rowsHTML = mockData.map(record => `
         <tr>
-            <td class="fw-medium">
-                <i class="bi bi-person-circle table-icon"></i>
-                ${record.professorName}
-            </td>
             <td>${record.room}</td>
-            <td>${record.time}</td>
-            <td>
-                <i class="bi bi-book table-icon"></i>
-                ${record.subject}
-            </td>
             <td>${record.course}</td>
             <td>
                 <span class="badge fw-bold text-dark">${record.turmaNumber}</span>
             </td>
-            <td>${record.withdrawalTime}</td>
+            <td class="fw-medium">
+                <i class="bi bi-person-circle table-icon"></i>
+                ${record.professorName}
+            </td>
+            <td>
+                <i class="bi bi-book table-icon"></i>
+                ${record.subject}
+            </td>
+            <td>${record.withdrawalTime || '-'}</td>
+            <td>${record.returnTime || '-'}</td>
             <td>${getStatusBadge(record.status)}</td>
             <td class="text-center">
                 ${getActionButton(record.id, record.status)}

@@ -22,6 +22,7 @@
             <input type="text" id="username" placeholder="Digite seu login">
             <input type="password" id="senha" placeholder="Digite sua senha">
             <button id="btn-login" onclick="login()">Entrar</button>
+            <button id ="cancel-btn" onclick="cancel()">Cancelar</button>
             <p id="msg-erro" class="msg-erro font-size-14px "></p>
         </div>
     </div>
@@ -30,19 +31,18 @@
      <!-- inicio do navbar-->
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container-fluid">
-            <div class="navbar-brand d-flex align-items-center">
+        <div class="container-fluid align-items-center">
+            <a class="navbar-brand d-flex align-items-center" href="#">
                 <img src="public/senailogo.png" alt="Logo SENAI" class="me-2" style="height: 40px;">
-                <h1 class="h2 mb-1 fw-bold text-white" style="position: relative; left: 550px;">Sistema de Controle de Chaves</h1>
-                <img src="public/chave-unscreen.gif" alt="Chave animada" class="me-3" style="height: 48px; position: relative; left: 40px; bottom: 7px;">
-                <div class="d-flex flex-column">
-
-                </div>
+            </a>
+            <div class="navbar-center">
+                <img src="public/chave-unscreen.gif" alt="Chave animada" class="me-2 navbar-key-gif">
+                <h1 class="h2 mb-0 fw-bold text-white text-center">Sistema de Controle de Chaves</h1>
             </div>
-            <div class="navbar-nav ms-auto">
+            <div class="d-flex align-items-center ms-auto">
                 <span class="navbar-text text-light">
                     <i class="bi bi-person-circle me-1"></i>
-                    Administrador
+                    <span class="navbar-user-label d-none d-sm-inline">Administrador</span>
                 </span>
             </div>
         </div>
@@ -82,15 +82,15 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th class="border-0">Professor</th>
                                 <th class="border-0">Sala</th>
-                                <th class="border-0">Horário</th>
-                                <th class="border-0">Matéria</th>
                                 <th class="border-0">Curso</th>
-                                <th class="border-0">Número da turma</th>
-                                <th class="border-0">Retirada</th>
+                                <th class="border-0">Turma</th>
+                                <th class="border-0">Professor</th>
+                                <th class="border-0">Disciplina</th>
+                                <th class="border-0">Hora Inicial</th>
+                                <th class="border-0">Hora Final</th>
                                 <th class="border-0">Status</th>
-                                <th class="border-0 text-center">Ações</th>
+                                <th class="border-0 text-center">Devolução</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody">

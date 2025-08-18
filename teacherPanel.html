@@ -19,16 +19,15 @@
 <body class="bg-light d-flex flex-column">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container-fluid">
-            <div class="navbar-brand d-flex align-items-center">
+        <div class="container-fluid align-items-center">
+            <a class="navbar-brand d-flex align-items-center" href="#">
                 <img src="public/senailogo.png" alt="Logo SENAI" class="me-2" style="height: 40px;">
-                <h1 class="h2 mb-1 fw-bold text-white" style="position: relative; left: 550px;">Sistema de Controle de Chaves</h1>
-                <img src="public/chave-unscreen.gif" alt="Chave animada" class="me-3" style="height: 48px; position: relative; left: 40px; bottom: 7px;">
-                <div class="d-flex flex-column">
-
-                </div>
+            </a>
+            <div class="navbar-center">
+                <img src="public/chave-unscreen.gif" alt="Chave animada" class="me-2 navbar-key-gif">
+                <h1 class="h2 mb-0 fw-bold text-white text-center">Sistema de Controle de Chaves</h1>
             </div>
-            <button onclick="showAdmLogin()" id="btnAdm" class="btn navbar-nav ms-auto">
+            <button onclick="showAdmLogin()" id="btnAdm" class="btn d-flex align-items-center ms-auto">
                 <span class="navbar-text text-light">
                     <i class="bi bi-person-circle me-1"></i>
                     Administrador
@@ -154,13 +153,13 @@
                 </div>
             </label>
             
-            <label class="text-sm font-medium">Informações de Contato *
+            <label class="text-sm font-medium">Nome e número da Sala *
                 <div class="input-item">
                     <i class="bi bi-telephone"></i>
                     <input 
                         type="text" 
                         id="tpContact" 
-                        placeholder="Numero de telefone ou e-mail"
+                        placeholder="Digite o nome da sala, número e bloco"
                     >
                 </div>
             </label>

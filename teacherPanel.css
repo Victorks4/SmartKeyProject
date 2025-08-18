@@ -35,6 +35,47 @@ td {
     filter: brightness(0) invert(1);
 }
 
+/* Navbar responsivo com título centralizado (igual ao paineladm) */
+.navbar .container-fluid {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.navbar-center {
+    grid-column: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.navbar-key-gif {
+    height: 47px;
+    filter: brightness(0) invert(1);
+    margin-bottom: 7px;
+    position: relative;
+    left: 15px;
+}
+
+@media (max-width: 576px) {
+    .navbar .container-fluid {
+        grid-template-columns: 1fr auto;
+    }
+    .navbar-center {
+        grid-column: 1 / -1;
+    }
+    .navbar-center h1 {
+        font-size: clamp(1rem, 5vw, 1.25rem);
+        white-space: normal;
+        padding: 0 8px;
+    }
+    .navbar-key-gif {
+        display: none;
+    }
+}
+
 .row-actions {
     width: 100%;
     display: flex;

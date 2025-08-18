@@ -98,6 +98,22 @@ function getActionButton(recordId, record) {
     }
 }
 
+function getStatusBadgeTP(record) {
+    let status = 'retirada';
+    if (record.withdrawalTime && !record.returnTime) {
+        status = 'em_uso';
+    } else if (record.returnTime) {
+        status = 'devolvida';
+    }
+    const variants = {
+        'em_uso': { variant: 'em-uso', label: 'Em Uso' },
+        'devolvida': { variant: 'devolvida', label: 'Devolvida' },
+        'retirada': { variant: 'retirada', label: 'Retirada' }
+    };
+    const config = variants[status];
+    return `<span class="status-badge ${config.variant}">${config.label}</span>`;
+}
+
 // ---------- Renderização ----------
 function renderTabs() {
     const tabs = [
@@ -129,18 +145,20 @@ function renderTableForShift(shift) {
 
     const rows = records.map(record => `
         <tr>
+            <td>${record.room}</td>
+            <td>${record.course}</td>
+            <td>-</td>
             <td class="fw-medium">
                 <i class="bi bi-person-circle table-icon"></i>
                 ${record.professorName}
             </td>
-            <td>${record.room}</td>
-            <td>${record.time}</td>
             <td>
                 <i class="bi bi-book table-icon"></i>
                 ${record.subject}
             </td>
-            <td>${record.course}</td>
             <td>${record.withdrawalTime || '-'}</td>
+            <td>${record.returnTime || '-'}</td>
+            <td>${getStatusBadgeTP(record)}</td>
             <td class="text-center">
                 ${getActionButton(record.id, record)}
             </td>
@@ -160,13 +178,15 @@ function renderTableForShift(shift) {
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Professor</th>
-                            <th>Sala</th>
-                            <th>Horário</th>
-                            <th>Matéria</th>
-                            <th>Curso</th>
-                            <th>Retirada</th>
-                            <th class="text-center">Ações</th>
+                            <th class="border-0">Sala</th>
+                            <th class="border-0">Curso</th>
+                            <th class="border-0">Turma</th>
+                            <th class="border-0">Professor</th>
+                            <th class="border-0">Disciplina</th>
+                            <th class="border-0">Hora Inicial</th>
+                            <th class="border-0">Hora Final</th>
+                            <th class="border-0">Status</th>
+                            <th class="border-0 text-center">Devolução</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
