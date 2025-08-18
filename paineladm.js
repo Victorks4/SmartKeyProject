@@ -10,9 +10,19 @@ function login(){
     } else {
         // Mostrar mensagem de erro
         document.getElementById('msg-erro').textContent = 'Usuário ou senha incorretos!';
-        document.getElementById('msg-erro').stylSe.color = 'red';
+        document.getElementById('msg-erro').style.color = 'red';
     }
 }
+
+// Botão cancelar (voltar para a tela anterior FUNCIONANDOOOO)
+function cancel(){
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        window.location.href = 'teacherPanel.html';
+    }
+}
+   
 
 
 const mockData = [
@@ -318,5 +328,11 @@ document.addEventListener('DOMContentLoaded', function() {
         editButton.addEventListener('click', function() {
             showNotification('Funcionalidade de editar será implementada em breve!', 'warning');
         });
+    }
+
+    // Botão Cancelar do overlay (evita duplicidade se já houver onclick inline)
+    const cancelButton = document.getElementById('cancel-btn');
+    if (cancelButton && !cancelButton.getAttribute('onclick')) {
+        cancelButton.addEventListener('click', cancel);
     }
 });
