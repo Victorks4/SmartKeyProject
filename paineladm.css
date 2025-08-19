@@ -107,6 +107,11 @@ td {
     color: #212529;
 }
 
+.status-badge.disponivel {
+    background-color: var(--bs-info);
+    color: white;
+}
+
 /* Estilos para botões de ação */
 .action-btn {
     min-width: 100px;

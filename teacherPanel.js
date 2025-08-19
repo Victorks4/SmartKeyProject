@@ -160,6 +160,7 @@ function renderTabs() {
     `).join('');
 }
 
+
 function sorted(data) {
     if(sortAlphabetically) {
         return [ ...data ].sort((a, b) => a.professorName.localeCompare(b.professorName, 'pt-BR'));
@@ -167,6 +168,8 @@ function sorted(data) {
     const idx = new Map(ORIGINAL_ORDER.map((id, i) => [ id, i ]));
     return [ ...data ].sort((a, b) => idx.get(a.id) - idx.get(b.id));
 }
+
+
 
 function renderTableForShift(shift) {
     const container = document.getElementById('shiftContent');

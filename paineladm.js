@@ -1,5 +1,349 @@
 // Variáveis globais
+// Estado atual
 let activeShift = 'manhã';
+
+// Função para processar arquivo importado
+async function handleFileImport(file) {
+    if (!file) return;
+
+    // Verificar extensão do arquivo
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    if (!['xlsx', 'xls'].includes(fileExt)) {
+        alert('Por favor, use apenas arquivos Excel (.xlsx, .xls)');
+        return;
+    }
+
+    // Mostrar indicador de carregamento
+    const importBtn = document.querySelector('button[title="Importar Arquivo"]');
+    const originalText = importBtn.innerHTML;
+    importBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Importando...';
+    importBtn.disabled = true;
+
+    try {
+        const data = await readFileData(file);
+        if (data && data.length > 0) {
+            // Converter os dados para o formato do mockData
+            const convertedData = data.map((row, index) => {
+                // Extrair informações da linha e limpar valores FALSE
+                const sala = (row[0] || '').toString().trim();
+                const curso = (row[1] || '').toString().trim();
+                const professorName = (row[3] || '').toString().trim();
+                const disciplina = (row[4] || '').toString().trim();
+                const registro = (row[5] || '').toString().trim();
+
+                // Ignorar valores FALSE ou ---
+                if (sala === 'FALSE' || sala === '---' || 
+                    curso === 'FALSE' || curso === '---' ||
+                    disciplina === 'FALSE' || disciplina === '---') {
+                    return null;
+                }
+
+                // Determinar o turno baseado na sala ou turma
+                let defaultShift = 'manhã';
+                const turmaStr = row[2] ? row[2].toString().trim() : '';
+                if (turmaStr.includes('NOTURNO') || turmaStr.includes('NOITE')) {
+                    defaultShift = 'noite';
+                } else if (turmaStr.includes('TARDE')) {
+                    defaultShift = 'tarde';
+                }
+
+                return {
+                    id: registro || (index + 1).toString(), // Usar G-number como ID se disponível
+                    room: sala,
+                    course: curso,
+                    turmaNumber: turmaStr,
+                    professorName: professorName,
+                    subject: disciplina,
+                    time: '', // Será preenchido quando a chave for retirada
+                    status: 'disponivel',
+                    withdrawalTime: '', // Será preenchido quando a chave for retirada
+                    returnTime: '', // Será preenchido quando a chave for devolvida
+                    requiresLogin: true,
+                    shift: defaultShift
+                };
+            });
+
+                // Filtrar e validar os dados convertidos
+                const validData = convertedData.filter(item => {
+                    // Verificar se é um registro válido
+                    const isValidRoom = item.room && 
+                                     item.room.trim() !== '' && 
+                                     item.room !== 'FALSE' &&
+                                     !item.room.includes('---') &&
+                                     !item.room.toLowerCase().includes('sala');
+
+                    // Remover espaços em branco extras e manter valores originais
+                    if (isValidRoom) {
+                        item.room = item.room.trim();
+                        // Manter os valores originais do curso e disciplina se existirem
+                        if (item.course) item.course = item.course.trim();
+                        if (item.subject) item.subject = item.subject.trim();
+                        if (item.professorName) item.professorName = item.professorName.trim();
+                        item.status = 'disponivel';
+                    }
+
+                    return isValidRoom && (item.course || item.subject); // Pelo menos um dos dois deve existir
+                });
+
+                if (validData.length === 0) {
+                    throw new Error('Nenhum registro válido encontrado no arquivo. Verifique o formato dos dados.');
+                }
+
+                // Atualizar os dados com apenas os registros válidos
+                mockData = validData;
+                console.log('Dados importados com sucesso. Total de registros:', validData.length);
+            
+            // Atualizar as visualizações
+            updateTable();
+            
+            // Mostrar mensagem de sucesso
+            alert(`Importação concluída com sucesso!\n\nTotal de registros importados: ${validData.length}`);
+            
+            // Salvar no localStorage para persistência
+            localStorage.setItem('importedData', JSON.stringify(mockData));
+        } else {
+            throw new Error('Nenhum dado válido encontrado no arquivo');
+        }
+    } catch (error) {
+        console.error('Erro ao importar arquivo:', error);
+        alert(`Erro ao importar arquivo:\n${error.message || 'Verifique se o formato está correto e tente novamente.'}`);
+    } finally {
+        // Restaurar botão
+        importBtn.innerHTML = originalText;
+        importBtn.disabled = false;
+    }
+}
+
+
+// Função para determinar o turno baseado na sala (pode ser customizada conforme necessário)
+function getShiftFromRoom(room) {
+    if (!room) return '';
+    // Aqui você pode adicionar lógica específica para determinar o turno
+    // baseado no número ou nome da sala, se necessário
+    return '';
+}
+
+// Função para ler o arquivo
+function readFileData(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            try {
+                // Verificar se o arquivo está vazio
+                if (!e.target.result) {
+                    throw new Error('Arquivo vazio ou inválido');
+                }
+
+                // Processar Excel
+                const data = new Uint8Array(e.target.result);
+                if (!data || data.length === 0) {
+                    throw new Error('Arquivo vazio ou corrompido');
+                }
+
+                const workbook = XLSX.read(data, { 
+                    type: 'array',
+                    raw: false,
+                    cellText: true,
+                    cellDates: true
+                });
+
+                if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
+                    throw new Error('Arquivo Excel inválido ou sem planilhas');
+                }
+
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                if (!firstSheet) {
+                    throw new Error('Primeira planilha está vazia ou inválida');
+                }
+                
+                // Configurar opções para ignorar linhas e colunas vazias
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
+                    header: 1,
+                    raw: false,
+                   // range: 'B8:Z1000',  // começa da célula B8 até Z1000
+                    blankrows: false, 
+                    skipHidden: true,    // pula linhas/colunas ocultas
+                    defval: null         // células vazias serão null ao invés de string vazia
+                });
+
+                console.log('Dados lidos do arquivo:', jsonData); // Debug
+
+                // Processar o arquivo linha por linha
+                let columnMap = {
+                    sala: -1,
+                    curso: -1,
+                    turma: -1,
+                    professor: -1,
+                    disciplina: -1
+                };
+
+                // Encontrar cabeçalho e mapear colunas
+                let startIndex = -1;
+                for (let i = 0; i < jsonData.length; i++) {
+                    const row = jsonData[i];
+                    if (!Array.isArray(row)) continue;
+
+                    // Verificar se é uma linha de cabeçalho
+                    let foundHeader = false;
+                    for (let j = 0; j < row.length; j++) {
+                        if (!row[j]) continue;
+                        const cellValue = String(row[j]).trim().toUpperCase();
+                        
+                        if (cellValue === 'SALA' || cellValue === 'SALAS') {
+                            columnMap.sala = j;
+                            foundHeader = true;
+                        } else if (cellValue === 'CURSO' || cellValue === 'CURSOS') {
+                            columnMap.curso = j;
+                        } else if (cellValue === 'TURMA' || cellValue === 'TURMAS') {
+                            columnMap.turma = j;
+                        } else if (cellValue.includes('PROFESSOR')) {
+                            columnMap.professor = j;
+                        } else if (cellValue === 'DISCIPLINA' || cellValue.includes('DISCIPLINAS')) {
+                            columnMap.disciplina = j;
+                        }
+                    }
+
+                    if (foundHeader) {
+                        startIndex = i;
+                        break;
+                    }
+                }
+
+                // Se não encontrou o cabeçalho, tentar identificar pela primeira linha de dados
+                if (startIndex === -1) {
+                    for (let i = 0; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        if (!Array.isArray(row) || row.length < 2) continue;
+                        
+                        // Verificar se a linha parece conter dados válidos
+                        const firstCell = String(row[0] || '').trim();
+                        if (firstCell && !firstCell.includes('FALSE') && !firstCell.includes('---')) {
+                            startIndex = i - 1; // Considerar esta como primeira linha de dados
+                            // Mapear colunas baseado na estrutura esperada
+                            columnMap = {
+                                sala: 0,
+                                curso: 1,
+                                turma: 2,
+                                professor: 3,
+                                disciplina: 4
+                            };
+                            break;
+                        }
+                    }
+                }
+
+                if (startIndex === -1) {
+                    throw new Error('Não foi possível encontrar o cabeçalho das colunas no arquivo.');
+                }
+
+                // Extrair apenas as colunas relevantes e formatar os dados
+                const formattedData = jsonData.slice(startIndex + 1)
+                    .filter(row => Array.isArray(row) && row.some(cell => cell)) // Manter linhas que têm pelo menos uma célula com conteúdo
+                    .map(row => {
+                        try {
+                            // Verificar se os índices das colunas são válidos
+                            if (columnMap.sala === -1) {
+                                throw new Error('Coluna SALA não encontrada no arquivo');
+                            }
+
+                            // Obter valores com validação
+                            const getSafeValue = (index) => {
+                                if (index === -1) return '';
+                                const value = row[index];
+                                if (!value) return '';
+                                const strValue = String(value).trim();
+                                // Não retornar "FALSE" como valor e tratar células vazias
+                                return strValue === 'FALSE' || strValue === '---' ? '' : strValue;
+                            };
+
+                            const sala = getSafeValue(columnMap.sala);
+                            
+                            // Pular linhas de cabeçalho ou divisória
+                            if (!sala || sala.toUpperCase().includes('SALA') || sala.includes('---')) {
+                                return null;
+                            }
+
+                            let professor = getSafeValue(columnMap.professor);
+                            let disciplina = getSafeValue(columnMap.disciplina);
+                            const curso = getSafeValue(columnMap.curso);
+                            const turma = getSafeValue(columnMap.turma);
+                            const registro = getSafeValue(columnMap.registro);
+
+                            // Se o professor ou disciplina estiver vazio, tentar encontrar em linhas adjacentes
+                            if (!professor || !disciplina) {
+                                for (let i = -2; i <= 2; i++) {
+                                    const adjRow = jsonData[startIndex + 1 + i];
+                                    if (adjRow) {
+                                        const adjProf = adjRow[columnMap.professor];
+                                        if (!professor && adjProf) {
+                                            const profStr = String(adjProf).trim();
+                                            if (profStr !== 'FALSE') {
+                                                professor = profStr;
+                                            }
+                                        }
+                                        
+                                        const adjDisc = adjRow[columnMap.disciplina];
+                                        if (!disciplina && adjDisc) {
+                                            const discStr = String(adjDisc).trim();
+                                            if (discStr !== 'FALSE') {
+                                                disciplina = discStr;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            return [
+                                sala,
+                                curso,
+                                turma,
+                                professor,
+                                disciplina,
+                                registro
+                            ];
+                        } catch (error) {
+                            console.error('Erro ao processar linha:', error, row);
+                            return null;
+                        }
+                    })
+                    .filter(row => row !== null && row[0] && row[0].trim() !== ''); // Remover linhas nulas e vazias
+
+                if (formattedData.length === 0) {
+                    throw new Error('Nenhum dado válido encontrado na planilha. Verifique o formato.');
+                }
+
+                resolve(formattedData);
+            } catch (error) {
+                console.error('Erro ao processar arquivo:', error);
+                reject(new Error('Erro ao processar o arquivo. Verifique se o formato está correto e se há dados válidos.'));
+            }
+        };
+        
+        reader.onerror = function(error) {
+            reject(error);
+        };
+        
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+// Função para validar o formato dos dados
+function isValidDataFormat(data) {
+    if (!data || data.length === 0) return false;
+    
+    // Verifica se cada linha tem pelo menos os 5 campos obrigatórios
+    return data.every(row => row && row.length >= 5);
+}
+
+// Carregar dados salvos ao iniciar
+function loadSavedData() {
+    const savedData = localStorage.getItem('importedData');
+    if (savedData) {
+        mockData = JSON.parse(savedData);
+        updateTable();
+    }
+}
 
 // Configuração dos turnos
 const shifts = [
@@ -29,15 +373,10 @@ function switchShift(shift) {
 
 // Atualiza a tabela com base no turno selecionado
 function updateTable() {
-    const filteredData = mockData.filter(r => {
-        const hour = parseInt(r.time.split(':')[0]);
-        if (activeShift === 'manhã') return hour >= 7 && hour < 12;
-        if (activeShift === 'tarde') return hour >= 12 && hour < 18;
-        if (activeShift === 'noite') return hour >= 18;
-        return true;
-    });
-    
-    renderTable(filteredData);
+    // Por enquanto vamos mostrar todos os dados, sem filtrar por turno
+    renderTable();
+    // Atualizar os cards de estatísticas também
+    renderStatsCards();
 }
 
 // Dados mock (equivalente ao mockData do React)
@@ -110,7 +449,7 @@ function cancel(){
    
 
 
-const mockData = [
+let mockData = [
     {
         id: "1",
         professorName: "Prof. Moises Lima",
@@ -180,7 +519,8 @@ function getStatusBadge(status) {
     const variants = {
         'em_uso': { variant: 'em-uso', label: 'Em Uso' },
         'devolvida': { variant: 'devolvida', label: 'Devolvida' },
-        'retirada': { variant: 'retirada', label: 'Retirada' }
+        'retirada': { variant: 'retirada', label: 'Retirada' },
+        'disponivel': { variant: 'disponivel', label: 'Disponível' }
     };
     
     const config = variants[status];
@@ -189,7 +529,18 @@ function getStatusBadge(status) {
 
 // Função para gerar o botão de ação baseado no status da chave
 function getActionButton(recordId, status) {
-    if (status === 'em_uso') {
+    if (status === 'disponivel') {
+        // Chave disponível - botão "Retirar" ativo
+        return `
+            <button 
+                class="btn action-btn retirar"
+                onclick="handleKeyAction('${recordId}', '${status}')"
+            >
+                <i class="bi bi-box-arrow-right me-1"></i>
+                Retirar
+            </button>
+        `;
+    } else if (status === 'em_uso') {
         // Chave em uso - botão "Devolver" ativo
         return `
             <button 
@@ -276,30 +627,56 @@ function renderStatsCards() {
 // Função para renderizar a tabela
 function renderTable() {
     const tableBody = document.getElementById('tableBody');
+    if (!tableBody) {
+        console.error('Elemento tableBody não encontrado');
+        return;
+    }
     
-    const rowsHTML = mockData.map(record => `
+    if (!Array.isArray(mockData)) {
+        console.error('mockData não é um array:', mockData);
+        return;
+    }
+
+    console.log('Dados a serem renderizados:', mockData); // Debug
+
+    const rowsHTML = mockData.map(record => {
+        // Garantir que temos valores seguros para exibição
+        const safeRecord = {
+            room: record.room || '',
+            course: record.course || '',
+            turmaNumber: record.turmaNumber || '',
+            professorName: record.professorName || 'PROFESSOR',
+            subject: record.subject || 'DISCIPLINA',
+            withdrawalTime: record.withdrawalTime || '-',
+            returnTime: record.returnTime || '-',
+            status: record.status || 'disponivel',
+            id: record.id || ''
+        };
+
+        return `
         <tr>
-            <td>${record.room}</td>
-            <td>${record.course}</td>
+            <td>${safeRecord.room}</td>
+            <td>${safeRecord.course}</td>
             <td>
-                <span class="badge fw-bold text-dark">${record.turmaNumber}</span>
+                <span class="badge fw-bold text-dark">${safeRecord.turmaNumber}</span>
             </td>
             <td class="fw-medium">
                 <i class="bi bi-person-circle table-icon"></i>
-                ${record.professorName}
+                ${safeRecord.professorName}
             </td>
             <td>
                 <i class="bi bi-book table-icon"></i>
-                ${record.subject}
+                ${safeRecord.subject}
             </td>
-            <td>${record.withdrawalTime || '-'}</td>
-            <td>${record.returnTime || '-'}</td>
-            <td>${getStatusBadge(record.status)}</td>
+            <td>${safeRecord.withdrawalTime}</td>
+            <td>${safeRecord.returnTime}</td>
+            <td>${getStatusBadge(safeRecord.status)}</td>
             <td class="text-center">
-                ${getActionButton(record.id, record.status)}
+                ${getActionButton(safeRecord.id, safeRecord.status)}
             </td>
         </tr>
-    `).join('');
+        `;
+    }).join('');
 
     tableBody.innerHTML = rowsHTML;
 }
@@ -361,17 +738,30 @@ function showNotification(message, type = 'info') {
 
 // Função principal de inicialização
 function initializePainelAdm() {
-    // Aguardar o DOM estar pronto
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            renderStatsCards();
-            renderShiftTabs();
-            updateTable();
-        });
-    } else {
-        renderStatsCards();
-        renderTable();
+    console.log('Inicializando painel administrativo...');
+    
+    // Limpar dados antigos do localStorage para evitar conflitos
+    if (!localStorage.getItem('importedData')) {
+        console.log('Inicializando com dados padrão...');
+        mockData = []; // Começar com array vazio até importar dados
+        localStorage.setItem('importedData', JSON.stringify(mockData));
     }
+
+    // Carregar dados salvos
+    loadSavedData();
+    
+    // Verificar se temos dados válidos
+    if (!Array.isArray(mockData)) {
+        console.error('mockData inválido após carregamento:', mockData);
+        mockData = [];
+    }
+
+    console.log('Dados carregados:', mockData);
+
+    // Renderizar a interface
+    renderStatsCards();
+    renderShiftTabs();
+    renderTable();
 }
 
 // Não inicializar automaticamente - apenas após login

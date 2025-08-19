@@ -18,6 +18,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+
+    <!-- SheetJS for Excel/CSV -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="bg-light d-flex flex-column" onload="checkLogin()">
     <!-- Overlay de login -->
@@ -92,6 +95,11 @@
                             <i class="bi bi-calendar me-1"></i>
                             Filtrar Data
                         </button>
+                        <button type="button" class="btn btn-outline-success btn-sm ms-2" onclick="document.getElementById('fileInput').click()" title="Importar Arquivo">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i>
+                            Importar Dados
+                        </button>
+                        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none" onchange="handleFileImport(this.files[0])">
                     </div>
                 </div>
             </div>
