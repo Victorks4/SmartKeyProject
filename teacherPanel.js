@@ -2,6 +2,35 @@ let activeAction = null;
 let activeShift = 'manhã';
 let sortAlphabetically = false;
 
+// Inicializar o calendário
+document.addEventListener('DOMContentLoaded', function() {
+    flatpickr("#teacherDateFilter", {
+        locale: "pt",
+        dateFormat: "d/m/Y",
+        onChange: function(selectedDates, dateStr) {
+            filterTeacherPanelByDate(selectedDates[0]);
+        }
+    });
+});
+
+// Função para filtrar por data no painel do professor
+function filterTeacherPanelByDate(selectedDate) {
+    const shiftContent = document.getElementById('shiftContent');
+    const cards = shiftContent.getElementsByClassName('room-card');
+
+    for (let card of cards) {
+        const dateStr = card.getAttribute('data-date'); // Você precisará adicionar este atributo aos cards
+        if (dateStr) {
+            const cardDate = new Date(dateStr);
+            if (selectedDate.toDateString() === cardDate.toDateString()) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        }
+    }
+}
+
 function login(){
     const username = document.getElementById('username').value;
     const senha = document.getElementById('senha').value;

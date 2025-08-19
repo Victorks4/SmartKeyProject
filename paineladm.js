@@ -1,9 +1,94 @@
+// Variáveis globais
+let activeShift = 'manhã';
+
+// Configuração dos turnos
+const shifts = [
+    { id: 'manhã', label: 'Manhã' },
+    { id: 'tarde', label: 'Tarde' },
+    { id: 'noite', label: 'Noite' }
+];
+
+// Renderiza as abas de turno
+function renderShiftTabs() {
+    const el = document.getElementById('shiftTabs');
+    if (!el) return;
+
+    el.innerHTML = shifts.map(t => `
+        <button class="tab ${(t.id === activeShift) ? 'active' : ''}" onclick="switchShift('${t.id}')">
+            ${t.label}
+        </button>
+    `).join('');
+}
+
+// Troca o turno ativo
+function switchShift(shift) {
+    activeShift = shift;
+    renderShiftTabs();
+    updateTable();
+}
+
+// Atualiza a tabela com base no turno selecionado
+function updateTable() {
+    const filteredData = mockData.filter(r => {
+        const hour = parseInt(r.time.split(':')[0]);
+        if (activeShift === 'manhã') return hour >= 7 && hour < 12;
+        if (activeShift === 'tarde') return hour >= 12 && hour < 18;
+        if (activeShift === 'noite') return hour >= 18;
+        return true;
+    });
+    
+    renderTable(filteredData);
+}
+
 // Dados mock (equivalente ao mockData do React)
+
+// Inicializar o calendário
+document.addEventListener('DOMContentLoaded', function() {
+    flatpickr("#dateFilter", {
+        locale: "pt",
+        dateFormat: "d/m/Y",
+        onChange: function(selectedDates, dateStr) {
+            filterByDate(selectedDates[0]);
+        }
+    });
+});
+
+// Função para filtrar por data
+function filterByDate(selectedDate) {
+    const tableBody = document.getElementById('tableBody');
+    const rows = tableBody.getElementsByTagName('tr');
+
+    for (let row of rows) {
+        const timeCell = row.querySelector('td:nth-child(6)'); // coluna da hora inicial
+        if (timeCell) {
+            const rowDate = new Date(); // Aqui você usaria a data real do registro
+            if (selectedDate.toDateString() === rowDate.toDateString()) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    }
+}
+
+function checkLogin() {
+    const isLoggedIn = localStorage.getItem('adminLoggedIn');
+    if (isLoggedIn === 'true') {
+        document.getElementById('overlay').style.display = 'none';
+        initializePainelAdm();
+    }
+}
+
+function logout() {
+    localStorage.removeItem('adminLoggedIn');
+    document.getElementById('overlay').style.display = 'flex';
+}
 
 function login(){
     const username = document.getElementById('username').value;
     const senha = document.getElementById('senha').value;
     if(username === 'admin' && senha === 'adm@123'){
+        localStorage.setItem('adminLoggedIn', 'true');
         document.getElementById('overlay').style.display = 'none';
         // Inicializar o painel após login bem-sucedido
         initializePainelAdm();
@@ -280,7 +365,8 @@ function initializePainelAdm() {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
             renderStatsCards();
-            renderTable();
+            renderShiftTabs();
+            updateTable();
         });
     } else {
         renderStatsCards();
