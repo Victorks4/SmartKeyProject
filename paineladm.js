@@ -38,14 +38,8 @@ async function handleFileImport(file) {
                     return null;
                 }
 
-                // Determinar o turno baseado na sala ou turma
-                let defaultShift = 'manhã';
-                const turmaStr = row[2] ? row[2].toString().trim() : '';
-                if (turmaStr.includes('NOTURNO') || turmaStr.includes('NOITE')) {
-                    defaultShift = 'noite';
-                } else if (turmaStr.includes('TARDE')) {
-                    defaultShift = 'tarde';
-                }
+                // Usar o turno ativo atual para o novo registro
+                const defaultShift = activeShift;
 
                 return {
                     id: registro || (index + 1).toString(), // Usar G-number como ID se disponível
@@ -368,15 +362,19 @@ function renderShiftTabs() {
 function switchShift(shift) {
     activeShift = shift;
     renderShiftTabs();
-    updateTable();
+    // Filtrar dados pelo turno antes de atualizar
+    const filteredData = mockData.filter(item => item.shift === shift);
+    updateTable(filteredData);
 }
 
 // Atualiza a tabela com base no turno selecionado
 function updateTable() {
-    // Por enquanto vamos mostrar todos os dados, sem filtrar por turno
-    renderTable();
-    // Atualizar os cards de estatísticas também
-    renderStatsCards();
+    // Filtrar dados pelo turno ativo
+    const filteredData = mockData.filter(item => item.shift === activeShift);
+    // Renderizar apenas os dados do turno atual
+    renderTable(filteredData);
+    // Atualizar os cards de estatísticas também com os dados filtrados
+    renderStatsCards(filteredData);
 }
 
 // Dados mock (equivalente ao mockData do React)
@@ -449,70 +447,8 @@ function cancel(){
    
 
 
-let mockData = [
-    {
-        id: "1",
-        professorName: "Prof. Moises Lima",
-        room: "Laboratório 07 - Desenvolvimento Web",
-        time: "13:00 - 17:00",
-        subject: "Desenvolvimento Web",
-        course: "Desenvolvimento de Sistemas",
-        turmaNumber: "91134",
-        status: "em_uso",
-        withdrawalTime: "13:10",
-        requiresLogin: true
-    },
-    {
-        id: "2", 
-        professorName: "Prof. Icaro Alvim",
-        room: "Laboratório 03 - Programação de app",
-        time: "18:40 - 21:10",
-        subject: "Programação de app",
-        course: "Desenvolvimento de Sistemas",
-        turmaNumber: "2024B",
-        status: "devolvida",
-        withdrawalTime: "13:10",
-        returnTime: "21:20",
-        requiresLogin: true
-    },
-    {
-        id: "3",
-        professorName: "Prof. Ana",
-        room: "Sala 305",
-        time: "14:00 - 16:00",
-        subject: "História",
-        course: "Humanidades",
-        turmaNumber: "2024C",
-        status: "retirada",
-        withdrawalTime: "13:10",
-        requiresLogin: true
-    },
-    {
-        id: "4",
-        professorName: "Prof. Carlos Silva",
-        room: "Laboratório 05 - Matemática",
-        time: "08:00 - 10:00",
-        subject: "Matemática Aplicada",
-        course: "Engenharia",
-        turmaNumber: "2024D",
-        status: "devolvida",
-        withdrawalTime: "08:05",
-        returnTime: "10:15",
-        requiresLogin: true
-    },
-    {
-        id: "5",
-        professorName: "Maria Santos Cerqueira",
-        room: "Sala 401",
-        time: "15:30 - 17:30",
-        subject: "Física",
-        course: "Ciências Exatas",
-        turmaNumber: "2024E",
-        status: "em_uso",
-        withdrawalTime: "15:35",
-        requiresLogin: true
-    }
-];
+// Array que irá armazenar os dados importados
+let mockData = [];
 
 // Função para obter o badge de status
 function getStatusBadge(status) {
@@ -577,13 +513,13 @@ function getActionButton(recordId, status) {
 }
 
 // Função para renderizar os cards de estatísticas
-function renderStatsCards() {
+function renderStatsCards(data = mockData) {
     const statsCardsContainer = document.getElementById('statsCards');
     
     const stats = {
-        total: mockData.length,
-        emUso: mockData.filter(r => r.status === 'em_uso').length,
-        devolvidas: mockData.filter(r => r.status === 'devolvida').length
+        total: data.length,
+        emUso: data.filter(r => r.status === 'em_uso').length,
+        devolvidas: data.filter(r => r.status === 'devolvida').length
     };
 
     const cards = [
@@ -625,21 +561,22 @@ function renderStatsCards() {
 }
 
 // Função para renderizar a tabela
-function renderTable() {
+function renderTable(data = mockData) {
     const tableBody = document.getElementById('tableBody');
     if (!tableBody) {
         console.error('Elemento tableBody não encontrado');
         return;
     }
     
-    if (!Array.isArray(mockData)) {
-        console.error('mockData não é um array:', mockData);
+    if (!Array.isArray(data)) {
+        console.error('data não é um array:', data);
         return;
     }
 
-    console.log('Dados a serem renderizados:', mockData); // Debug
+    console.log(`Dados a serem renderizados (${activeShift}):`, data); // Debug
 
-    const rowsHTML = mockData.map(record => {
+    // Filtrar registros apenas do turno atual
+    const rowsHTML = data.filter(record => record.shift === activeShift).map(record => {
         // Garantir que temos valores seguros para exibição
         const safeRecord = {
             room: record.room || '',
@@ -650,7 +587,8 @@ function renderTable() {
             withdrawalTime: record.withdrawalTime || '-',
             returnTime: record.returnTime || '-',
             status: record.status || 'disponivel',
-            id: record.id || ''
+            id: record.id || '',
+            shift: record.shift || 'manhã'
         };
 
         return `
