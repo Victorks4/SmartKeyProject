@@ -1,8 +1,85 @@
 let activeAction = null;
 let activeShift = 'manhã';
 let sortAlphabetically = false;
+let dataByShift = {
+    'manhã': [],
+    'tarde': [],
+    'noite': []
+};
 
-// Inicializar o calendário
+// Carregar dados do localStorage
+function loadSharedData() {
+    console.log('Carregando dados compartilhados...');
+    const savedData = localStorage.getItem('allShiftData');
+    if (savedData) {
+        try {
+            const parsedData = JSON.parse(savedData);
+            console.log('Dados brutos carregados:', parsedData);
+            
+            // Se parsedData for um array (formato antigo), converter para o novo formato
+            if (Array.isArray(parsedData)) {
+                console.log('Convertendo dados do formato antigo...');
+                dataByShift = {
+                    'manhã': parsedData.filter(item => item && item.turno === 'manhã'),
+                    'tarde': parsedData.filter(item => item && item.turno === 'tarde'),
+                    'noite': parsedData.filter(item => item && item.turno === 'noite')
+                };
+            } else {
+                // Garantir que o objeto tem a estrutura correta
+                dataByShift = {
+                    'manhã': Array.isArray(parsedData['manhã']) ? parsedData['manhã'].filter(Boolean) : [],
+                    'tarde': Array.isArray(parsedData['tarde']) ? parsedData['tarde'].filter(Boolean) : [],
+                    'noite': Array.isArray(parsedData['noite']) ? parsedData['noite'].filter(Boolean) : []
+                };
+            }
+            
+            // Sanitizar os dados
+            for (let turno in dataByShift) {
+                dataByShift[turno] = dataByShift[turno].map(item => ({
+                    sala: item.sala || 'Sala não especificada',
+                    professor: item.professor || 'Professor não especificado',
+                    disciplina: item.disciplina || '-',
+                    curso: item.curso || '-',
+                    turma: item.turma || '-',
+                    horaRetirada: item.horaRetirada || null,
+                    horaDevolucao: item.horaDevolucao || null
+                }));
+            }
+            
+            console.log('Dados estruturados e sanitizados:', dataByShift);
+            renderTableForShift(activeShift);
+        } catch (e) {
+            console.error('Erro ao carregar dados compartilhados:', e);
+            // Resetar para estrutura vazia em caso de erro
+            dataByShift = {
+                'manhã': [],
+                'tarde': [],
+                'noite': []
+            };
+        }
+    } else {
+        console.log('Nenhum dado encontrado no localStorage');
+    }
+}
+
+// Escutar por atualizações de dados
+window.addEventListener('shiftDataUpdated', function(event) {
+    console.log('Evento de atualização recebido:', event.detail);
+    if (event.detail && event.detail.data) {
+        // Garantir que o objeto tem a estrutura correta
+        dataByShift = {
+            'manhã': Array.isArray(event.detail.data['manhã']) ? event.detail.data['manhã'] : [],
+            'tarde': Array.isArray(event.detail.data['tarde']) ? event.detail.data['tarde'] : [],
+            'noite': Array.isArray(event.detail.data['noite']) ? event.detail.data['noite'] : []
+        };
+        console.log('Dados atualizados:', dataByShift);
+        renderTableForShift(activeShift);
+    } else {
+        console.error('Evento de atualização recebido sem dados válidos:', event);
+    }
+});
+
+// Inicializar o calendário e carregar dados
 document.addEventListener('DOMContentLoaded', function() {
     flatpickr("#teacherDateFilter", {
         locale: "pt",
@@ -11,6 +88,10 @@ document.addEventListener('DOMContentLoaded', function() {
             filterTeacherPanelByDate(selectedDates[0]);
         }
     });
+    
+    // Carregar dados iniciais e renderizar
+    loadSharedData();
+    renderTableForShift(activeShift);
 });
 
 // Função para filtrar por data no painel do professor
@@ -51,58 +132,9 @@ function hideAdmLogin() {
     document.getElementById('overlay').style.visibility = 'hidden';
 }
 
-const mockData = [
-    { 
-        id: "1", 
-        professorName: "Prof. Moises Lima", 
-        room: "Laboratório 07 - Desenvolvimento Web", 
-        time: "13:00 - 17:00", 
-        subject: "Desenvolvimento Web", 
-        course: "Desenvolvimento de Sistemas", 
-        withdrawalTime: "13:10", 
-        requiresLogin: true, 
-        shift: "tarde" 
-    },
-    { 
-        id: "2", 
-        professorName: "Prof. Icaro Alvim", 
-        room: "Laboratório 03 - Programação de app", 
-        time: "18:40 - 21:10", 
-        subject: "Programação de app", 
-        course: "Desenvolvimento de Sistemas", 
-        withdrawalTime: "18:35", 
-        returnTime: "21:20", 
-        requiresLogin: true, 
-        shift: "tarde" 
-    },
-    { 
-        id: "3", 
-        professorName: "Prof. Ana Costa", 
-        room: "Sala 305", 
-        time: "14:00 - 16:00", 
-        subject: "História", 
-        course: "Humanidades", 
-        withdrawalTime: "13:45", 
-        requiresLogin: true, 
-        shift: "tarde" 
-    },
-    { 
-        id: "4", 
-        professorName: "Prof. Bruno Alves", 
-        room: "Sala 102", 
-        time: "07:30 - 11:45", 
-        subject: "Matemática", 
-        course: "Exatas", 
-        requiresLogin: true, 
-        shift: "tarde" 
-    }
-];
-
-const ORIGINAL_ORDER = [ ...mockData.map(m => m.id) ];
-
 // ---------- Botão de Ação ----------
 function getActionButton(recordId, record) {
-    if (record.withdrawalTime && !record.returnTime) {
+    if (record.horaRetirada && !record.horaDevolucao) {
         // Já retirada - opção de devolver
         return `
             <button 
@@ -128,20 +160,31 @@ function getActionButton(recordId, record) {
 }
 
 function getStatusBadgeTP(record) {
-    let status = 'retirada';
-    if (record.withdrawalTime && !record.returnTime) {
-        status = 'em_uso';
-    } else if (record.returnTime) {
-        status = 'devolvida';
+    if (!record || typeof record !== 'object') {
+        return `<span class="status-badge disponivel">Disponível</span>`;
     }
-    const variants = {
-        'em_uso': { variant: 'em-uso', label: 'Em Uso' },
-        'devolvida': { variant: 'devolvida', label: 'Devolvida' },
-        'retirada': { variant: 'retirada', label: 'Retirada' }
-    };
-    const config = variants[status];
-    return `<span class="status-badge ${config.variant}">${config.label}</span>`;
+
+    let status = 'disponivel';
+    let label = 'Disponível';
+
+    if (record.horaRetirada) {
+        if (!record.horaDevolucao) {
+            status = 'em_uso';
+            label = 'Em Uso';
+        } else {
+            status = 'devolvida';
+            label = 'Devolvida';
+        }
+    }
+
+    return `<span class="status-badge ${status}">${label}</span>`;
 }
+
+// ---------- Inicialização ----------
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado, iniciando...');
+    initialize(); // Usar a função de inicialização única
+});
 
 // ---------- Renderização ----------
 function renderTabs() {
@@ -162,40 +205,91 @@ function renderTabs() {
 
 
 function sorted(data) {
-    if(sortAlphabetically) {
-        return [ ...data ].sort((a, b) => a.professorName.localeCompare(b.professorName, 'pt-BR'));
+    if (!Array.isArray(data)) {
+        console.error('Dados inválidos para ordenação:', data);
+        return [];
     }
-    const idx = new Map(ORIGINAL_ORDER.map((id, i) => [ id, i ]));
-    return [ ...data ].sort((a, b) => idx.get(a.id) - idx.get(b.id));
+
+    try {
+        const validData = data.filter(item => item && typeof item === 'object');
+        if (validData.length !== data.length) {
+            console.warn('Alguns itens foram removidos por serem inválidos:', data);
+        }
+
+        if (sortAlphabetically) {
+            return validData.sort((a, b) => {
+                if (!a.professor || !b.professor) return 0;
+                return (a.professor || '').localeCompare((b.professor || ''), 'pt-BR');
+            });
+        }
+        return validData.sort((a, b) => {
+            if (!a.sala || !b.sala) return 0;
+            return (a.sala || '').localeCompare((b.sala || ''), 'pt-BR');
+        });
+    } catch (error) {
+        console.error('Erro ao ordenar dados:', error);
+        return [];
+    }
 }
 
-
-
 function renderTableForShift(shift) {
+    console.log('Renderizando dados para o turno:', shift);
     const container = document.getElementById('shiftContent');
-    const records = sorted(mockData.filter(r => r.shift === shift));
+    if (!container) {
+        console.error('Elemento shiftContent não encontrado!');
+        return;
+    }
+    
+    let shiftData = dataByShift[shift];
+    if (!Array.isArray(shiftData)) {
+        console.warn('Dados do turno não são um array:', shift);
+        shiftData = [];
+    }
+    
+    // Filtrar dados inválidos
+    shiftData = shiftData.filter(item => {
+        if (!item || typeof item !== 'object') return false;
+        // Garantir que pelo menos a sala e o professor existem
+        return item.sala && typeof item.sala === 'string' &&
+               item.professor && typeof item.professor === 'string';
+    });
+    
+    console.log('Dados filtrados do turno:', shiftData);
+    const records = sorted(shiftData);
 
-    const rows = records.map(record => `
+    console.log('Gerando linhas para os registros:', records);
+    const rows = records.map(record => {
+        // Sanitizar valores para garantir que não são undefined
+        const sala = record.sala || '-';
+        const curso = record.curso || '-';
+        const turma = record.turma || '-';
+        const professor = record.professor || '-';
+        const disciplina = record.disciplina || '-';
+        const horaRetirada = record.horaRetirada || '-';
+        const horaDevolucao = record.horaDevolucao || '-';
+
+        return `
         <tr>
-            <td>${record.room}</td>
-            <td>${record.course}</td>
-            <td>-</td>
+            <td>${sala}</td>
+            <td>${curso}</td>
+            <td>${turma}</td>
             <td class="fw-medium">
                 <i class="bi bi-person-circle table-icon"></i>
-                ${record.professorName}
+                ${professor}
             </td>
             <td>
                 <i class="bi bi-book table-icon"></i>
-                ${record.subject}
+                ${disciplina}
             </td>
-            <td>${record.withdrawalTime || '-'}</td>
-            <td>${record.returnTime || '-'}</td>
+            <td>${horaRetirada}</td>
+            <td>${horaDevolucao}</td>
             <td>${getStatusBadgeTP(record)}</td>
             <td class="text-center">
-                ${getActionButton(record.id, record)}
+                ${getActionButton(sala, record)}
             </td>
         </tr>
-    `).join('');
+        `;
+    }).join('');
 
     container.innerHTML = `
         <div class="card-header d-flex align-items-center">
@@ -231,13 +325,10 @@ function renderTableForShift(shift) {
 }
 
 // ----------- Ações da chave -----------
-function handleKey(id, action) {
-    const record = mockData.find(r => r.id === id);
-    if(!record) return;
-
-    if(action === 'remove' && record.requiresLogin) {
-        activeAction = { record, action };
-        openLogin();
+function handleKey(salaId, action) {
+    const record = dataByShift[activeShift]?.find(r => r.sala === salaId);
+    if(!record) {
+        console.error('Registro não encontrado:', salaId);
         return;
     }
 
@@ -248,11 +339,21 @@ function executeKeyAction(record, action) {
     const now = new Date();
     const hm = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-    if(action === 'remove') {
-        record.withdrawalTime = hm;
-        record.returnTime = undefined;
-    } else if(action === 'return') {
-        record.returnTime = hm;
+    const currentShiftData = dataByShift[activeShift];
+    const recordIndex = currentShiftData.findIndex(r => r.sala === record.sala);
+    
+    if (recordIndex !== -1) {
+        if (action === 'remove') {
+            currentShiftData[recordIndex].horaRetirada = hm;
+            currentShiftData[recordIndex].horaDevolucao = undefined;
+        } else if (action === 'return') {
+            currentShiftData[recordIndex].horaDevolucao = hm;
+        }
+
+        // Atualizar o localStorage com os novos dados
+        localStorage.setItem('allShiftData', JSON.stringify(dataByShift));
+        // Disparar evento de atualização
+        window.dispatchEvent(new CustomEvent('shiftDataUpdated', { detail: { data: dataByShift } }));
     }
 
     renderTableForShift(activeShift);
@@ -317,19 +418,25 @@ function saveThirdParty() {
     }
 
     const newRecord = {
-        id: String(mockData.length + 1),
-        professorName: name + " (Terceiro)",
-        room: "-", 
-        time: "-",
-        subject: purpose,
-        course: "Terceiros",
-        withdrawalTime: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        returnTime: undefined,
-        requiresLogin: false,
-        shift: activeShift
+        sala: contact,
+        professor: name + " (Terceiro)",
+        disciplina: purpose,
+        curso: "Terceiros",
+        turma: "-",
+        horaRetirada: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        horaDevolucao: undefined,
+        notas: notes
     };
 
-    mockData.push(newRecord);
+    // Adicionar ao array do turno atual
+    if (!dataByShift[activeShift]) {
+        dataByShift[activeShift] = [];
+    }
+    dataByShift[activeShift].push(newRecord);
+    
+    // Atualizar localStorage e notificar outros painéis
+    localStorage.setItem('allShiftData', JSON.stringify(dataByShift));
+    window.dispatchEvent(new CustomEvent('shiftDataUpdated', { detail: { data: dataByShift } }));
 
     document.getElementById('tpFullName').value = '';
     document.getElementById('tpPurpose').value = '';
@@ -340,12 +447,41 @@ function saveThirdParty() {
     renderTableForShift(activeShift);
 }
 
-// ----------- Turno automático às 12:00 -----------
-function switchShift(shift) { 
-    activeShift = shift; 
+// ----------- Inicialização e mudança de turno -----------
+function initialize() {
+    console.log('Inicializando painel do professor...');
+    const h = new Date().getHours();
+    activeShift = (h < 12) ? 'manhã' : ((h < 18) ? 'tarde' : 'noite');
+    console.log('Turno inicial:', activeShift);
 
+    // Carregar dados e configurar interface
+    loadSharedData();
+    renderTabs();
+    
+    // Configurar os eventos
+    document.getElementById('sortToggle')?.addEventListener('click', () => {
+        sortAlphabetically = !sortAlphabetically;
+        const btn = document.getElementById('sortToggle');
+        if (btn) {
+            btn.setAttribute('aria-pressed', String(sortAlphabetically));
+            renderTableForShift(activeShift);
+        }
+    });
+
+    // Iniciar verificação automática de turno
+    setInterval(autoShiftTick, 60000);
+    
+    // Inicializar ícones
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+}
+
+function switchShift(shift) { 
+    console.log('Mudando para o turno:', shift);
+    activeShift = shift; 
+    loadSharedData(); // Recarregar dados ao mudar de turno
     renderTabs(); 
-    renderTableForShift(activeShift); 
 }
 
 function autoShiftTick() {
@@ -361,6 +497,9 @@ function initialize() {
 
     activeShift = (h < 12) ? 'manhã' : ((h < 18) ? 'tarde' : 'noite');
 
+    // Carregar dados iniciais
+    loadSharedData();
+    
     renderTabs();
     renderTableForShift(activeShift);
 
@@ -374,6 +513,7 @@ function initialize() {
         renderTableForShift(activeShift);
     });
 
+    // Configurar atualização automática de turno
     setInterval(autoShiftTick, 60000);
 }
 

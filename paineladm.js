@@ -1,15 +1,59 @@
 // Variáveis globais
-// Estado atual
 let activeShift = 'manhã';
+let dataByShift = {
+    'manhã': [],
+    'tarde': [],
+    'noite': []
+};
+
+// Função para mudar o turno ativo
+function changeShift(newShift) {
+    if (newShift !== activeShift && ['manhã', 'tarde', 'noite'].includes(newShift)) {
+        activeShift = newShift;
+        updateTable();
+        renderStatsCards(); // Atualizar cards ao mudar de turno
+        
+        // Atualizar interface visual de seleção de turno
+        const tabs = document.querySelectorAll('.shift-tab');
+        tabs.forEach(tab => {
+            if (tab.dataset.shift === newShift) {
+                tab.classList.add('active');
+            } else {
+                tab.classList.remove('active');
+            }
+        });
+        
+        const shiftCapitalized = newShift.charAt(0).toUpperCase() + newShift.slice(1);
+        showNotification(`Visualizando turno da ${shiftCapitalized}`, 'info');
+    }
+}
+let selectedFileForImport = null;
+
+// Função para mostrar o modal de seleção de turno
+function showShiftSelectionModal(file) {
+    selectedFileForImport = file;
+    const modal = new bootstrap.Modal(document.getElementById('shiftSelectionModal'));
+    modal.show();
+}
 
 // Função para processar arquivo importado
 async function handleFileImport(file) {
     if (!file) return;
+    
+    // Mostrar modal de seleção de turno
+    selectedFileForImport = file;
+    const modal = new bootstrap.Modal(document.getElementById('shiftSelectionModal'));
+    modal.show();
+}
+
+// Função para processar o arquivo após seleção do turno
+async function processFileImport(file, selectedShift) {
+    if (!file) return;
 
     // Verificar extensão do arquivo
     const fileExt = file.name.split('.').pop().toLowerCase();
-    if (!['xlsx', 'xls'].includes(fileExt)) {
-        alert('Por favor, use apenas arquivos Excel (.xlsx, .xls)');
+    if (!['xlsx', 'xls', 'csv'].includes(fileExt)) {
+        alert('Por favor, use apenas arquivos Excel (.xlsx, .xls) ou CSV (.csv)');
         return;
     }
 
@@ -20,16 +64,20 @@ async function handleFileImport(file) {
     importBtn.disabled = true;
 
     try {
+        // Pegar o turno atual antes de processar o arquivo
+        const currentShift = activeShift.charAt(0).toUpperCase() + activeShift.slice(1); // Capitaliza o turno
+
         const data = await readFileData(file);
         if (data && data.length > 0) {
             // Converter os dados para o formato do mockData
             const convertedData = data.map((row, index) => {
                 // Extrair informações da linha e limpar valores FALSE
-                const sala = (row[0] || '').toString().trim();
-                const curso = (row[1] || '').toString().trim();
-                const professorName = (row[3] || '').toString().trim();
-                const disciplina = (row[4] || '').toString().trim();
-                const registro = (row[5] || '').toString().trim();
+                const sala = decodeText(row[0]);
+                const curso = decodeText(row[1]);
+                const turmaStr = decodeText(row[2]);
+                const professorName = decodeText(row[3]);
+                const disciplina = decodeText(row[4]);
+                const registro = decodeText(row[5]);
 
                 // Ignorar valores FALSE ou ---
                 if (sala === 'FALSE' || sala === '---' || 
@@ -83,24 +131,43 @@ async function handleFileImport(file) {
                     throw new Error('Nenhum registro válido encontrado no arquivo. Verifique o formato dos dados.');
                 }
 
-                // Atualizar os dados com apenas os registros válidos
-                mockData = validData;
-                console.log('Dados importados com sucesso. Total de registros:', validData.length);
+                // Atualizar os dados do turno selecionado
+                dataByShift[selectedShift] = validData;
+                console.log(`Dados importados com sucesso para o turno ${selectedShift}. Total de registros:`, validData.length);
             
-            // Atualizar as visualizações
-            updateTable();
+                // Atualizar as visualizações se estivermos no turno selecionado
+                if (activeShift === selectedShift) {
+                    updateTable();
+                    renderStatsCards(); // Atualizar os cards após importação
+                }
             
-            // Mostrar mensagem de sucesso
-            alert(`Importação concluída com sucesso!\n\nTotal de registros importados: ${validData.length}`);
+                // Mostrar notificação de sucesso
+                const shiftCapitalized = selectedShift.charAt(0).toUpperCase() + selectedShift.slice(1);
+                showNotification(
+                    `Dados importados com sucesso para o turno da ${shiftCapitalized}!\nTotal de registros: ${validData.length}`,
+                    'success'
+                );
+                
+                // Salvar todos os dados no localStorage para persistência e compartilhamento
+                localStorage.setItem('allShiftData', JSON.stringify(dataByShift));
+                
+                // Emitir evento de atualização de dados
+                const updateEvent = new CustomEvent('shiftDataUpdated', { 
+                    detail: { shift: selectedShift, data: dataByShift }
+                });
+                window.dispatchEvent(updateEvent);
             
-            // Salvar no localStorage para persistência
-            localStorage.setItem('importedData', JSON.stringify(mockData));
+                // Salvar no localStorage para persistência
+                localStorage.setItem('importedData', JSON.stringify(mockData));
         } else {
             throw new Error('Nenhum dado válido encontrado no arquivo');
         }
     } catch (error) {
         console.error('Erro ao importar arquivo:', error);
-        alert(`Erro ao importar arquivo:\n${error.message || 'Verifique se o formato está correto e tente novamente.'}`);
+        showNotification(
+            `Erro ao importar arquivo: ${error.message || 'Verifique se o formato está correto e tente novamente.'}`,
+            'error'
+        );
     } finally {
         // Restaurar botão
         importBtn.innerHTML = originalText;
@@ -117,11 +184,46 @@ function getShiftFromRoom(room) {
     return '';
 }
 
+// Função para decodificar texto com caracteres especiais
+function decodeText(text) {
+    if (!text) return '';
+    // Tenta decodificar caracteres especiais que podem ter sido mal interpretados
+    try {
+        return text.toString()
+            .replace(/�/g, 'á')  // á
+            .replace(/�/g, 'é')  // é
+            .replace(/�/g, 'í')  // í
+            .replace(/�/g, 'ó')  // ó
+            .replace(/�/g, 'ú')  // ú
+            .replace(/�/g, 'ã')  // ã
+            .replace(/�/g, 'õ')  // õ
+            .replace(/�/g, 'â')  // â
+            .replace(/�/g, 'ê')  // ê
+            .replace(/�/g, 'î')  // î
+            .replace(/�/g, 'ô')  // ô
+            .replace(/�/g, 'û')  // û
+            .replace(/�/g, 'ç')  // ç
+            .replace(/Ã§/g, 'ç') // ç (outro encoding)
+            .replace(/Ã£/g, 'ã') // ã (outro encoding)
+            .replace(/Ã¡/g, 'á') // á (outro encoding)
+            .replace(/Ã©/g, 'é') // é (outro encoding)
+            .replace(/Ã³/g, 'ó') // ó (outro encoding)
+            .trim();
+    } catch (e) {
+        return text.toString().trim();
+    }
+}
+
 // Função para ler o arquivo
 function readFileData(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
+        const isCSV = file.name.toLowerCase().endsWith('.csv');
         
+        reader.onerror = function(e) {
+            reject(new Error('Erro ao ler o arquivo: ' + e.target.error));
+        };
+
         reader.onload = function(e) {
             try {
                 // Verificar se o arquivo está vazio
@@ -129,23 +231,42 @@ function readFileData(file) {
                     throw new Error('Arquivo vazio ou inválido');
                 }
 
-                // Processar Excel
-                const data = new Uint8Array(e.target.result);
-                if (!data || data.length === 0) {
-                    throw new Error('Arquivo vazio ou corrompido');
+                let workbook;
+                if (isCSV) {
+                    // Processar CSV com encoding correto para caracteres especiais
+                    const content = e.target.result;
+                    workbook = XLSX.read(content, { 
+                        type: 'string',
+                        raw: true,
+                        cellText: false,
+                        cellDates: true,
+                        codepage: 65001, // UTF-8
+                        charset: 'UTF-8'
+                    });
+                    if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
+                        throw new Error('Arquivo CSV inválido');
+                    }
+                } else {
+                    // Processar Excel
+                    const data = new Uint8Array(e.target.result);
+                    if (!data || data.length === 0) {
+                        throw new Error('Arquivo vazio ou corrompido');
+                    }
+
+                    workbook = XLSX.read(data, { 
+                        type: 'array',
+                        raw: true, // Mantém os dados brutos
+                        cellText: false, // Não converte para texto ainda
+                        cellDates: true,
+                        cellNF: false,
+                        codepage: 65001 // UTF-8
+                    });
+
+                    if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
+                        throw new Error('Arquivo Excel inválido ou sem planilhas');
+                    }
                 }
-
-                const workbook = XLSX.read(data, { 
-                    type: 'array',
-                    raw: false,
-                    cellText: true,
-                    cellDates: true
-                });
-
-                if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
-                    throw new Error('Arquivo Excel inválido ou sem planilhas');
-                }
-
+                
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 if (!firstSheet) {
                     throw new Error('Primeira planilha está vazia ou inválida');
@@ -155,10 +276,11 @@ function readFileData(file) {
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
                     header: 1,
                     raw: false,
-                   // range: 'B8:Z1000',  // começa da célula B8 até Z1000
                     blankrows: false, 
                     skipHidden: true,    // pula linhas/colunas ocultas
-                    defval: null         // células vazias serão null ao invés de string vazia
+                    defval: null,        // células vazias serão null ao invés de string vazia
+                    dateNF: 'dd/mm/yyyy', // formato de data
+                    encoding: 'UTF-8'     // encoding para caracteres especiais
                 });
 
                 console.log('Dados lidos do arquivo:', jsonData); // Debug
@@ -313,12 +435,13 @@ function readFileData(file) {
                 reject(new Error('Erro ao processar o arquivo. Verifique se o formato está correto e se há dados válidos.'));
             }
         };
-        
-        reader.onerror = function(error) {
-            reject(error);
-        };
-        
-        reader.readAsArrayBuffer(file);
+
+        // Iniciar a leitura do arquivo depois de configurar os handlers
+        if (isCSV) {
+            reader.readAsText(file);
+        } else {
+            reader.readAsArrayBuffer(file);
+        }
     });
 }
 
@@ -379,8 +502,63 @@ function updateTable() {
 
 // Dados mock (equivalente ao mockData do React)
 
-// Inicializar o calendário
+// Variável global para o intervalo de atualização da data
+let dateUpdateInterval;
+
+// Limpar o intervalo quando a página for fechada
+window.addEventListener('unload', function() {
+    if (dateUpdateInterval) {
+        clearInterval(dateUpdateInterval);
+    }
+});
+
+// Inicializar o calendário e o atualizador de data
+// Inicializar os event listeners do modal de seleção de turno
+// Função para carregar dados salvos
+function loadSavedData() {
+    const savedData = localStorage.getItem('allShiftData');
+    if (savedData) {
+        try {
+            dataByShift = JSON.parse(savedData);
+            updateTable();
+        } catch (e) {
+            console.error('Erro ao carregar dados salvos:', e);
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Iniciar o atualizador de data
+    updateCurrentDate();
+    dateUpdateInterval = setInterval(updateCurrentDate, 60000); // Atualizar a cada minuto
+
+    // Carregar dados salvos
+    loadSavedData();
+    renderStatsCards(); // Carregar os cards iniciais
+
+    // Configurar evento do botão de confirmação de importação
+    document.getElementById('confirmImportShift').addEventListener('click', async function() {
+        const selectedShift = document.querySelector('input[name="importShift"]:checked').value;
+        const modal = bootstrap.Modal.getInstance(document.getElementById('shiftSelectionModal'));
+        modal.hide();
+        
+        if (selectedFileForImport) {
+            await processFileImport(selectedFileForImport, selectedShift);
+            selectedFileForImport = null;
+        }
+    });
+
+    // Event listener para o botão de confirmação do modal
+    document.getElementById('confirmImportShift').addEventListener('click', async function() {
+        const selectedShift = document.querySelector('input[name="importShift"]:checked').value;
+        const modal = bootstrap.Modal.getInstance(document.getElementById('shiftSelectionModal'));
+        modal.hide();
+        
+        if (selectedFileForImport) {
+            await processFileImport(selectedFileForImport, selectedShift);
+            selectedFileForImport = null; // Limpar a referência do arquivo
+        }
+    });
     flatpickr("#dateFilter", {
         locale: "pt",
         dateFormat: "d/m/Y",
@@ -513,13 +691,17 @@ function getActionButton(recordId, status) {
 }
 
 // Função para renderizar os cards de estatísticas
-function renderStatsCards(data = mockData) {
+function renderStatsCards() {
     const statsCardsContainer = document.getElementById('statsCards');
+    if (!statsCardsContainer) return;
+
+    // Usar os dados do turno atual
+    const currentData = dataByShift[activeShift] || [];
     
     const stats = {
-        total: data.length,
-        emUso: data.filter(r => r.status === 'em_uso').length,
-        devolvidas: data.filter(r => r.status === 'devolvida').length
+        total: currentData.length,
+        emUso: currentData.filter(r => r.status === 'em_uso').length,
+        devolvidas: currentData.filter(r => r.status === 'devolvida').length
     };
 
     const cards = [
@@ -560,13 +742,37 @@ function renderStatsCards(data = mockData) {
     statsCardsContainer.innerHTML = cardsHTML;
 }
 
+// Função para atualizar a data atual
+function updateCurrentDate() {
+    const dateElement = document.getElementById('currentDate');
+    if (dateElement) {
+        const now = new Date();
+        const formattedDate = now.toLocaleDateString('pt-BR', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        const formattedTime = now.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        dateElement.textContent = `${formattedDate} - ${formattedTime}`;
+    }
+}
+
 // Função para renderizar a tabela
-function renderTable(data = mockData) {
+function renderTable() {
+    // Usar os dados do turno atual
+    const data = dataByShift[activeShift] || [];
     const tableBody = document.getElementById('tableBody');
     if (!tableBody) {
         console.error('Elemento tableBody não encontrado');
         return;
     }
+    
+    // Atualizar a data atual
+    updateCurrentDate();
     
     if (!Array.isArray(data)) {
         console.error('data não é um array:', data);
