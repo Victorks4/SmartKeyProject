@@ -258,14 +258,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    flatpickr("#teacherDateFilter", {
-        locale: "pt",
-        dateFormat: "d/m/Y",
-        onChange: function(selectedDates, dateStr) {
-            filterTeacherPanelByDate(selectedDates[0]);
-        }
-    });
-    
     // Carregar dados iniciais e renderizar
     console.log('[PROFESSOR] ==> Inicializando painel do professor');
     console.log('[PROFESSOR] ==> activeShift inicial:', activeShift);
@@ -306,23 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 2000); // Verificar a cada 2 segundos
 });
 
-// Função para filtrar por data no painel do professor
-function filterTeacherPanelByDate(selectedDate) {
-    const shiftContent = document.getElementById('shiftContent');
-    const cards = shiftContent.getElementsByClassName('room-card');
 
-    for (let card of cards) {
-        const dateStr = card.getAttribute('data-date'); // Você precisará adicionar este atributo aos cards
-        if (dateStr) {
-            const cardDate = new Date(dateStr);
-            if (selectedDate.toDateString() === cardDate.toDateString()) {
-                card.style.display = '';
-            } else {
-                card.style.display = 'none';
-            }
-        }
-    }
-}
 
 function login(){
     const username = document.getElementById('username').value;

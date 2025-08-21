@@ -629,32 +629,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    flatpickr("#dateFilter", {
-        locale: "pt",
-        dateFormat: "d/m/Y",
-        onChange: function(selectedDates, dateStr) {
-            filterByDate(selectedDates[0]);
-        }
-    });
 });
-
-// Função para filtrar por data
-function filterByDate(selectedDate) {
-    const tableBody = document.getElementById('tableBody');
-    const rows = tableBody.getElementsByTagName('tr');
-
-    for (let row of rows) {
-        const timeCell = row.querySelector('td:nth-child(6)'); // coluna da hora inicial
-        if (timeCell) {
-            const rowDate = new Date(); // Aqui você usaria a data real do registro
-            if (selectedDate.toDateString() === rowDate.toDateString()) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        }
-    }
-}
 
 function checkLogin() {
     const isLoggedIn = localStorage.getItem('adminLoggedIn');
