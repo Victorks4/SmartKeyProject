@@ -1,61 +1,180 @@
 let activeAction = null;
 let activeShift = 'manhã';
 let sortAlphabetically = false;
-let dataByShift = {
-    'manhã': [],
-    'tarde': [],
-    'noite': []
-};
+let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
+let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
+
+// Função para obter ou criar estrutura de dados para uma data
+function getDataForDate(date) {
+    console.log(`[PROFESSOR] ==> getDataForDate chamada para: ${date}`);
+    console.log(`[PROFESSOR] ==> dataByDateAndShift[${date}] existe?`, !!dataByDateAndShift[date]);
+    
+    if (!dataByDateAndShift[date]) {
+        console.log(`[PROFESSOR] ==> Criando estrutura vazia para data ${date}`);
+        dataByDateAndShift[date] = {
+            'manhã': [],
+            'tarde': [],
+            'noite': []
+        };
+    }
+    
+    console.log(`[PROFESSOR] ==> Retornando dados para ${date}:`, dataByDateAndShift[date]);
+    return dataByDateAndShift[date];
+}
+
+// Função para converter dados do formato admin para professor
+function convertAdminDataToTeacherFormat(data) {
+    const convertedData = {};
+    
+    for (let date in data) {
+        convertedData[date] = {};
+        for (let turno in data[date]) {
+            if (Array.isArray(data[date][turno])) {
+                convertedData[date][turno] = data[date][turno].map(item => {
+                    // Se está no formato do painel administrativo, converter
+                    if (item.room && item.professorName) {
+                        return {
+                            sala: item.room || 'Sala não especificada',
+                            professor: item.professorName || 'Professor não especificado',
+                            disciplina: item.subject || '-',
+                            curso: item.course || '-',
+                            turma: item.turmaNumber || '-',
+                            horaRetirada: item.withdrawalTime || null,
+                            horaDevolucao: item.returnTime || null
+                        };
+                    }
+                    // Se já está no formato do professor, manter
+                    else {
+                        return item;
+                    }
+                });
+            } else {
+                convertedData[date][turno] = data[date][turno] || [];
+            }
+        }
+    }
+    
+    return convertedData;
+}
+
+// Função para obter dados do turno atual na data selecionada
+function getCurrentShiftData() {
+    console.log(`[PROFESSOR] ==> getCurrentShiftData chamada para data: ${selectedDate}, turno: ${activeShift}`);
+    console.log(`[PROFESSOR] ==> dataByDateAndShift completo:`, dataByDateAndShift);
+    
+    const dateData = getDataForDate(selectedDate);
+    console.log(`[PROFESSOR] ==> dateData para ${selectedDate}:`, dateData);
+    console.log(`[PROFESSOR] ==> dateData[${activeShift}]:`, dateData[activeShift]);
+    console.log(`[PROFESSOR] ==> Tipo de dateData[${activeShift}]:`, typeof dateData[activeShift]);
+    console.log(`[PROFESSOR] ==> É array?`, Array.isArray(dateData[activeShift]));
+    
+    const result = dateData[activeShift] || [];
+    console.log(`[PROFESSOR] ==> Resultado final:`, result);
+    return result;
+}
 
 // Carregar dados do localStorage
 function loadSharedData() {
-    console.log('Carregando dados compartilhados...');
-    const savedData = localStorage.getItem('allShiftData');
-    if (savedData) {
+    console.log('[PROFESSOR] ==> loadSharedData iniciada');
+    console.log('[PROFESSOR] ==> selectedDate atual:', selectedDate);
+    console.log('[PROFESSOR] ==> activeShift atual:', activeShift);
+    
+    // Tentar carregar dados no novo formato (por data)
+    const newFormatData = localStorage.getItem('allDateShiftData');
+    console.log('[PROFESSOR] Dados brutos do localStorage:', newFormatData);
+    
+    if (newFormatData) {
         try {
-            const parsedData = JSON.parse(savedData);
-            console.log('Dados brutos carregados:', parsedData);
+            dataByDateAndShift = JSON.parse(newFormatData);
+            console.log('[PROFESSOR] Dados carregados no novo formato:', dataByDateAndShift);
+            console.log('[PROFESSOR] Total de datas encontradas:', Object.keys(dataByDateAndShift).length);
+            console.log('[PROFESSOR] ==> Chamando renderTableForShift com activeShift:', activeShift);
+            renderTableForShift(activeShift);
+            return;
+        } catch (e) {
+            console.error('[PROFESSOR] Erro ao carregar dados no novo formato:', e);
+        }
+    } else {
+        console.log('[PROFESSOR] Nenhum dado encontrado em allDateShiftData');
+    }
+    
+    // Fallback: tentar carregar dados no formato antigo e migrar
+    const oldFormatData = localStorage.getItem('allShiftData');
+    if (oldFormatData) {
+        try {
+            const parsedData = JSON.parse(oldFormatData);
+            console.log('Migrando dados do formato antigo...');
             
-            // Se parsedData for um array (formato antigo), converter para o novo formato
+            // Migrar dados antigos para a data atual
+            const dateData = getDataForDate(selectedDate);
+            
             if (Array.isArray(parsedData)) {
-                console.log('Convertendo dados do formato antigo...');
-                dataByShift = {
-                    'manhã': parsedData.filter(item => item && item.turno === 'manhã'),
-                    'tarde': parsedData.filter(item => item && item.turno === 'tarde'),
-                    'noite': parsedData.filter(item => item && item.turno === 'noite')
-                };
+                // Formato muito antigo
+                dateData['manhã'] = parsedData.filter(item => item && item.turno === 'manhã');
+                dateData['tarde'] = parsedData.filter(item => item && item.turno === 'tarde');
+                dateData['noite'] = parsedData.filter(item => item && item.turno === 'noite');
             } else {
-                // Garantir que o objeto tem a estrutura correta
-                dataByShift = {
-                    'manhã': Array.isArray(parsedData['manhã']) ? parsedData['manhã'].filter(Boolean) : [],
-                    'tarde': Array.isArray(parsedData['tarde']) ? parsedData['tarde'].filter(Boolean) : [],
-                    'noite': Array.isArray(parsedData['noite']) ? parsedData['noite'].filter(Boolean) : []
-                };
+                // Formato intermediário
+                dateData['manhã'] = Array.isArray(parsedData['manhã']) ? parsedData['manhã'].filter(Boolean) : [];
+                dateData['tarde'] = Array.isArray(parsedData['tarde']) ? parsedData['tarde'].filter(Boolean) : [];
+                dateData['noite'] = Array.isArray(parsedData['noite']) ? parsedData['noite'].filter(Boolean) : [];
             }
             
-            // Sanitizar os dados
-            for (let turno in dataByShift) {
-                dataByShift[turno] = dataByShift[turno].map(item => ({
-                    sala: item.sala || 'Sala não especificada',
-                    professor: item.professor || 'Professor não especificado',
-                    disciplina: item.disciplina || '-',
-                    curso: item.curso || '-',
-                    turma: item.turma || '-',
-                    horaRetirada: item.horaRetirada || null,
-                    horaDevolucao: item.horaDevolucao || null
-                }));
+            // Converter dados do formato do painel administrativo para o formato do painel do professor
+            console.log('[PROFESSOR] Convertendo dados do formato administrativo...');
+            for (let turno in dateData) {
+                if (Array.isArray(dateData[turno])) {
+                    console.log(`[PROFESSOR] Convertendo ${dateData[turno].length} registros do turno ${turno}`);
+                    dateData[turno] = dateData[turno].map(item => {
+                        // Se o item já está no formato do professor, manter
+                        if (item.sala && item.professor) {
+                            return {
+                                sala: item.sala,
+                                professor: item.professor,
+                                disciplina: item.disciplina || '-',
+                                curso: item.curso || '-',
+                                turma: item.turma || '-',
+                                horaRetirada: item.horaRetirada || item.withdrawalTime || null,
+                                horaDevolucao: item.horaDevolucao || item.returnTime || null
+                            };
+                        }
+                        // Se está no formato do painel administrativo, converter
+                        else if (item.room && item.professorName) {
+                            console.log('[PROFESSOR] Convertendo item do formato admin:', item);
+                            return {
+                                sala: item.room || 'Sala não especificada',
+                                professor: item.professorName || 'Professor não especificado',
+                                disciplina: item.subject || '-',
+                                curso: item.course || '-',
+                                turma: item.turmaNumber || '-',
+                                horaRetirada: item.withdrawalTime || null,
+                                horaDevolucao: item.returnTime || null
+                            };
+                        }
+                        // Fallback para dados mal formatados
+                        else {
+                            console.log('[PROFESSOR] Usando fallback para item:', item);
+                            return {
+                                sala: item.sala || item.room || 'Sala não especificada',
+                                professor: item.professor || item.professorName || 'Professor não especificado',
+                                disciplina: item.disciplina || item.subject || '-',
+                                curso: item.curso || item.course || '-',
+                                turma: item.turma || item.turmaNumber || '-',
+                                horaRetirada: item.horaRetirada || item.withdrawalTime || null,
+                                horaDevolucao: item.horaDevolucao || item.returnTime || null
+                            };
+                        }
+                    });
+                }
             }
             
-            console.log('Dados estruturados e sanitizados:', dataByShift);
+            // Salvar no novo formato
+            localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
+            console.log('Dados migrados e estruturados:', dataByDateAndShift);
             renderTableForShift(activeShift);
         } catch (e) {
             console.error('Erro ao carregar dados compartilhados:', e);
-            // Resetar para estrutura vazia em caso de erro
-            dataByShift = {
-                'manhã': [],
-                'tarde': [],
-                'noite': []
-            };
+            dataByDateAndShift = {};
         }
     } else {
         console.log('Nenhum dado encontrado no localStorage');
@@ -64,23 +183,81 @@ function loadSharedData() {
 
 // Escutar por atualizações de dados
 window.addEventListener('shiftDataUpdated', function(event) {
-    console.log('Evento de atualização recebido:', event.detail);
+    console.log('[PROFESSOR] Evento de atualização recebido:', event.detail);
     if (event.detail && event.detail.data) {
-        // Garantir que o objeto tem a estrutura correta
-        dataByShift = {
-            'manhã': Array.isArray(event.detail.data['manhã']) ? event.detail.data['manhã'] : [],
-            'tarde': Array.isArray(event.detail.data['tarde']) ? event.detail.data['tarde'] : [],
-            'noite': Array.isArray(event.detail.data['noite']) ? event.detail.data['noite'] : []
-        };
-        console.log('Dados atualizados:', dataByShift);
+        // Atualizar estrutura de dados completa
+        const oldData = JSON.stringify(dataByDateAndShift);
+        
+        // Converter dados do formato admin para professor
+        dataByDateAndShift = convertAdminDataToTeacherFormat(event.detail.data);
+        
+        console.log('[PROFESSOR] Dados atualizados de:', oldData);
+        console.log('[PROFESSOR] Para:', JSON.stringify(dataByDateAndShift));
+        
+        // Salvar também no localStorage
+        localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
+        
+        // Não sincronizar data - cada painel navega independentemente
+        // Apenas atualizar os dados se estivermos visualizando a data atual
+        console.log('[PROFESSOR] Renderizando tabela para data atual:', selectedDate);
         renderTableForShift(activeShift);
     } else {
-        console.error('Evento de atualização recebido sem dados válidos:', event);
+        console.error('[PROFESSOR] Evento de atualização recebido sem dados válidos:', event);
+    }
+});
+
+// Listener para detectar mudanças no localStorage (para sincronização entre abas)
+window.addEventListener('storage', function(e) {
+    if (e.key === 'allDateShiftData' || e.key === 'allShiftData' || e.key === 'dataUpdateTimestamp') {
+        console.log('[PROFESSOR] Detectada atualização de dados em outra aba/janela, chave:', e.key);
+        console.log('[PROFESSOR] Novo valor:', e.newValue);
+        
+        if (e.key === 'allDateShiftData' && e.newValue) {
+            try {
+                const newData = JSON.parse(e.newValue);
+                console.log('[PROFESSOR] Dados brutos recebidos via storage:', newData);
+                
+                // Converter dados do formato admin para professor
+                dataByDateAndShift = convertAdminDataToTeacherFormat(newData);
+                console.log('[PROFESSOR] Dados convertidos:', dataByDateAndShift);
+                
+                renderTableForShift(activeShift);
+            } catch (error) {
+                console.error('[PROFESSOR] Erro ao processar dados do storage:', error);
+            }
+        } else {
+            loadSharedData();
+        }
     }
 });
 
 // Inicializar o calendário e carregar dados
 document.addEventListener('DOMContentLoaded', function() {
+    // Cada painel mantém sua própria data selecionada independentemente
+
+    // Configurar seletor de data
+    const dateSelector = document.getElementById('teacherDateSelector');
+    if (dateSelector) {
+        // Definir data atual como padrão
+        dateSelector.value = selectedDate;
+        
+        // Evento de mudança de data
+        dateSelector.addEventListener('change', function() {
+            const oldDate = selectedDate;
+            selectedDate = this.value;
+            console.log(`Data alterada de ${oldDate} para ${selectedDate}`);
+            
+            // Verificar se há dados para esta data
+            const dateData = getDataForDate(selectedDate);
+            const shiftData = dateData[activeShift] || [];
+            console.log(`Dados encontrados para ${selectedDate} no turno ${activeShift}:`, shiftData);
+            
+            // Não sincronizar data - navegação independente
+            
+            renderTableForShift(activeShift);
+        });
+    }
+
     flatpickr("#teacherDateFilter", {
         locale: "pt",
         dateFormat: "d/m/Y",
@@ -90,8 +267,43 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Carregar dados iniciais e renderizar
+    console.log('[PROFESSOR] ==> Inicializando painel do professor');
+    console.log('[PROFESSOR] ==> activeShift inicial:', activeShift);
+    console.log('[PROFESSOR] ==> selectedDate inicial:', selectedDate);
+    
+    renderTabs(); // Garantir que as abas sejam renderizadas
     loadSharedData();
     renderTableForShift(activeShift);
+    
+    // Teste: verificar se há dados no localStorage
+    setTimeout(function() {
+        console.log('[PROFESSOR] ==> TESTE: Verificando localStorage após 1 segundo...');
+        const testData = localStorage.getItem('allDateShiftData');
+        if (testData) {
+            console.log('[PROFESSOR] ==> TESTE: Dados encontrados no localStorage');
+            const parsed = JSON.parse(testData);
+            console.log('[PROFESSOR] ==> TESTE: Dados parseados:', parsed);
+            
+            // Forçar recarregamento
+            dataByDateAndShift = convertAdminDataToTeacherFormat(parsed);
+            console.log('[PROFESSOR] ==> TESTE: Dados convertidos forçadamente:', dataByDateAndShift);
+            renderTableForShift(activeShift);
+        } else {
+            console.log('[PROFESSOR] ==> TESTE: Nenhum dado encontrado no localStorage');
+        }
+    }, 1000);
+    
+    // Verificar periodicamente por atualizações (fallback para sincronização)
+    setInterval(function() {
+        const currentTimestamp = localStorage.getItem('dataUpdateTimestamp');
+        const lastChecked = window.lastDataCheck || '0';
+        
+        if (currentTimestamp && currentTimestamp !== lastChecked) {
+            console.log('[PROFESSOR] Detectada atualização via polling, recarregando dados...');
+            window.lastDataCheck = currentTimestamp;
+            loadSharedData();
+        }
+    }, 2000); // Verificar a cada 2 segundos
 });
 
 // Função para filtrar por data no painel do professor
@@ -233,32 +445,101 @@ function sorted(data) {
 }
 
 function renderTableForShift(shift) {
-    console.log('Renderizando dados para o turno:', shift);
+    console.log('[PROFESSOR] ==> Renderizando dados para o turno:', shift, 'na data:', selectedDate);
+    console.log('[PROFESSOR] ==> Estado atual de dataByDateAndShift:', dataByDateAndShift);
+    
     const container = document.getElementById('shiftContent');
     if (!container) {
-        console.error('Elemento shiftContent não encontrado!');
+        console.error('[PROFESSOR] ==> Elemento shiftContent não encontrado!');
         return;
     }
     
-    let shiftData = dataByShift[shift];
+    // Usar dados da data e turno selecionados
+    let shiftData = getCurrentShiftData();
+    console.log('[PROFESSOR] ==> Dados brutos obtidos de getCurrentShiftData():', shiftData);
+    console.log('[PROFESSOR] ==> Tipo dos dados:', typeof shiftData, 'É array?', Array.isArray(shiftData));
+    
     if (!Array.isArray(shiftData)) {
-        console.warn('Dados do turno não são um array:', shift);
+        console.warn('[PROFESSOR] ==> Dados do turno não são um array:', shift);
         shiftData = [];
     }
     
-    // Filtrar dados inválidos
-    shiftData = shiftData.filter(item => {
-        if (!item || typeof item !== 'object') return false;
-        // Garantir que pelo menos a sala e o professor existem
-        return item.sala && typeof item.sala === 'string' &&
-               item.professor && typeof item.professor === 'string';
+    console.log('[PROFESSOR] ==> Dados antes da conversão:', shiftData.length, 'itens');
+    
+    // PRIMEIRO: Converter dados do formato admin para professor se necessário
+    shiftData = shiftData.map(item => {
+        if (!item || typeof item !== 'object') return item;
+        
+        // Se está no formato admin (room, professorName), converter
+        if (item.room && item.professorName && !item.sala && !item.professor) {
+            console.log('[PROFESSOR] ==> Convertendo item do formato admin:', item);
+            return {
+                sala: item.room || 'Sala não especificada',
+                professor: item.professorName || 'Professor não especificado',
+                disciplina: item.subject || '-',
+                curso: item.course || '-',
+                turma: item.turmaNumber || '-',
+                horaRetirada: item.withdrawalTime || null,
+                horaDevolucao: item.returnTime || null
+            };
+        }
+        
+        // Se já está no formato professor ou é outro formato, manter
+        return item;
     });
     
-    console.log('Dados filtrados do turno:', shiftData);
+    console.log('[PROFESSOR] ==> Dados após conversão:', shiftData);
+    console.log('[PROFESSOR] ==> Dados antes da filtragem:', shiftData.length, 'itens');
+    
+    // SEGUNDO: Filtrar dados inválidos
+    const originalLength = shiftData.length;
+    shiftData = shiftData.filter(item => {
+        if (!item || typeof item !== 'object') {
+            console.log('[PROFESSOR] ==> Item rejeitado (não é objeto):', item);
+            return false;
+        }
+        // Garantir que pelo menos a sala e o professor existem
+        const valid = item.sala && typeof item.sala === 'string' &&
+               item.professor && typeof item.professor === 'string' &&
+               item.sala.trim() !== '' && item.professor.trim() !== '';
+        
+        if (!valid) {
+            console.log('[PROFESSOR] ==> Item rejeitado (dados inválidos):');
+            console.log('[PROFESSOR] ==> - Objeto completo:', item);
+            console.log('[PROFESSOR] ==> - Propriedades do objeto:', Object.keys(item));
+            console.log('[PROFESSOR] ==> - item.sala:', item.sala, '(tipo:', typeof item.sala, ')');
+            console.log('[PROFESSOR] ==> - item.professor:', item.professor, '(tipo:', typeof item.professor, ')');
+            console.log('[PROFESSOR] ==> - item.room:', item.room, '(tipo:', typeof item.room, ')');
+            console.log('[PROFESSOR] ==> - item.professorName:', item.professorName, '(tipo:', typeof item.professorName, ')');
+        }
+        return valid;
+    });
+    
+    console.log('[PROFESSOR] ==> Dados após filtragem:', shiftData.length, 'de', originalLength, 'itens');
+    console.log('[PROFESSOR] ==> Dados filtrados:', shiftData);
     const records = sorted(shiftData);
 
     console.log('Gerando linhas para os registros:', records);
-    const rows = records.map(record => {
+    
+    // Se não há dados, mostrar mensagem
+    let rows = '';
+    if (records.length === 0) {
+        const [year, month, day] = selectedDate.split('-');
+        const formattedDate = `${day}/${month}/${year}`;
+        const shiftCapitalized = shift.charAt(0).toUpperCase() + shift.slice(1);
+        
+        rows = `
+            <tr>
+                <td colspan="9" class="text-center text-muted py-4">
+                    <i class="bi bi-calendar-x me-2"></i>
+                    Nenhum dado encontrado para ${formattedDate} no turno da ${shiftCapitalized.toLowerCase()}
+                    <br>
+                    <small class="text-muted">Aguarde a importação de dados pelo administrador</small>
+                </td>
+            </tr>
+        `;
+    } else {
+        rows = records.map(record => {
         // Sanitizar valores para garantir que não são undefined
         const sala = record.sala || '-';
         const curso = record.curso || '-';
@@ -289,14 +570,23 @@ function renderTableForShift(shift) {
             </td>
         </tr>
         `;
-    }).join('');
+        }).join('');
+    }
 
+    // Corrigir problema de fuso horário ao exibir a data
+    const [year, month, day] = selectedDate.split('-');
+    const formattedDate = `${day}/${month}/${year}`;
+    
     container.innerHTML = `
-        <div class="card-header d-flex align-items-center">
+        <div class="card-header d-flex align-items-center justify-content-between">
             <h2 class="card-title">
                 <i class="bi bi-clock"></i>
                 Turno da ${shift}
             </h2>
+            <span class="text-muted">
+                <i class="bi bi-calendar3 me-1"></i>
+                ${formattedDate}
+            </span>
         </div>
         <div class="card-body p-0">
         
@@ -326,7 +616,8 @@ function renderTableForShift(shift) {
 
 // ----------- Ações da chave -----------
 function handleKey(salaId, action) {
-    const record = dataByShift[activeShift]?.find(r => r.sala === salaId);
+    const currentData = getCurrentShiftData();
+    const record = currentData.find(r => r.sala === salaId);
     if(!record) {
         console.error('Registro não encontrado:', salaId);
         return;
@@ -339,7 +630,7 @@ function executeKeyAction(record, action) {
     const now = new Date();
     const hm = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-    const currentShiftData = dataByShift[activeShift];
+    const currentShiftData = getCurrentShiftData();
     const recordIndex = currentShiftData.findIndex(r => r.sala === record.sala);
     
     if (recordIndex !== -1) {
@@ -351,9 +642,12 @@ function executeKeyAction(record, action) {
         }
 
         // Atualizar o localStorage com os novos dados
-        localStorage.setItem('allShiftData', JSON.stringify(dataByShift));
-        // Disparar evento de atualização
-        window.dispatchEvent(new CustomEvent('shiftDataUpdated', { detail: { data: dataByShift } }));
+        localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
+        
+        // Disparar evento de atualização (sem sincronizar data)
+        window.dispatchEvent(new CustomEvent('shiftDataUpdated', { 
+            detail: { shift: activeShift, data: dataByDateAndShift } 
+        }));
     }
 
     renderTableForShift(activeShift);
@@ -417,26 +711,31 @@ function saveThirdParty() {
         return; 
     }
 
+    const timeString = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    
     const newRecord = {
         sala: contact,
         professor: name + " (Terceiro)",
         disciplina: purpose,
         curso: "Terceiros",
         turma: "-",
-        horaRetirada: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        horaRetirada: timeString,
         horaDevolucao: undefined,
         notas: notes
     };
 
-    // Adicionar ao array do turno atual
-    if (!dataByShift[activeShift]) {
-        dataByShift[activeShift] = [];
+    // Adicionar ao array do turno atual na data selecionada
+    const dateData = getDataForDate(selectedDate);
+    if (!dateData[activeShift]) {
+        dateData[activeShift] = [];
     }
-    dataByShift[activeShift].push(newRecord);
+    dateData[activeShift].push(newRecord);
     
-    // Atualizar localStorage e notificar outros painéis
-    localStorage.setItem('allShiftData', JSON.stringify(dataByShift));
-    window.dispatchEvent(new CustomEvent('shiftDataUpdated', { detail: { data: dataByShift } }));
+    // Atualizar localStorage e notificar outros painéis (sem sincronizar data)
+    localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
+    window.dispatchEvent(new CustomEvent('shiftDataUpdated', { 
+        detail: { shift: activeShift, data: dataByDateAndShift } 
+    }));
 
     document.getElementById('tpFullName').value = '';
     document.getElementById('tpPurpose').value = '';
@@ -480,8 +779,8 @@ function initialize() {
 function switchShift(shift) { 
     console.log('Mudando para o turno:', shift);
     activeShift = shift; 
-    loadSharedData(); // Recarregar dados ao mudar de turno
     renderTabs(); 
+    renderTableForShift(activeShift); // Renderizar dados do novo turno
 }
 
 function autoShiftTick() {
@@ -491,32 +790,7 @@ function autoShiftTick() {
     }
 }
 
-// ----------- Inicialização da página -----------
-function initialize() {
-    const h = new Date().getHours();
-
-    activeShift = (h < 12) ? 'manhã' : ((h < 18) ? 'tarde' : 'noite');
-
-    // Carregar dados iniciais
-    loadSharedData();
-    
-    renderTabs();
-    renderTableForShift(activeShift);
-
-    lucide.createIcons();
-
-    document.getElementById('sortToggle').addEventListener('click', () => {
-        sortAlphabetically = !sortAlphabetically;
-        const btn = document.getElementById('sortToggle');
-
-        btn.setAttribute('aria-pressed', String(sortAlphabetically));
-        renderTableForShift(activeShift);
-    });
-
-    // Configurar atualização automática de turno
-    setInterval(autoShiftTick, 60000);
-}
-
+// Verificar se a página já foi carregada e inicializar
 if(document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initialize);
 } else {

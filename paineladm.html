@@ -60,54 +60,63 @@
         </div>
     </nav>
 
-    <div class="container-fluid main-content align-self-center py-4">
-        <!-- Header Section -->
-       <!-- div/div que era o sistema de controle-->
-
-        <!-- Stats Cards -->
-        <div class="row mb-4" id="statsCards">
-            <!-- Cards serão inseridos via JavaScript -->
+    <div class="main-content align-self-center py-5">
+        <!-- Cabeçalho -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-foreground flex items-center gap-3">
+                    <i class="bi bi-building me-2 text-primary"></i>
+                    Dashboard do Administrador
+                </h1>
+            </div>            
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center">
+                    <label for="dateSelector" class="form-label me-2 mb-0 text-muted">Data:</label>
+                    <input type="date" id="dateSelector" class="form-control form-control-sm" style="width: auto;">
+                </div>
+                <span class="text-sm text-muted-foreground">
+                    <i class="bi bi-calendar-date text-primary me-2"></i>
+                    <span id="currentDate" class="text-muted">Data atual: </span>
+                </span>
+            </div>
         </div>
 
         <!-- Abas de Turno -->
         <div class="row-actions d-flex items-center justify-between mb-3">
             <div class="tabs" id="shiftTabs"></div>
+            <div class="toolbar">
+                <button type="button" class="btn btn-outline" title="Adicionar Nova Chave">
+                    <i class="bi bi-plus-lg me-1"></i>
+                    Adicionar
+                </button>
+                <button type="button" class="btn btn-outline" title="Editar Configurações">
+                    <i class="bi bi-pencil me-1"></i>
+                    Editar
+                </button>
+                
+                <span class="divider"></span>
+                
+                <button type="button" class="btn btn-outline" id="dateFilter" title="Filtrar por Data">
+                    <i class="bi bi-calendar me-1"></i>
+                    Filtrar Data
+                </button>
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('fileInput').click()" title="Importar Arquivo">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>
+                    Importar Dados
+                </button>
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none" onchange="handleFileImport(this.files[0])">
+            </div>
         </div>
 
-        <!-- Main Table Card -->
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-bottom">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0 fw-semibold">
-                        <i class="bi bi-building me-2 text-primary"></i>
-                        Monitoramento de Chaves
-                    </h5>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-outline-primary btn-sm" title="Adicionar Nova Chave">
-                            <i class="bi bi-plus-lg me-1"></i>
-                            Adicionar
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" title="Editar Configurações">
-                            <i class="bi bi-pencil me-1"></i>
-                            Editar
-                        </button>
-                        <button type="button" class="btn btn-outline-primary btn-sm ms-2" id="dateFilter" title="Filtrar por Data">
-                            <i class="bi bi-calendar me-1"></i>
-                            Filtrar Data
-                        </button>
-                        <button type="button" class="btn btn-outline-success btn-sm ms-2" onclick="document.getElementById('fileInput').click()" title="Importar Arquivo">
-                            <i class="bi bi-file-earmark-spreadsheet me-1"></i>
-                            Importar Dados
-                        </button>
-                        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none" onchange="handleFileImport(this.files[0])">
-                    </div>
-                </div>
+        <!-- Conteúdo por Turno -->
+        <div class="card shadow-sm border-0 p-4" id="shiftContent">
+            <div class="card-header d-flex align-items-center">
+                <h2 class="card-title">
+                    <i class="bi bi-clock"></i>
+                    Turno da manhã
+                </h2>
             </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-3">
-                    <i class="bi bi-calendar-date text-primary me-2"></i>
-                    <span id="currentDate" class="text-muted">Data atual: </span>
-                </div>
+            <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
@@ -163,8 +172,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="confirmImportShift">Importar</button>
+                    <button type="button" class="btn btn-danger text-white" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary text-white" id="confirmImportShift">Importar</button>
                 </div>
             </div>
         </div>

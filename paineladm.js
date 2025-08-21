@@ -1,30 +1,43 @@
 // Variáveis globais
 let activeShift = 'manhã';
-let dataByShift = {
-    'manhã': [],
-    'tarde': [],
-    'noite': []
-};
+let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
+let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
+
+// Função para obter ou criar estrutura de dados para uma data
+function getDataForDate(date) {
+    if (!dataByDateAndShift[date]) {
+        dataByDateAndShift[date] = {
+            'manhã': [],
+            'tarde': [],
+            'noite': []
+        };
+    }
+    return dataByDateAndShift[date];
+}
+
+// Função para obter dados do turno atual na data selecionada
+function getCurrentShiftData() {
+    const dateData = getDataForDate(selectedDate);
+    console.log(`Obtendo dados para data: ${selectedDate}, turno: ${activeShift}`, dateData[activeShift]);
+    return dateData[activeShift] || [];
+}
 
 // Função para mudar o turno ativo
 function changeShift(newShift) {
     if (newShift !== activeShift && ['manhã', 'tarde', 'noite'].includes(newShift)) {
+        console.log(`Mudando turno de ${activeShift} para ${newShift} na data ${selectedDate}`);
         activeShift = newShift;
-        updateTable();
-        renderStatsCards(); // Atualizar cards ao mudar de turno
         
         // Atualizar interface visual de seleção de turno
-        const tabs = document.querySelectorAll('.shift-tab');
-        tabs.forEach(tab => {
-            if (tab.dataset.shift === newShift) {
-                tab.classList.add('active');
-            } else {
-                tab.classList.remove('active');
-            }
-        });
+        renderShiftTabs();
+        
+        // Atualizar tabela com dados do novo turno
+        updateTable();
         
         const shiftCapitalized = newShift.charAt(0).toUpperCase() + newShift.slice(1);
-        showNotification(`Visualizando turno da ${shiftCapitalized}`, 'info');
+        const [year, month, day] = selectedDate.split('-');
+        const formattedDate = `${day}/${month}/${year}`;
+        showNotification(`Visualizando turno da ${shiftCapitalized} - ${formattedDate}`, 'info');
     }
 }
 let selectedFileForImport = null;
@@ -131,14 +144,14 @@ async function processFileImport(file, selectedShift) {
                     throw new Error('Nenhum registro válido encontrado no arquivo. Verifique o formato dos dados.');
                 }
 
-                // Atualizar os dados do turno selecionado
-                dataByShift[selectedShift] = validData;
+                // Atualizar os dados do turno selecionado na data atual
+                const dateData = getDataForDate(selectedDate);
+                dateData[selectedShift] = validData;
                 console.log(`Dados importados com sucesso para o turno ${selectedShift}. Total de registros:`, validData.length);
             
                 // Atualizar as visualizações se estivermos no turno selecionado
                 if (activeShift === selectedShift) {
                     updateTable();
-                    renderStatsCards(); // Atualizar os cards após importação
                 }
             
                 // Mostrar notificação de sucesso
@@ -149,16 +162,27 @@ async function processFileImport(file, selectedShift) {
                 );
                 
                 // Salvar todos os dados no localStorage para persistência e compartilhamento
-                localStorage.setItem('allShiftData', JSON.stringify(dataByShift));
+                console.log('Salvando dados no localStorage:', dataByDateAndShift);
+                localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
+                console.log('Dados salvos com sucesso no localStorage');
                 
-                // Emitir evento de atualização de dados
+                // Também salvar no formato antigo para compatibilidade
+                const currentDateData = getDataForDate(selectedDate);
+                localStorage.setItem('allShiftData', JSON.stringify(currentDateData));
+                
+                // Emitir evento de atualização de dados para sincronizar com o painel do professor
+                // Não incluir date para não forçar mudança de data no professor
+                console.log('Disparando evento shiftDataUpdated...');
                 const updateEvent = new CustomEvent('shiftDataUpdated', { 
-                    detail: { shift: selectedShift, data: dataByShift }
+                    detail: { shift: selectedShift, data: dataByDateAndShift }
                 });
                 window.dispatchEvent(updateEvent);
+                console.log('Evento disparado com sucesso');
+                
+                // Forçar atualização em outras abas/janelas
+                localStorage.setItem('dataUpdateTimestamp', Date.now().toString());
             
-                // Salvar no localStorage para persistência
-                localStorage.setItem('importedData', JSON.stringify(mockData));
+
         } else {
             throw new Error('Nenhum dado válido encontrado no arquivo');
         }
@@ -453,14 +477,7 @@ function isValidDataFormat(data) {
     return data.every(row => row && row.length >= 5);
 }
 
-// Carregar dados salvos ao iniciar
-function loadSavedData() {
-    const savedData = localStorage.getItem('importedData');
-    if (savedData) {
-        mockData = JSON.parse(savedData);
-        updateTable();
-    }
-}
+
 
 // Configuração dos turnos
 const shifts = [
@@ -472,32 +489,32 @@ const shifts = [
 // Renderiza as abas de turno
 function renderShiftTabs() {
     const el = document.getElementById('shiftTabs');
-    if (!el) return;
+    if (!el) {
+        console.error('Elemento shiftTabs não encontrado!');
+        return;
+    }
 
-    el.innerHTML = shifts.map(t => `
-        <button class="tab ${(t.id === activeShift) ? 'active' : ''}" onclick="switchShift('${t.id}')">
+    const tabsHTML = shifts.map(t => `
+        <button class="tab ${(t.id === activeShift) ? 'active' : ''}" onclick="changeShift('${t.id}')">
             ${t.label}
         </button>
     `).join('');
+    
+    console.log('Renderizando abas de turno:', tabsHTML);
+    el.innerHTML = tabsHTML;
 }
 
 // Troca o turno ativo
 function switchShift(shift) {
     activeShift = shift;
     renderShiftTabs();
-    // Filtrar dados pelo turno antes de atualizar
-    const filteredData = mockData.filter(item => item.shift === shift);
-    updateTable(filteredData);
+    updateTable();
 }
 
 // Atualiza a tabela com base no turno selecionado
 function updateTable() {
-    // Filtrar dados pelo turno ativo
-    const filteredData = mockData.filter(item => item.shift === activeShift);
     // Renderizar apenas os dados do turno atual
-    renderTable(filteredData);
-    // Atualizar os cards de estatísticas também com os dados filtrados
-    renderStatsCards(filteredData);
+    renderTable();
 }
 
 // Dados mock (equivalente ao mockData do React)
@@ -516,13 +533,39 @@ window.addEventListener('unload', function() {
 // Inicializar os event listeners do modal de seleção de turno
 // Função para carregar dados salvos
 function loadSavedData() {
-    const savedData = localStorage.getItem('allShiftData');
-    if (savedData) {
+    // Tentar carregar dados no novo formato (por data)
+    const newFormatData = localStorage.getItem('allDateShiftData');
+    if (newFormatData) {
         try {
-            dataByShift = JSON.parse(savedData);
+            dataByDateAndShift = JSON.parse(newFormatData);
+            console.log('Dados carregados no novo formato:', dataByDateAndShift);
+            updateTable();
+            return;
+        } catch (e) {
+            console.error('Erro ao carregar dados no novo formato:', e);
+        }
+    }
+    
+    // Fallback: tentar carregar dados no formato antigo e migrar
+    const oldFormatData = localStorage.getItem('allShiftData');
+    if (oldFormatData) {
+        try {
+            const oldData = JSON.parse(oldFormatData);
+            console.log('Migrando dados do formato antigo...');
+            
+            // Migrar dados antigos para a data atual
+            dataByDateAndShift[selectedDate] = {
+                'manhã': Array.isArray(oldData['manhã']) ? oldData['manhã'] : [],
+                'tarde': Array.isArray(oldData['tarde']) ? oldData['tarde'] : [],
+                'noite': Array.isArray(oldData['noite']) ? oldData['noite'] : []
+            };
+            
+            // Salvar no novo formato
+            localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
             updateTable();
         } catch (e) {
-            console.error('Erro ao carregar dados salvos:', e);
+            console.error('Erro ao migrar dados antigos:', e);
+            dataByDateAndShift = {};
         }
     }
 }
@@ -532,10 +575,48 @@ document.addEventListener('DOMContentLoaded', function() {
     updateCurrentDate();
     dateUpdateInterval = setInterval(updateCurrentDate, 60000); // Atualizar a cada minuto
 
+    // Cada painel mantém sua própria data selecionada independentemente
+
+    // Configurar seletor de data
+    const dateSelector = document.getElementById('dateSelector');
+    if (dateSelector) {
+        // Definir data atual como padrão
+        dateSelector.value = selectedDate;
+        
+        // Evento de mudança de data
+        dateSelector.addEventListener('change', function() {
+            const oldDate = selectedDate;
+            selectedDate = this.value;
+            console.log(`Data alterada de ${oldDate} para ${selectedDate}`);
+            
+            // Verificar se há dados para esta data
+            const dateData = getDataForDate(selectedDate);
+            const shiftData = dateData[activeShift] || [];
+            console.log(`Dados encontrados para ${selectedDate} no turno ${activeShift}:`, shiftData);
+            console.log('Estrutura completa de dados por data:', dataByDateAndShift);
+            
+            // Atualizar tabela
+            updateTable();
+            
+            // Não sincronizar data, apenas salvar dados para acesso independente
+            localStorage.setItem('allShiftData', JSON.stringify(dateData));
+            
+            // Corrigir problema de fuso horário ao exibir a data
+            const [year, month, day] = selectedDate.split('-');
+            const formattedDate = `${day}/${month}/${year}`;
+            
+            // Contar total de registros em todos os turnos para esta data
+            const totalRecords = (dateData['manhã']?.length || 0) + 
+                               (dateData['tarde']?.length || 0) + 
+                               (dateData['noite']?.length || 0);
+            
+            showNotification(`Visualizando ${formattedDate} - ${shiftData.length} registros no turno (${totalRecords} total)`, 'info');
+        });
+    }
+
     // Carregar dados salvos
     loadSavedData();
-    renderStatsCards(); // Carregar os cards iniciais
-
+    
     // Configurar evento do botão de confirmação de importação
     document.getElementById('confirmImportShift').addEventListener('click', async function() {
         const selectedShift = document.querySelector('input[name="importShift"]:checked').value;
@@ -548,17 +629,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Event listener para o botão de confirmação do modal
-    document.getElementById('confirmImportShift').addEventListener('click', async function() {
-        const selectedShift = document.querySelector('input[name="importShift"]:checked').value;
-        const modal = bootstrap.Modal.getInstance(document.getElementById('shiftSelectionModal'));
-        modal.hide();
-        
-        if (selectedFileForImport) {
-            await processFileImport(selectedFileForImport, selectedShift);
-            selectedFileForImport = null; // Limpar a referência do arquivo
-        }
-    });
     flatpickr("#dateFilter", {
         locale: "pt",
         dateFormat: "d/m/Y",
@@ -590,7 +660,10 @@ function checkLogin() {
     const isLoggedIn = localStorage.getItem('adminLoggedIn');
     if (isLoggedIn === 'true') {
         document.getElementById('overlay').style.display = 'none';
-        initializePainelAdm();
+        // Aguardar um pouco para garantir que o DOM está pronto
+        setTimeout(() => {
+            initializePainelAdm();
+        }, 100);
     }
 }
 
@@ -606,7 +679,9 @@ function login(){
         localStorage.setItem('adminLoggedIn', 'true');
         document.getElementById('overlay').style.display = 'none';
         // Inicializar o painel após login bem-sucedido
-        initializePainelAdm();
+        setTimeout(() => {
+            initializePainelAdm();
+        }, 100);
     } else {
         // Mostrar mensagem de erro
         document.getElementById('msg-erro').textContent = 'Usuário ou senha incorretos!';
@@ -690,57 +765,7 @@ function getActionButton(recordId, status) {
     `;
 }
 
-// Função para renderizar os cards de estatísticas
-function renderStatsCards() {
-    const statsCardsContainer = document.getElementById('statsCards');
-    if (!statsCardsContainer) return;
 
-    // Usar os dados do turno atual
-    const currentData = dataByShift[activeShift] || [];
-    
-    const stats = {
-        total: currentData.length,
-        emUso: currentData.filter(r => r.status === 'em_uso').length,
-        devolvidas: currentData.filter(r => r.status === 'devolvida').length
-    };
-
-    const cards = [
-        {
-            title: 'Total de Registros',
-            value: stats.total,
-            icon: 'bi-key-fill',
-            iconClass: 'info'
-        },
-        {
-            title: 'Em uso',
-            value: stats.emUso,
-            icon: 'bi-clock-fill',
-            iconClass: 'primary'
-        },
-        {
-            title: 'Devolvidas',
-            value: stats.devolvidas,
-            icon: 'bi-check-circle-fill',
-            iconClass: 'success'
-        }
-    ];
-
-    const cardsHTML = cards.map(card => `
-        <div class="col-lg-4 col-md-6 col-sm-12 mb-3">
-            <div class="stats-card">
-                <div class="stats-card-header">
-                    <span class="stats-card-title">${card.title}</span>
-                    <div class="stats-card-icon ${card.iconClass}">
-                        <i class="${card.icon}"></i>
-                    </div>
-                </div>
-                <div class="stats-card-value text-${card.iconClass === 'info' ? 'info' : card.iconClass}">${card.value}</div>
-            </div>
-        </div>
-    `).join('');
-
-    statsCardsContainer.innerHTML = cardsHTML;
-}
 
 // Função para atualizar a data atual
 function updateCurrentDate() {
@@ -761,28 +786,57 @@ function updateCurrentDate() {
     }
 }
 
-// Função para renderizar a tabela
+// Função para renderizar a tabela (similar ao teacherPanel)
 function renderTable() {
-    // Usar os dados do turno atual
-    const data = dataByShift[activeShift] || [];
-    const tableBody = document.getElementById('tableBody');
-    if (!tableBody) {
-        console.error('Elemento tableBody não encontrado');
+    console.log('Renderizando dados para o turno:', activeShift);
+    const container = document.getElementById('shiftContent');
+    if (!container) {
+        console.error('Elemento shiftContent não encontrado!');
         return;
     }
     
     // Atualizar a data atual
     updateCurrentDate();
     
-    if (!Array.isArray(data)) {
-        console.error('data não é um array:', data);
-        return;
+    // Usar os dados do turno atual na data selecionada
+    let shiftData = getCurrentShiftData();
+    if (!Array.isArray(shiftData)) {
+        console.warn('Dados do turno não são um array:', activeShift);
+        shiftData = [];
     }
+    
+    console.log(`Dados a serem renderizados (${activeShift}) na data ${selectedDate}:`, shiftData);
 
-    console.log(`Dados a serem renderizados (${activeShift}):`, data); // Debug
+    // Filtrar dados inválidos
+    shiftData = shiftData.filter(item => {
+        if (!item || typeof item !== 'object') return false;
+        return item.room && typeof item.room === 'string' &&
+               item.professorName && typeof item.professorName === 'string' &&
+               item.room.trim() !== '' && item.professorName.trim() !== '';
+    });
+    
+    console.log(`Dados válidos após filtro:`, shiftData);
 
-    // Filtrar registros apenas do turno atual
-    const rowsHTML = data.filter(record => record.shift === activeShift).map(record => {
+    const shiftCapitalized = activeShift.charAt(0).toUpperCase() + activeShift.slice(1);
+    // Corrigir problema de fuso horário ao exibir a data
+    const [year, month, day] = selectedDate.split('-');
+    const formattedDate = `${day}/${month}/${year}`;
+
+    // Se não há dados, mostrar mensagem
+    let rows = '';
+    if (shiftData.length === 0) {
+        rows = `
+            <tr>
+                <td colspan="9" class="text-center text-muted py-4">
+                    <i class="bi bi-calendar-x me-2"></i>
+                    Nenhum dado encontrado para ${formattedDate} no turno da ${shiftCapitalized.toLowerCase()}
+                    <br>
+                    <small class="text-muted">Importe um arquivo ou selecione outra data</small>
+                </td>
+            </tr>
+        `;
+    } else {
+        rows = shiftData.map(record => {
         // Garantir que temos valores seguros para exibição
         const safeRecord = {
             room: record.room || '',
@@ -794,7 +848,7 @@ function renderTable() {
             returnTime: record.returnTime || '-',
             status: record.status || 'disponivel',
             id: record.id || '',
-            shift: record.shift || 'manhã'
+            shift: record.shift || activeShift
         };
 
         return `
@@ -820,41 +874,90 @@ function renderTable() {
             </td>
         </tr>
         `;
-    }).join('');
-
-    tableBody.innerHTML = rowsHTML;
+        }).join('');
+    }
+    
+    container.innerHTML = `
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <h2 class="card-title">
+                <i class="bi bi-clock"></i>
+                Turno da ${shiftCapitalized}
+            </h2>
+            <span class="text-muted">
+                <i class="bi bi-calendar3 me-1"></i>
+                ${formattedDate}
+            </span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0">Sala</th>
+                            <th class="border-0">Curso</th>
+                            <th class="border-0">Turma</th>
+                            <th class="border-0">Professor</th>
+                            <th class="border-0">Disciplina</th>
+                            <th class="border-0">Hora Inicial</th>
+                            <th class="border-0">Hora Final</th>
+                            <th class="border-0">Status</th>
+                            <th class="border-0 text-center">Devolução</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        ${rows || ''}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
 }
 
 // Função para lidar com ações de chave
 function handleKeyAction(recordId, currentStatus) {
-    const record = mockData.find(r => r.id === recordId);
+    // Encontrar o registro no turno atual da data selecionada
+    const currentData = getCurrentShiftData();
+    const record = currentData.find(r => r.id === recordId);
     if (!record) return;
+
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('pt-BR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
 
     if (currentStatus === 'em_uso') {
         // Devolver a chave
         record.status = 'devolvida';
-        record.returnTime = new Date().toLocaleTimeString('pt-BR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
+        record.returnTime = timeString;
         
         // Mostrar notificação Bootstrap
         showNotification(`Chave devolvida por ${record.professorName} às ${record.returnTime}`, 'success');
-    } else if (currentStatus === 'retirada' || currentStatus === 'devolvida') {
+    } else if (currentStatus === 'retirada' || currentStatus === 'devolvida' || currentStatus === 'disponivel') {
         // Retirar a chave
         record.status = 'em_uso';
-        record.withdrawalTime = new Date().toLocaleTimeString('pt-BR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
+        record.withdrawalTime = timeString;
         record.returnTime = undefined;
         
         // Mostrar notificação Bootstrap
         showNotification(`Chave retirada por ${record.professorName} às ${record.withdrawalTime}`, 'info');
     }
 
+    // Atualizar os dados no localStorage
+    localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
+    
+    // Também salvar no formato antigo para compatibilidade
+    const currentDateData = getDataForDate(selectedDate);
+    localStorage.setItem('allShiftData', JSON.stringify(currentDateData));
+    
+    // Emitir evento de atualização para sincronizar com o painel do professor
+    // Não incluir date para não forçar mudança de data no professor
+    const updateEvent = new CustomEvent('shiftDataUpdated', { 
+        detail: { shift: activeShift, data: dataByDateAndShift }
+    });
+    window.dispatchEvent(updateEvent);
+
     // Re-renderizar a interface
-    renderStatsCards();
     renderTable();
 }
 
@@ -884,28 +987,23 @@ function showNotification(message, type = 'info') {
 function initializePainelAdm() {
     console.log('Inicializando painel administrativo...');
     
-    // Limpar dados antigos do localStorage para evitar conflitos
-    if (!localStorage.getItem('importedData')) {
-        console.log('Inicializando com dados padrão...');
-        mockData = []; // Começar com array vazio até importar dados
-        localStorage.setItem('importedData', JSON.stringify(mockData));
-    }
-
     // Carregar dados salvos
     loadSavedData();
     
-    // Verificar se temos dados válidos
-    if (!Array.isArray(mockData)) {
-        console.error('mockData inválido após carregamento:', mockData);
-        mockData = [];
-    }
-
-    console.log('Dados carregados:', mockData);
+    console.log('Dados carregados por data:', dataByDateAndShift);
 
     // Renderizar a interface
-    renderStatsCards();
+    console.log('Inicializando renderização das abas...');
     renderShiftTabs();
-    renderTable();
+    updateTable();
+    
+    // Verificar se as abas foram renderizadas
+    setTimeout(() => {
+        const tabsElement = document.getElementById('shiftTabs');
+        if (tabsElement) {
+            console.log('Conteúdo das abas após renderização:', tabsElement.innerHTML);
+        }
+    }, 200);
 }
 
 // Não inicializar automaticamente - apenas após login
