@@ -73,7 +73,51 @@ function getCurrentShiftData() {
     return result;
 }
 
-// Carregar dados do localStorage
+// Função para sincronizar dados em tempo real com Firebase
+function syncDataRealtimeTeacher(date, shift) {
+    if (typeof syncDataRealtime === 'function') {
+        const ref = database.ref(`chaves/${date}/${shift}`);
+        ref.on('value', (snapshot) => {
+            const data = snapshot.val() || [];
+            console.log(`[PROFESSOR] Dados sincronizados do Firebase para ${date}/${shift}:`, data);
+            
+            if (dataByDateAndShift[date]) {
+                dataByDateAndShift[date][shift] = data;
+                
+                // Se estamos visualizando esta data e turno, atualizar a tabela
+                if (date === selectedDate && shift === activeShift) {
+                    renderTableForShift(shift);
+                    showNotification('Dados atualizados em tempo real!', 'success');
+                }
+            }
+        });
+    }
+}
+
+// Função para parar sincronização
+function stopSyncDataRealtimeTeacher(date, shift) {
+    if (typeof stopSyncDataRealtime === 'function') {
+        const ref = database.ref(`chaves/${date}/${shift}`);
+        ref.off('value');
+    }
+}
+
+// Função para carregar dados do Firebase
+async function loadDataFromFirebaseTeacher(date, shift) {
+    if (typeof loadDataFromFirebase === 'function') {
+        try {
+            const data = await loadDataFromFirebase(date, shift);
+            console.log(`[PROFESSOR] Dados carregados do Firebase para ${date}/${shift}:`, data);
+            return data;
+        } catch (error) {
+            console.error('[PROFESSOR] Erro ao carregar do Firebase:', error);
+            return [];
+        }
+    }
+    return [];
+}
+
+// Carregar dados do localStorage e Firebase
 function loadSharedData() {
     console.log('[PROFESSOR] ==> loadSharedData iniciada');
     console.log('[PROFESSOR] ==> selectedDate atual:', selectedDate);
@@ -90,12 +134,42 @@ function loadSharedData() {
             console.log('[PROFESSOR] Total de datas encontradas:', Object.keys(dataByDateAndShift).length);
             console.log('[PROFESSOR] ==> Chamando renderTableForShift com activeShift:', activeShift);
             renderTableForShift(activeShift);
+            
+            // Iniciar sincronização Firebase para a data atual
+            if (typeof syncDataRealtimeTeacher === 'function') {
+                syncDataRealtimeTeacher(selectedDate, 'manhã');
+                syncDataRealtimeTeacher(selectedDate, 'tarde');
+                syncDataRealtimeTeacher(selectedDate, 'noite');
+            }
+            
             return;
         } catch (e) {
             console.error('[PROFESSOR] Erro ao carregar dados no novo formato:', e);
         }
     } else {
         console.log('[PROFESSOR] Nenhum dado encontrado em allDateShiftData');
+        
+        // Tentar carregar do Firebase se localStorage estiver vazio
+        if (typeof loadDataFromFirebaseTeacher === 'function') {
+            loadDataFromFirebaseTeacher(selectedDate, 'manhã').then(manhaData => {
+                loadDataFromFirebaseTeacher(selectedDate, 'tarde').then(tardeData => {
+                    loadDataFromFirebaseTeacher(selectedDate, 'noite').then(noiteData => {
+                        dataByDateAndShift[selectedDate] = {
+                            'manhã': manhaData,
+                            'tarde': tardeData,
+                            'noite': noiteData
+                        };
+                        
+                        renderTableForShift(activeShift);
+                        
+                        // Iniciar sincronização
+                        syncDataRealtimeTeacher(selectedDate, 'manhã');
+                        syncDataRealtimeTeacher(selectedDate, 'tarde');
+                        syncDataRealtimeTeacher(selectedDate, 'noite');
+                    });
+                });
+            });
+        }
     }
     
     // Fallback: tentar carregar dados no formato antigo e migrar
@@ -247,14 +321,43 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedDate = this.value;
             console.log(`Data alterada de ${oldDate} para ${selectedDate}`);
             
+            // Parar sincronização da data anterior
+            if (typeof stopSyncDataRealtimeTeacher === 'function') {
+                stopSyncDataRealtimeTeacher(oldDate, 'manhã');
+                stopSyncDataRealtimeTeacher(oldDate, 'tarde');
+                stopSyncDataRealtimeTeacher(oldDate, 'noite');
+            }
+            
             // Verificar se há dados para esta data
             const dateData = getDataForDate(selectedDate);
             const shiftData = dateData[activeShift] || [];
             console.log(`Dados encontrados para ${selectedDate} no turno ${activeShift}:`, shiftData);
             
-            // Não sincronizar data - navegação independente
-            
-            renderTableForShift(activeShift);
+            // Carregar dados do Firebase para a nova data
+            if (typeof loadDataFromFirebaseTeacher === 'function') {
+                loadDataFromFirebaseTeacher(selectedDate, 'manhã').then(manhaData => {
+                    loadDataFromFirebaseTeacher(selectedDate, 'tarde').then(tardeData => {
+                        loadDataFromFirebaseTeacher(selectedDate, 'noite').then(noiteData => {
+                            dataByDateAndShift[selectedDate] = {
+                                'manhã': manhaData,
+                                'tarde': tardeData,
+                                'noite': noiteData
+                            };
+                            
+                            // Iniciar sincronização em tempo real para a nova data
+                            if (typeof syncDataRealtimeTeacher === 'function') {
+                                syncDataRealtimeTeacher(selectedDate, 'manhã');
+                                syncDataRealtimeTeacher(selectedDate, 'tarde');
+                                syncDataRealtimeTeacher(selectedDate, 'noite');
+                            }
+                            
+                            renderTableForShift(activeShift);
+                        });
+                    });
+                });
+            } else {
+                renderTableForShift(activeShift);
+            }
         });
     }
 
@@ -764,6 +867,28 @@ function autoShiftTick() {
     if(d.getHours() === 12 && d.getMinutes() === 0) {
         switchShift('tarde');
     }
+}
+
+// Função para mostrar notificações
+function showNotification(message, type = 'info') {
+    // Criar elemento de notificação
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Adicionar ao body
+    document.body.appendChild(notification);
+    
+    // Remover automaticamente após 5 segundos
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
 }
 
 // Verificar se a página já foi carregada e inicializar

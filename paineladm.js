@@ -962,6 +962,15 @@ function handleKeyAction(recordId, currentStatus) {
         showNotification(`Chave retirada por ${record.professorName} às ${record.withdrawalTime}`, 'info');
     }
 
+    // Salvar no Firebase para sincronização em tempo real
+    if (typeof saveDataToFirebase === 'function') {
+        saveDataToFirebase(selectedDate, activeShift, currentData).then(() => {
+            console.log('Dados salvos no Firebase após ação de chave');
+        }).catch(error => {
+            console.error('Erro ao salvar no Firebase:', error);
+        });
+    }
+
     // Atualizar os dados no localStorage
     localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
     
