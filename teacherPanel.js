@@ -75,19 +75,22 @@ function getCurrentShiftData() {
 
 // Função para sincronizar dados em tempo real com Firebase
 function syncDataRealtimeTeacher(date, shift) {
-    if (typeof syncDataRealtime === 'function') {
+    if (typeof database !== 'undefined') {
         const ref = database.ref(`chaves/${date}/${shift}`);
         ref.on('value', (snapshot) => {
             const data = snapshot.val() || [];
             console.log(`[PROFESSOR] Dados sincronizados do Firebase para ${date}/${shift}:`, data);
             
             if (dataByDateAndShift[date]) {
+                const oldData = JSON.stringify(dataByDateAndShift[date][shift] || []);
+                const newData = JSON.stringify(data);
+                
                 dataByDateAndShift[date][shift] = data;
                 
-                // Se estamos visualizando esta data e turno, atualizar a tabela
-                if (date === selectedDate && shift === activeShift) {
+                // Se estamos visualizando esta data e turno e os dados mudaram, atualizar a tabela
+                if (date === selectedDate && shift === activeShift && oldData !== newData) {
                     renderTableForShift(shift);
-                    showNotification('Dados atualizados em tempo real!', 'success');
+                    showNotification('Dados atualizados em tempo real!', 'info');
                 }
             }
         });
@@ -715,9 +718,24 @@ function executeKeyAction(record, action) {
     if (recordIndex !== -1) {
         if (action === 'remove') {
             currentShiftData[recordIndex].horaRetirada = hm;
-            currentShiftData[recordIndex].horaDevolucao = undefined;
+            currentShiftData[recordIndex].horaDevolucao = '';  // String vazia ao invés de undefined
+            
+            // Mostrar notificação
+            showNotification(`Chave da ${record.sala} retirada por ${record.professorName} às ${hm}`, 'info');
         } else if (action === 'return') {
             currentShiftData[recordIndex].horaDevolucao = hm;
+            
+            // Mostrar notificação
+            showNotification(`Chave da ${record.sala} devolvida por ${record.professorName} às ${hm}`, 'success');
+        }
+
+        // Salvar no Firebase para sincronização em tempo real
+        if (typeof saveDataToFirebase === 'function') {
+            saveDataToFirebase(selectedDate, activeShift, currentShiftData).then(() => {
+                console.log('Dados salvos no Firebase após ação de chave no painel do professor');
+            }).catch(error => {
+                console.error('Erro ao salvar no Firebase:', error);
+            });
         }
 
         // Atualizar o localStorage com os novos dados
