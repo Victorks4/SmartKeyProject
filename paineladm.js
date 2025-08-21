@@ -22,6 +22,18 @@ function getCurrentShiftData() {
     return dateData[activeShift] || [];
 }
 
+// Função para inicializar sincronização Firebase
+function initializeFirebaseSync() {
+    // Carregar dados da data atual
+    loadAllDataForDate(selectedDate).then(() => {
+        updateTable();
+        // Iniciar sincronização em tempo real para todos os turnos
+        syncDataRealtime(selectedDate, 'manhã');
+        syncDataRealtime(selectedDate, 'tarde');
+        syncDataRealtime(selectedDate, 'noite');
+    });
+}
+
 // Função para mudar o turno ativo
 function changeShift(newShift) {
     if (newShift !== activeShift && ['manhã', 'tarde', 'noite'].includes(newShift)) {
@@ -38,6 +50,11 @@ function changeShift(newShift) {
         const [year, month, day] = selectedDate.split('-');
         const formattedDate = `${day}/${month}/${year}`;
         showNotification(`Visualizando turno da ${shiftCapitalized} - ${formattedDate}`, 'info');
+        
+        // Sincronizar dados do novo turno com Firebase
+        if (typeof syncDataRealtime === 'function') {
+            syncDataRealtime(selectedDate, newShift);
+        }
     }
 }
 let selectedFileForImport = null;
@@ -515,6 +532,14 @@ function switchShift(shift) {
 function updateTable() {
     // Renderizar apenas os dados do turno atual
     renderTable();
+    
+    // Salvar dados no Firebase se estiver disponível
+    if (typeof saveDataToFirebase === 'function') {
+        const currentData = getCurrentShiftData();
+        saveDataToFirebase(selectedDate, activeShift, currentData).catch(error => {
+            console.error('Erro ao salvar no Firebase:', error);
+        });
+    }
 }
 
 // Dados mock (equivalente ao mockData do React)
@@ -589,14 +614,33 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedDate = this.value;
             console.log(`Data alterada de ${oldDate} para ${selectedDate}`);
             
+            // Parar sincronização da data anterior
+            if (typeof stopSyncDataRealtime === 'function') {
+                stopSyncDataRealtime(oldDate, 'manhã');
+                stopSyncDataRealtime(oldDate, 'tarde');
+                stopSyncDataRealtime(oldDate, 'noite');
+            }
+            
             // Verificar se há dados para esta data
             const dateData = getDataForDate(selectedDate);
             const shiftData = dateData[activeShift] || [];
             console.log(`Dados encontrados para ${selectedDate} no turno ${activeShift}:`, shiftData);
             console.log('Estrutura completa de dados por data:', dataByDateAndShift);
             
-            // Atualizar tabela
-            updateTable();
+            // Carregar dados do Firebase para a nova data
+            if (typeof loadAllDataForDate === 'function') {
+                loadAllDataForDate(selectedDate).then(() => {
+                    // Iniciar sincronização em tempo real para a nova data
+                    if (typeof syncDataRealtime === 'function') {
+                        syncDataRealtime(selectedDate, 'manhã');
+                        syncDataRealtime(selectedDate, 'tarde');
+                        syncDataRealtime(selectedDate, 'noite');
+                    }
+                    updateTable();
+                });
+            } else {
+                updateTable();
+            }
             
             // Não sincronizar data, apenas salvar dados para acesso independente
             localStorage.setItem('allShiftData', JSON.stringify(dateData));
@@ -971,6 +1015,12 @@ function initializePainelAdm() {
     console.log('Inicializando renderização das abas...');
     renderShiftTabs();
     updateTable();
+    
+    // Inicializar sincronização Firebase se estiver disponível
+    if (typeof initializeFirebaseSync === 'function') {
+        console.log('Inicializando sincronização Firebase...');
+        initializeFirebaseSync();
+    }
     
     // Verificar se as abas foram renderizadas
     setTimeout(() => {
