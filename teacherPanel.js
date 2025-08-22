@@ -83,9 +83,30 @@ function syncDataRealtimeTeacher(date, shift) {
             
             if (dataByDateAndShift[date]) {
                 const oldData = JSON.stringify(dataByDateAndShift[date][shift] || []);
-                const newData = JSON.stringify(data);
                 
-                dataByDateAndShift[date][shift] = data;
+                // Converter dados do formato admin para professor se necessário
+                const convertedData = data.map(item => {
+                    if (!item || typeof item !== 'object') return item;
+                    
+                    // Se está no formato admin (room, professorName), converter
+                    if (item.room && item.professorName && !item.sala && !item.professor) {
+                        return {
+                            sala: item.room || 'Sala não especificada',
+                            professor: item.professorName || 'Professor não especificado',
+                            disciplina: item.subject || '-',
+                            curso: item.course || '-',
+                            turma: item.turmaNumber || '-',
+                            horaRetirada: item.withdrawalTime || null,
+                            horaDevolucao: item.returnTime || null
+                        };
+                    }
+                    
+                    // Se já está no formato professor, manter
+                    return item;
+                });
+                
+                const newData = JSON.stringify(convertedData);
+                dataByDateAndShift[date][shift] = convertedData;
                 
                 // Se estamos visualizando esta data e turno e os dados mudaram, atualizar a tabela
                 if (date === selectedDate && shift === activeShift && oldData !== newData) {
@@ -721,17 +742,43 @@ function executeKeyAction(record, action) {
             currentShiftData[recordIndex].horaDevolucao = '';  // String vazia ao invés de undefined
             
             // Mostrar notificação
-            showNotification(`Chave da ${record.sala} retirada por ${record.professorName} às ${hm}`, 'info');
+            showNotification(`Chave da ${record.sala} retirada por ${record.professor} às ${hm}`, 'info');
         } else if (action === 'return') {
             currentShiftData[recordIndex].horaDevolucao = hm;
             
             // Mostrar notificação
-            showNotification(`Chave da ${record.sala} devolvida por ${record.professorName} às ${hm}`, 'success');
+            showNotification(`Chave da ${record.sala} devolvida por ${record.professor} às ${hm}`, 'success');
         }
 
         // Salvar no Firebase para sincronização em tempo real
         if (typeof saveDataToFirebase === 'function') {
-            saveDataToFirebase(selectedDate, activeShift, currentShiftData).then(() => {
+            // Converter dados do formato professor para admin antes de salvar
+            const dataForFirebase = currentShiftData.map(item => {
+                if (!item || typeof item !== 'object') return item;
+                
+                // Se está no formato professor (sala, professor), converter para admin
+                if (item.sala && item.professor && !item.room && !item.professorName) {
+                    return {
+                        id: item.id || item.sala,
+                        room: item.sala,
+                        course: item.curso || '-',
+                        turmaNumber: item.turma || '-',
+                        professorName: item.professor,
+                        subject: item.disciplina || '-',
+                        withdrawalTime: item.horaRetirada || '',
+                        returnTime: item.horaDevolucao || '',
+                        status: item.horaRetirada && !item.horaDevolucao ? 'em_uso' : 
+                               item.horaDevolucao ? 'devolvida' : 'disponivel',
+                        shift: activeShift,
+                        requiresLogin: true
+                    };
+                }
+                
+                // Se já está no formato admin, manter
+                return item;
+            });
+            
+            saveDataToFirebase(selectedDate, activeShift, dataForFirebase).then(() => {
                 console.log('Dados salvos no Firebase após ação de chave no painel do professor');
             }).catch(error => {
                 console.error('Erro ao salvar no Firebase:', error);
@@ -770,7 +817,7 @@ function confirmLogin() {
     }
 
     const record = activeAction ? activeAction.record : null;
-    const professorNameWithoutPrefix = record.professorName.replace(/^Prof\. /, '');
+    const professorNameWithoutPrefix = (record.professor || record.professorName || '').replace(/^Prof\. /, '');
 
     if(!record || professorNameWithoutPrefix !== name || record.id !== id) {
         alert('Nome de professor ou ID incorretos.');

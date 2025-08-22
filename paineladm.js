@@ -672,6 +672,31 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedFileForImport = null;
         }
     });
+    
+    // Listener para detectar mudanças no localStorage (sincronização entre abas)
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'allDateShiftData' || e.key === 'allShiftData' || e.key === 'dataUpdateTimestamp') {
+            console.log('[ADMIN] Detectada atualização de dados em outra aba/janela, chave:', e.key);
+            console.log('[ADMIN] Novo valor:', e.newValue);
+            
+            if (e.key === 'allDateShiftData' && e.newValue) {
+                try {
+                    const newData = JSON.parse(e.newValue);
+                    console.log('[ADMIN] Dados brutos recebidos via storage:', newData);
+                    
+                    dataByDateAndShift = newData;
+                    console.log('[ADMIN] Dados atualizados:', dataByDateAndShift);
+                    
+                    renderTable();
+                    showNotification('Dados atualizados por outro painel!', 'info');
+                } catch (error) {
+                    console.error('[ADMIN] Erro ao processar dados do storage:', error);
+                }
+            } else {
+                loadSavedData();
+            }
+        }
+    });
 
 });
 
@@ -956,7 +981,7 @@ function handleKeyAction(recordId, currentStatus) {
         // Retirar a chave
         record.status = 'em_uso';
         record.withdrawalTime = timeString;
-        record.returnTime = undefined;
+        record.returnTime = '';  // String vazia ao invés de undefined
         
         // Mostrar notificação Bootstrap
         showNotification(`Chave retirada por ${record.professorName} às ${record.withdrawalTime}`, 'info');
@@ -965,7 +990,7 @@ function handleKeyAction(recordId, currentStatus) {
     // Salvar no Firebase para sincronização em tempo real
     if (typeof saveDataToFirebase === 'function') {
         saveDataToFirebase(selectedDate, activeShift, currentData).then(() => {
-            console.log('Dados salvos no Firebase após ação de chave');
+            console.log('Dados salvos no Firebase após ação de chave no painel administrativo');
         }).catch(error => {
             console.error('Erro ao salvar no Firebase:', error);
         });
@@ -984,6 +1009,9 @@ function handleKeyAction(recordId, currentStatus) {
         detail: { shift: activeShift, data: dataByDateAndShift }
     });
     window.dispatchEvent(updateEvent);
+    
+    // Marcar timestamp de atualização para sincronização entre abas
+    localStorage.setItem('dataUpdateTimestamp', Date.now().toString());
 
     // Re-renderizar a interface
     renderTable();
