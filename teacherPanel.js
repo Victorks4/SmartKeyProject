@@ -1,6 +1,5 @@
 let activeAction = null;
 let activeShift = 'manhã';
-let sortAlphabetically = false;
 let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 
@@ -110,6 +109,15 @@ function syncDataRealtimeTeacher(date, shift) {
                 
                 // Se estamos visualizando esta data e turno e os dados mudaram, atualizar a tabela
                 if (date === selectedDate && shift === activeShift && oldData !== newData) {
+                    // Garantir que os dados sejam ordenados antes de renderizar
+                    if (dataByDateAndShift[date] && dataByDateAndShift[date][shift]) {
+                        dataByDateAndShift[date][shift] = dataByDateAndShift[date][shift].sort((a, b) => {
+                            const professorA = (a.professor || a.professorName || '').trim();
+                            const professorB = (b.professor || b.professorName || '').trim();
+                            if (!professorA || !professorB) return 0;
+                            return professorA.localeCompare(professorB, 'pt-BR');
+                        });
+                    }
                     renderTableForShift(shift);
                     showNotification('Dados atualizados em tempo real!', 'info');
                 }
@@ -159,6 +167,18 @@ function loadSharedData() {
             console.log('[PROFESSOR] ==> Chamando renderTableForShift com activeShift:', activeShift);
             renderTableForShift(activeShift);
             
+            // Ordenar dados de todos os turnos alfabeticamente por sala
+            for (let turno in dataByDateAndShift[selectedDate]) {
+                if (Array.isArray(dataByDateAndShift[selectedDate][turno])) {
+                                                                    dataByDateAndShift[selectedDate][turno] = dataByDateAndShift[selectedDate][turno].sort((a, b) => {
+                            const professorA = (a.professor || a.professorName || '').trim();
+                            const professorB = (b.professor || b.professorName || '').trim();
+                            if (!professorA || !professorB) return 0;
+                            return professorA.localeCompare(professorB, 'pt-BR');
+                        });
+                }
+            }
+            
             // Iniciar sincronização Firebase para a data atual
             if (typeof syncDataRealtimeTeacher === 'function') {
                 syncDataRealtimeTeacher(selectedDate, 'manhã');
@@ -178,10 +198,32 @@ function loadSharedData() {
             loadDataFromFirebaseTeacher(selectedDate, 'manhã').then(manhaData => {
                 loadDataFromFirebaseTeacher(selectedDate, 'tarde').then(tardeData => {
                     loadDataFromFirebaseTeacher(selectedDate, 'noite').then(noiteData => {
+                        // Ordenar dados de todos os turnos alfabeticamente por nome do professor
+                        const sortedManhaData = manhaData.sort((a, b) => {
+                            const professorA = (a.professor || a.professorName || '').trim();
+                            const professorB = (b.professor || b.professorName || '').trim();
+                            if (!professorA || !professorB) return 0;
+                            return professorA.localeCompare(professorB, 'pt-BR');
+                        });
+                        
+                        const sortedTardeData = tardeData.sort((a, b) => {
+                            const professorA = (a.professor || a.professorName || '').trim();
+                            const professorB = (b.professor || b.professorName || '').trim();
+                            if (!professorA || !professorB) return 0;
+                            return professorA.localeCompare(professorB, 'pt-BR');
+                        });
+                        
+                        const sortedNoiteData = noiteData.sort((a, b) => {
+                            const professorA = (a.professor || a.professorName || '').trim();
+                            const professorB = (b.professor || b.professorName || '').trim();
+                            if (!professorA || !professorB) return 0;
+                            return professorA.localeCompare(professorB, 'pt-BR');
+                        });
+                        
                         dataByDateAndShift[selectedDate] = {
-                            'manhã': manhaData,
-                            'tarde': tardeData,
-                            'noite': noiteData
+                            'manhã': sortedManhaData,
+                            'tarde': sortedTardeData,
+                            'noite': sortedNoiteData
                         };
                         
                         renderTableForShift(activeShift);
@@ -317,7 +359,22 @@ window.addEventListener('storage', function(e) {
                 
                 // Converter dados do formato admin para professor
                 dataByDateAndShift = convertAdminDataToTeacherFormat(newData);
-                console.log('[PROFESSOR] Dados convertidos:', dataByDateAndShift);
+                
+                // Ordenar dados de todos os turnos alfabeticamente por nome do professor
+                for (let date in dataByDateAndShift) {
+                    for (let turno in dataByDateAndShift[date]) {
+                        if (Array.isArray(dataByDateAndShift[date][turno])) {
+                            dataByDateAndShift[date][turno] = dataByDateAndShift[date][turno].sort((a, b) => {
+                                const professorA = (a.professor || a.professorName || '').trim();
+                                const professorB = (b.professor || b.professorName || '').trim();
+                                if (!professorA || !professorB) return 0;
+                                return professorA.localeCompare(professorB, 'pt-BR');
+                            });
+                        }
+                    }
+                }
+                
+                console.log('[PROFESSOR] Dados convertidos e ordenados:', dataByDateAndShift);
                 
                 renderTableForShift(activeShift);
             } catch (error) {
@@ -362,10 +419,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 loadDataFromFirebaseTeacher(selectedDate, 'manhã').then(manhaData => {
                     loadDataFromFirebaseTeacher(selectedDate, 'tarde').then(tardeData => {
                         loadDataFromFirebaseTeacher(selectedDate, 'noite').then(noiteData => {
+                            // Ordenar dados de todos os turnos alfabeticamente por nome do professor
+                            const sortedManhaData = manhaData.sort((a, b) => {
+                                const professorA = (a.professor || a.professorName || '').trim();
+                                const professorB = (b.professor || b.professorName || '').trim();
+                                if (!professorA || !professorB) return 0;
+                                return professorA.localeCompare(professorB, 'pt-BR');
+                            });
+                            
+                            const sortedTardeData = tardeData.sort((a, b) => {
+                                const professorA = (a.professor || a.professorName || '').trim();
+                                const professorB = (b.professor || b.professorName || '').trim();
+                                if (!professorA || !professorB) return 0;
+                                return professorA.localeCompare(professorB, 'pt-BR');
+                            });
+                            
+                            const sortedNoiteData = noiteData.sort((a, b) => {
+                                const professorA = (a.professor || a.professorName || '').trim();
+                                const professorB = (b.professor || b.professorName || '').trim();
+                                if (!professorA || !professorB) return 0;
+                                return professorA.localeCompare(professorB, 'pt-BR');
+                            });
+                            
                             dataByDateAndShift[selectedDate] = {
-                                'manhã': manhaData,
-                                'tarde': tardeData,
-                                'noite': noiteData
+                                'manhã': sortedManhaData,
+                                'tarde': sortedTardeData,
+                                'noite': sortedNoiteData
                             };
                             
                             // Iniciar sincronização em tempo real para a nova data
@@ -531,15 +610,12 @@ function sorted(data) {
             console.warn('Alguns itens foram removidos por serem inválidos:', data);
         }
 
-        if (sortAlphabetically) {
-            return validData.sort((a, b) => {
-                if (!a.professor || !b.professor) return 0;
-                return (a.professor || '').localeCompare((b.professor || ''), 'pt-BR');
-            });
-        }
+        // Sempre ordenar alfabeticamente por nome do professor
         return validData.sort((a, b) => {
-            if (!a.sala || !b.sala) return 0;
-            return (a.sala || '').localeCompare((b.sala || ''), 'pt-BR');
+            const professorA = (a.professor || a.professorName || '').trim();
+            const professorB = (b.professor || b.professorName || '').trim();
+            if (!professorA || !professorB) return 0;
+            return professorA.localeCompare(professorB, 'pt-BR');
         });
     } catch (error) {
         console.error('Erro ao ordenar dados:', error);
@@ -902,14 +978,7 @@ function initialize() {
     renderTabs();
     
     // Configurar os eventos
-    document.getElementById('sortToggle')?.addEventListener('click', () => {
-        sortAlphabetically = !sortAlphabetically;
-        const btn = document.getElementById('sortToggle');
-        if (btn) {
-            btn.setAttribute('aria-pressed', String(sortAlphabetically));
-            renderTableForShift(activeShift);
-        }
-    });
+    // Botão de ordenação removido - dados sempre ordenados alfabeticamente por sala
 
     // Iniciar verificação automática de turno
     setInterval(autoShiftTick, 60000);

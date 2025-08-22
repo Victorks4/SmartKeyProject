@@ -161,10 +161,18 @@ async function processFileImport(file, selectedShift) {
                     throw new Error('Nenhum registro válido encontrado no arquivo. Verifique o formato dos dados.');
                 }
 
+                // Ordenar dados alfabeticamente por nome do professor antes de salvar
+                const sortedData = validData.sort((a, b) => {
+                    const professorA = (a.professorName || '').trim();
+                    const professorB = (b.professorName || '').trim();
+                    if (!professorA || !professorB) return 0;
+                    return professorA.localeCompare(professorB, 'pt-BR');
+                });
+
                 // Atualizar os dados do turno selecionado na data atual
                 const dateData = getDataForDate(selectedDate);
-                dateData[selectedShift] = validData;
-                console.log(`Dados importados com sucesso para o turno ${selectedShift}. Total de registros:`, validData.length);
+                dateData[selectedShift] = sortedData;
+                console.log(`Dados importados e ordenados com sucesso para o turno ${selectedShift}. Total de registros:`, sortedData.length);
             
                 // Atualizar as visualizações se estivermos no turno selecionado
                 if (activeShift === selectedShift) {
@@ -563,7 +571,22 @@ function loadSavedData() {
     if (newFormatData) {
         try {
             dataByDateAndShift = JSON.parse(newFormatData);
-            console.log('Dados carregados no novo formato:', dataByDateAndShift);
+            
+            // Ordenar dados de todos os turnos alfabeticamente por nome do professor
+            for (let date in dataByDateAndShift) {
+                for (let turno in dataByDateAndShift[date]) {
+                    if (Array.isArray(dataByDateAndShift[date][turno])) {
+                        dataByDateAndShift[date][turno] = dataByDateAndShift[date][turno].sort((a, b) => {
+                            const professorA = (a.professorName || '').trim();
+                            const professorB = (b.professorName || '').trim();
+                            if (!professorA || !professorB) return 0;
+                            return professorA.localeCompare(professorB, 'pt-BR');
+                        });
+                    }
+                }
+            }
+            
+            console.log('Dados carregados e ordenados no novo formato:', dataByDateAndShift);
             updateTable();
             return;
         } catch (e) {
@@ -630,6 +653,18 @@ document.addEventListener('DOMContentLoaded', function() {
             // Carregar dados do Firebase para a nova data
             if (typeof loadAllDataForDate === 'function') {
                 loadAllDataForDate(selectedDate).then(() => {
+                    // Ordenar dados de todos os turnos alfabeticamente por nome do professor
+                    for (let turno in dataByDateAndShift[selectedDate]) {
+                        if (Array.isArray(dataByDateAndShift[selectedDate][turno])) {
+                            dataByDateAndShift[selectedDate][turno] = dataByDateAndShift[selectedDate][turno].sort((a, b) => {
+                                const professorA = (a.professorName || '').trim();
+                                const professorB = (b.professorName || '').trim();
+                                if (!professorA || !professorB) return 0;
+                                return professorA.localeCompare(professorB, 'pt-BR');
+                            });
+                        }
+                    }
+                    
                     // Iniciar sincronização em tempo real para a nova data
                     if (typeof syncDataRealtime === 'function') {
                         syncDataRealtime(selectedDate, 'manhã');
@@ -684,8 +719,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     const newData = JSON.parse(e.newValue);
                     console.log('[ADMIN] Dados brutos recebidos via storage:', newData);
                     
+                    // Ordenar dados de todos os turnos alfabeticamente por nome do professor
+                    for (let date in newData) {
+                        for (let turno in newData[date]) {
+                            if (Array.isArray(newData[date][turno])) {
+                                newData[date][turno] = newData[date][turno].sort((a, b) => {
+                                    const professorA = (a.professorName || '').trim();
+                                    const professorB = (b.professorName || '').trim();
+                                    if (!professorA || !professorB) return 0;
+                                    return professorA.localeCompare(professorB, 'pt-BR');
+                                });
+                            }
+                        }
+                    }
+                    
                     dataByDateAndShift = newData;
-                    console.log('[ADMIN] Dados atualizados:', dataByDateAndShift);
+                    console.log('[ADMIN] Dados atualizados e ordenados:', dataByDateAndShift);
                     
                     renderTable();
                     showNotification('Dados atualizados por outro painel!', 'info');
@@ -859,7 +908,15 @@ function renderTable() {
                item.room.trim() !== '' && item.professorName.trim() !== '';
     });
     
-    console.log(`Dados válidos após filtro:`, shiftData);
+    // Ordenar dados alfabeticamente por nome do professor
+    shiftData = shiftData.sort((a, b) => {
+        const professorA = (a.professorName || '').trim();
+        const professorB = (b.professorName || '').trim();
+        if (!professorA || !professorB) return 0;
+        return professorA.localeCompare(professorB, 'pt-BR');
+    });
+    
+    console.log(`Dados válidos após filtro e ordenação:`, shiftData);
 
     const shiftCapitalized = activeShift.charAt(0).toUpperCase() + activeShift.slice(1);
     // Corrigir problema de fuso horário ao exibir a data

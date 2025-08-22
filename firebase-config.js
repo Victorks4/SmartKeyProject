@@ -91,6 +91,15 @@ function syncDataRealtime(date, shift) {
             // Só atualizar se estamos visualizando esta data e turno e se os dados mudaram
             if (date === selectedDate && shift === activeShift && oldData !== newData) {
                 console.log('✅ SYNC: Atualizando tabela - dados mudaram!');
+                // Garantir que os dados sejam ordenados antes de atualizar
+                if (dataByDateAndShift[date] && dataByDateAndShift[date][shift]) {
+                    dataByDateAndShift[date][shift] = dataByDateAndShift[date][shift].sort((a, b) => {
+                        const professorA = (a.professorName || '').trim();
+                        const professorB = (b.professorName || '').trim();
+                        if (!professorA || !professorB) return 0;
+                        return professorA.localeCompare(professorB, 'pt-BR');
+                    });
+                }
                 updateTable();
                 showNotification('Dados atualizados em tempo real!', 'info');
             } else {
