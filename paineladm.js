@@ -238,27 +238,69 @@ function decodeText(text) {
     if (!text) return '';
     // Tenta decodificar caracteres especiais que podem ter sido mal interpretados
     try {
-        return text.toString()
-            .replace(/�/g, 'á')  // á
-            .replace(/�/g, 'é')  // é
-            .replace(/�/g, 'í')  // í
-            .replace(/�/g, 'ó')  // ó
-            .replace(/�/g, 'ú')  // ú
-            .replace(/�/g, 'ã')  // ã
-            .replace(/�/g, 'õ')  // õ
-            .replace(/�/g, 'â')  // â
-            .replace(/�/g, 'ê')  // ê
-            .replace(/�/g, 'î')  // î
-            .replace(/�/g, 'ô')  // ô
-            .replace(/�/g, 'û')  // û
-            .replace(/�/g, 'ç')  // ç
-            .replace(/Ã§/g, 'ç') // ç (outro encoding)
-            .replace(/Ã£/g, 'ã') // ã (outro encoding)
-            .replace(/Ã¡/g, 'á') // á (outro encoding)
-            .replace(/Ã©/g, 'é') // é (outro encoding)
-            .replace(/Ã³/g, 'ó') // ó (outro encoding)
+        const originalText = text.toString();
+        let decodedText = originalText;
+        
+        // Primeiro, tentar decodificar caracteres de substituição ()
+        if (decodedText.includes('')) {
+            try {
+                // Tentar UTF-8
+                const utf8Text = decodeURIComponent(escape(decodedText));
+                if (!utf8Text.includes('')) {
+                    decodedText = utf8Text;
+                }
+            } catch (e) {
+                // Se falhar, continuar com as substituições manuais
+            }
+        }
+        
+        // Aplicar substituições manuais para caracteres específicos
+        decodedText = decodedText
+            // Caracteres minúsculos
+            .replace(/Ã¡/g, 'á')  // á
+            .replace(/Ã©/g, 'é')  // é
+            .replace(/Ã­/g, 'í')  // í
+            .replace(/Ã³/g, 'ó')  // ó
+            .replace(/Ãº/g, 'ú')  // ú
+            .replace(/Ã£/g, 'ã')  // ã
+            .replace(/Ãµ/g, 'õ')  // õ
+            .replace(/Ã¢/g, 'â')  // â
+            .replace(/Ãª/g, 'ê')  // ê
+            .replace(/Ã®/g, 'î')  // î
+            .replace(/Ã´/g, 'ô')  // ô
+            .replace(/Ã»/g, 'û')  // û
+            .replace(/Ã§/g, 'ç')  // ç
+            // Caracteres maiúsculos
+            .replace(/Ã€/g, 'À')  // À
+            .replace(/Ãˆ/g, 'È')  // È
+            .replace(/ÃŒ/g, 'Ì')  // Ì
+            .replace(/Ã"/g, 'Ò')  // Ò
+            .replace(/Ã™/g, 'Ù')  // Ù
+            .replace(/Ãƒ/g, 'Ã')  // Ã
+            .replace(/Ã•/g, 'Õ')  // Õ
+            .replace(/Ã‚/g, 'Â')  // Â
+            .replace(/ÃŠ/g, 'Ê')  // Ê
+            .replace(/ÃŽ/g, 'Î')  // Î
+            .replace(/Ã"/g, 'Ô')  // Ô
+            .replace(/Ã›/g, 'Û')  // Û
+            .replace(/Ã‡/g, 'Ç')  // Ç
+            // Outros caracteres comuns
+            .replace(/Ã¨/g, 'è')  // è
+            .replace(/Ã¬/g, 'ì')  // ì
+            .replace(/Ã²/g, 'ò')  // ò
+            .replace(/Ã¹/g, 'ù')  // ù
+            // Caracteres de substituição () - tentar mapear baseado no contexto
+            .replace(/\uFFFD/g, 'é')   // Substituir por é (mais comum)
             .trim();
+        
+        // Debug: mostrar apenas se o texto foi alterado
+        if (originalText !== decodedText) {
+            console.log('Texto decodificado:', { original: originalText, decoded: decodedText });
+        }
+        
+        return decodedText;
     } catch (e) {
+        console.warn('Erro ao decodificar texto:', e, 'Texto original:', text);
         return text.toString().trim();
     }
 }
@@ -284,14 +326,44 @@ function readFileData(file) {
                 if (isCSV) {
                     // Processar CSV com encoding correto para caracteres especiais
                     const content = e.target.result;
-                    workbook = XLSX.read(content, { 
-                        type: 'string',
-                        raw: true,
-                        cellText: false,
-                        cellDates: true,
-                        codepage: 65001, // UTF-8
-                        charset: 'UTF-8'
-                    });
+                    
+                    // Tentar diferentes encodings para CSV
+                    try {
+                        // Primeira tentativa: UTF-8
+                        workbook = XLSX.read(content, { 
+                            type: 'string',
+                            raw: true,
+                            cellText: false,
+                            cellDates: true,
+                            codepage: 65001, // UTF-8
+                            charset: 'UTF-8'
+                        });
+                    } catch (e) {
+                        console.log('Tentativa UTF-8 falhou, tentando ISO-8859-1...');
+                        try {
+                            // Segunda tentativa: ISO-8859-1 (Latin-1)
+                            workbook = XLSX.read(content, { 
+                                type: 'string',
+                                raw: true,
+                                cellText: false,
+                                cellDates: true,
+                                codepage: 28591, // ISO-8859-1
+                                charset: 'ISO-8859-1'
+                            });
+                        } catch (e2) {
+                            console.log('Tentativa ISO-8859-1 falhou, tentando Windows-1252...');
+                            // Terceira tentativa: Windows-1252
+                            workbook = XLSX.read(content, { 
+                                type: 'string',
+                                raw: true,
+                                cellText: false,
+                                cellDates: true,
+                                codepage: 1252, // Windows-1252
+                                charset: 'Windows-1252'
+                            });
+                        }
+                    }
+                    
                     if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
                         throw new Error('Arquivo CSV inválido');
                     }
@@ -329,7 +401,7 @@ function readFileData(file) {
                     skipHidden: true,    // pula linhas/colunas ocultas
                     defval: null,        // células vazias serão null ao invés de string vazia
                     dateNF: 'dd/mm/yyyy', // formato de data
-                    encoding: 'UTF-8'     // encoding para caracteres especiais
+                    encoding: 'ISO-8859-1'     // encoding para caracteres especiais
                 });
 
                 console.log('Dados lidos do arquivo:', jsonData); // Debug
