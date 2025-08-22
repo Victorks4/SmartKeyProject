@@ -1,5 +1,6 @@
 let activeAction = null;
 let activeShift = 'manhã';
+let sortAlphabetically = false;
 let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 
@@ -72,84 +73,7 @@ function getCurrentShiftData() {
     return result;
 }
 
-// Função para sincronizar dados em tempo real com Firebase
-function syncDataRealtimeTeacher(date, shift) {
-    if (typeof database !== 'undefined') {
-        const ref = database.ref(`chaves/${date}/${shift}`);
-        ref.on('value', (snapshot) => {
-            const data = snapshot.val() || [];
-            console.log(`[PROFESSOR] Dados sincronizados do Firebase para ${date}/${shift}:`, data);
-            
-            if (dataByDateAndShift[date]) {
-                const oldData = JSON.stringify(dataByDateAndShift[date][shift] || []);
-                
-                // Converter dados do formato admin para professor se necessário
-                const convertedData = data.map(item => {
-                    if (!item || typeof item !== 'object') return item;
-                    
-                    // Se está no formato admin (room, professorName), converter
-                    if (item.room && item.professorName && !item.sala && !item.professor) {
-                        return {
-                            sala: item.room || 'Sala não especificada',
-                            professor: item.professorName || 'Professor não especificado',
-                            disciplina: item.subject || '-',
-                            curso: item.course || '-',
-                            turma: item.turmaNumber || '-',
-                            horaRetirada: item.withdrawalTime || null,
-                            horaDevolucao: item.returnTime || null
-                        };
-                    }
-                    
-                    // Se já está no formato professor, manter
-                    return item;
-                });
-                
-                const newData = JSON.stringify(convertedData);
-                dataByDateAndShift[date][shift] = convertedData;
-                
-                // Se estamos visualizando esta data e turno e os dados mudaram, atualizar a tabela
-                if (date === selectedDate && shift === activeShift && oldData !== newData) {
-                    // Garantir que os dados sejam ordenados antes de renderizar
-                    if (dataByDateAndShift[date] && dataByDateAndShift[date][shift]) {
-                        dataByDateAndShift[date][shift] = dataByDateAndShift[date][shift].sort((a, b) => {
-                            const professorA = (a.professor || a.professorName || '').trim();
-                            const professorB = (b.professor || b.professorName || '').trim();
-                            if (!professorA || !professorB) return 0;
-                            return professorA.localeCompare(professorB, 'pt-BR');
-                        });
-                    }
-                    renderTableForShift(shift);
-                    showNotification('Dados atualizados em tempo real!', 'info');
-                }
-            }
-        });
-    }
-}
-
-// Função para parar sincronização
-function stopSyncDataRealtimeTeacher(date, shift) {
-    if (typeof stopSyncDataRealtime === 'function') {
-        const ref = database.ref(`chaves/${date}/${shift}`);
-        ref.off('value');
-    }
-}
-
-// Função para carregar dados do Firebase
-async function loadDataFromFirebaseTeacher(date, shift) {
-    if (typeof loadDataFromFirebase === 'function') {
-        try {
-            const data = await loadDataFromFirebase(date, shift);
-            console.log(`[PROFESSOR] Dados carregados do Firebase para ${date}/${shift}:`, data);
-            return data;
-        } catch (error) {
-            console.error('[PROFESSOR] Erro ao carregar do Firebase:', error);
-            return [];
-        }
-    }
-    return [];
-}
-
-// Carregar dados do localStorage e Firebase
+// Carregar dados do localStorage
 function loadSharedData() {
     console.log('[PROFESSOR] ==> loadSharedData iniciada');
     console.log('[PROFESSOR] ==> selectedDate atual:', selectedDate);
@@ -159,83 +83,19 @@ function loadSharedData() {
     const newFormatData = localStorage.getItem('allDateShiftData');
     console.log('[PROFESSOR] Dados brutos do localStorage:', newFormatData);
     
-    if (newFormatData) {
+    if(newFormatData) {
         try {
             dataByDateAndShift = JSON.parse(newFormatData);
             console.log('[PROFESSOR] Dados carregados no novo formato:', dataByDateAndShift);
             console.log('[PROFESSOR] Total de datas encontradas:', Object.keys(dataByDateAndShift).length);
             console.log('[PROFESSOR] ==> Chamando renderTableForShift com activeShift:', activeShift);
             renderTableForShift(activeShift);
-            
-            // Ordenar dados de todos os turnos alfabeticamente por sala
-            for (let turno in dataByDateAndShift[selectedDate]) {
-                if (Array.isArray(dataByDateAndShift[selectedDate][turno])) {
-                                                                    dataByDateAndShift[selectedDate][turno] = dataByDateAndShift[selectedDate][turno].sort((a, b) => {
-                            const professorA = (a.professor || a.professorName || '').trim();
-                            const professorB = (b.professor || b.professorName || '').trim();
-                            if (!professorA || !professorB) return 0;
-                            return professorA.localeCompare(professorB, 'pt-BR');
-                        });
-                }
-            }
-            
-            // Iniciar sincronização Firebase para a data atual
-            if (typeof syncDataRealtimeTeacher === 'function') {
-                syncDataRealtimeTeacher(selectedDate, 'manhã');
-                syncDataRealtimeTeacher(selectedDate, 'tarde');
-                syncDataRealtimeTeacher(selectedDate, 'noite');
-            }
-            
             return;
         } catch (e) {
             console.error('[PROFESSOR] Erro ao carregar dados no novo formato:', e);
         }
     } else {
         console.log('[PROFESSOR] Nenhum dado encontrado em allDateShiftData');
-        
-        // Tentar carregar do Firebase se localStorage estiver vazio
-        if (typeof loadDataFromFirebaseTeacher === 'function') {
-            loadDataFromFirebaseTeacher(selectedDate, 'manhã').then(manhaData => {
-                loadDataFromFirebaseTeacher(selectedDate, 'tarde').then(tardeData => {
-                    loadDataFromFirebaseTeacher(selectedDate, 'noite').then(noiteData => {
-                        // Ordenar dados de todos os turnos alfabeticamente por nome do professor
-                        const sortedManhaData = manhaData.sort((a, b) => {
-                            const professorA = (a.professor || a.professorName || '').trim();
-                            const professorB = (b.professor || b.professorName || '').trim();
-                            if (!professorA || !professorB) return 0;
-                            return professorA.localeCompare(professorB, 'pt-BR');
-                        });
-                        
-                        const sortedTardeData = tardeData.sort((a, b) => {
-                            const professorA = (a.professor || a.professorName || '').trim();
-                            const professorB = (b.professor || b.professorName || '').trim();
-                            if (!professorA || !professorB) return 0;
-                            return professorA.localeCompare(professorB, 'pt-BR');
-                        });
-                        
-                        const sortedNoiteData = noiteData.sort((a, b) => {
-                            const professorA = (a.professor || a.professorName || '').trim();
-                            const professorB = (b.professor || b.professorName || '').trim();
-                            if (!professorA || !professorB) return 0;
-                            return professorA.localeCompare(professorB, 'pt-BR');
-                        });
-                        
-                        dataByDateAndShift[selectedDate] = {
-                            'manhã': sortedManhaData,
-                            'tarde': sortedTardeData,
-                            'noite': sortedNoiteData
-                        };
-                        
-                        renderTableForShift(activeShift);
-                        
-                        // Iniciar sincronização
-                        syncDataRealtimeTeacher(selectedDate, 'manhã');
-                        syncDataRealtimeTeacher(selectedDate, 'tarde');
-                        syncDataRealtimeTeacher(selectedDate, 'noite');
-                    });
-                });
-            });
-        }
     }
     
     // Fallback: tentar carregar dados no formato antigo e migrar
@@ -359,22 +219,7 @@ window.addEventListener('storage', function(e) {
                 
                 // Converter dados do formato admin para professor
                 dataByDateAndShift = convertAdminDataToTeacherFormat(newData);
-                
-                // Ordenar dados de todos os turnos alfabeticamente por nome do professor
-                for (let date in dataByDateAndShift) {
-                    for (let turno in dataByDateAndShift[date]) {
-                        if (Array.isArray(dataByDateAndShift[date][turno])) {
-                            dataByDateAndShift[date][turno] = dataByDateAndShift[date][turno].sort((a, b) => {
-                                const professorA = (a.professor || a.professorName || '').trim();
-                                const professorB = (b.professor || b.professorName || '').trim();
-                                if (!professorA || !professorB) return 0;
-                                return professorA.localeCompare(professorB, 'pt-BR');
-                            });
-                        }
-                    }
-                }
-                
-                console.log('[PROFESSOR] Dados convertidos e ordenados:', dataByDateAndShift);
+                console.log('[PROFESSOR] Dados convertidos:', dataByDateAndShift);
                 
                 renderTableForShift(activeShift);
             } catch (error) {
@@ -402,65 +247,14 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedDate = this.value;
             console.log(`Data alterada de ${oldDate} para ${selectedDate}`);
             
-            // Parar sincronização da data anterior
-            if (typeof stopSyncDataRealtimeTeacher === 'function') {
-                stopSyncDataRealtimeTeacher(oldDate, 'manhã');
-                stopSyncDataRealtimeTeacher(oldDate, 'tarde');
-                stopSyncDataRealtimeTeacher(oldDate, 'noite');
-            }
-            
             // Verificar se há dados para esta data
             const dateData = getDataForDate(selectedDate);
             const shiftData = dateData[activeShift] || [];
             console.log(`Dados encontrados para ${selectedDate} no turno ${activeShift}:`, shiftData);
             
-            // Carregar dados do Firebase para a nova data
-            if (typeof loadDataFromFirebaseTeacher === 'function') {
-                loadDataFromFirebaseTeacher(selectedDate, 'manhã').then(manhaData => {
-                    loadDataFromFirebaseTeacher(selectedDate, 'tarde').then(tardeData => {
-                        loadDataFromFirebaseTeacher(selectedDate, 'noite').then(noiteData => {
-                            // Ordenar dados de todos os turnos alfabeticamente por nome do professor
-                            const sortedManhaData = manhaData.sort((a, b) => {
-                                const professorA = (a.professor || a.professorName || '').trim();
-                                const professorB = (b.professor || b.professorName || '').trim();
-                                if (!professorA || !professorB) return 0;
-                                return professorA.localeCompare(professorB, 'pt-BR');
-                            });
-                            
-                            const sortedTardeData = tardeData.sort((a, b) => {
-                                const professorA = (a.professor || a.professorName || '').trim();
-                                const professorB = (b.professor || b.professorName || '').trim();
-                                if (!professorA || !professorB) return 0;
-                                return professorA.localeCompare(professorB, 'pt-BR');
-                            });
-                            
-                            const sortedNoiteData = noiteData.sort((a, b) => {
-                                const professorA = (a.professor || a.professorName || '').trim();
-                                const professorB = (b.professor || b.professorName || '').trim();
-                                if (!professorA || !professorB) return 0;
-                                return professorA.localeCompare(professorB, 'pt-BR');
-                            });
-                            
-                            dataByDateAndShift[selectedDate] = {
-                                'manhã': sortedManhaData,
-                                'tarde': sortedTardeData,
-                                'noite': sortedNoiteData
-                            };
-                            
-                            // Iniciar sincronização em tempo real para a nova data
-                            if (typeof syncDataRealtimeTeacher === 'function') {
-                                syncDataRealtimeTeacher(selectedDate, 'manhã');
-                                syncDataRealtimeTeacher(selectedDate, 'tarde');
-                                syncDataRealtimeTeacher(selectedDate, 'noite');
-                            }
-                            
-                            renderTableForShift(activeShift);
-                        });
-                    });
-                });
-            } else {
-                renderTableForShift(activeShift);
-            }
+            // Não sincronizar data - navegação independente
+            
+            renderTableForShift(activeShift);
         });
     }
 
@@ -503,20 +297,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 2000); // Verificar a cada 2 segundos
 });
-
-
-
-function login(){
-    const username = document.getElementById('username').value;
-    const senha = document.getElementById('senha').value;
-    if(username === 'admin' && senha === 'adm@123'){
-        document.getElementById('overlay').style.display = 'none';
-        window.location.href = 'paineladm.html';
-    } else {
-        document.getElementById('msg-erro').textContent = 'Usuário ou senha incorretos!';
-        document.getElementById('msg-erro').style.color = 'red';
-    }
-}
 
 function showAdmLogin() {
     window.location.href = 'paineladm.html';
@@ -597,7 +377,6 @@ function renderTabs() {
     `).join('');
 }
 
-
 function sorted(data) {
     if (!Array.isArray(data)) {
         console.error('Dados inválidos para ordenação:', data);
@@ -610,12 +389,15 @@ function sorted(data) {
             console.warn('Alguns itens foram removidos por serem inválidos:', data);
         }
 
-        // Sempre ordenar alfabeticamente por nome do professor
+        if (sortAlphabetically) {
+            return validData.sort((a, b) => {
+                if (!a.professor || !b.professor) return 0;
+                return (a.professor || '').localeCompare((b.professor || ''), 'pt-BR');
+            });
+        }
         return validData.sort((a, b) => {
-            const professorA = (a.professor || a.professorName || '').trim();
-            const professorB = (b.professor || b.professorName || '').trim();
-            if (!professorA || !professorB) return 0;
-            return professorA.localeCompare(professorB, 'pt-BR');
+            if (!a.sala || !b.sala) return 0;
+            return (a.sala || '').localeCompare((b.sala || ''), 'pt-BR');
         });
     } catch (error) {
         console.error('Erro ao ordenar dados:', error);
@@ -815,50 +597,9 @@ function executeKeyAction(record, action) {
     if (recordIndex !== -1) {
         if (action === 'remove') {
             currentShiftData[recordIndex].horaRetirada = hm;
-            currentShiftData[recordIndex].horaDevolucao = '';  // String vazia ao invés de undefined
-            
-            // Mostrar notificação
-            showNotification(`Chave da ${record.sala} retirada por ${record.professor} às ${hm}`, 'info');
+            currentShiftData[recordIndex].horaDevolucao = undefined;
         } else if (action === 'return') {
             currentShiftData[recordIndex].horaDevolucao = hm;
-            
-            // Mostrar notificação
-            showNotification(`Chave da ${record.sala} devolvida por ${record.professor} às ${hm}`, 'success');
-        }
-
-        // Salvar no Firebase para sincronização em tempo real
-        if (typeof saveDataToFirebase === 'function') {
-            // Converter dados do formato professor para admin antes de salvar
-            const dataForFirebase = currentShiftData.map(item => {
-                if (!item || typeof item !== 'object') return item;
-                
-                // Se está no formato professor (sala, professor), converter para admin
-                if (item.sala && item.professor && !item.room && !item.professorName) {
-                    return {
-                        id: item.id || item.sala,
-                        room: item.sala,
-                        course: item.curso || '-',
-                        turmaNumber: item.turma || '-',
-                        professorName: item.professor,
-                        subject: item.disciplina || '-',
-                        withdrawalTime: item.horaRetirada || '',
-                        returnTime: item.horaDevolucao || '',
-                        status: item.horaRetirada && !item.horaDevolucao ? 'em_uso' : 
-                               item.horaDevolucao ? 'devolvida' : 'disponivel',
-                        shift: activeShift,
-                        requiresLogin: true
-                    };
-                }
-                
-                // Se já está no formato admin, manter
-                return item;
-            });
-            
-            saveDataToFirebase(selectedDate, activeShift, dataForFirebase).then(() => {
-                console.log('Dados salvos no Firebase após ação de chave no painel do professor');
-            }).catch(error => {
-                console.error('Erro ao salvar no Firebase:', error);
-            });
         }
 
         // Atualizar o localStorage com os novos dados
@@ -884,19 +625,17 @@ function closeLogin() {
 }
 
 function confirmLogin() {
-    const name = (document.getElementById('loginName').value || '').trim();
-    const id = (document.getElementById('loginId').value || '').trim();
+    const fast = (document.getElementById('loginFast').value || '').trim();
 
-    if(!name || !id) { 
-        alert('Por favor, preencha o nome completo e o ID.'); 
+    if(!fast) {
+        document.getElementById('msg-erro').textContent = 'Por favor, preencha o Fast!';
         return; 
     }
 
     const record = activeAction ? activeAction.record : null;
-    const professorNameWithoutPrefix = (record.professor || record.professorName || '').replace(/^Prof\. /, '');
 
-    if(!record || professorNameWithoutPrefix !== name || record.id !== id) {
-        alert('Nome de professor ou ID incorretos.');
+    if(!record || record.fast !== fast) {
+        document.getElementById('msg-erro').textContent = 'Fast incorreto.';
         return;
     }
 
@@ -907,7 +646,6 @@ function confirmLogin() {
         activeAction = null; 
     }
 
-    document.getElementById('loginName').value = ''; 
     document.getElementById('loginId').value = '';
 }
 
@@ -923,53 +661,405 @@ function closeThirdPartyForm() {
 function saveThirdParty() {
     const name = document.getElementById('tpFullName').value.trim();
     const purpose = document.getElementById('tpPurpose').value.trim();
-    const contact = document.getElementById('tpContact').value.trim();
+    const block = document.getElementById('valueBlock').innerHTML;
+    const room = document.getElementById('valueRoom').innerHTML;
+    const roomNumber = document.getElementById('valueRoomNumber').innerHTML;
     const notes = document.getElementById('tpNotes').value.trim();
 
-    if(!name || !purpose) { 
+    if(!name || !purpose || !block || !room || !roomNumber) { 
         alert('Nome Completo, informações de contato e motivo são obrigatórios.'); 
         return; 
     }
 
-    const timeString = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const timeString = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', 
+                                                                minute: '2-digit' 
+    });
     
     const newRecord = {
-        sala: contact,
+        sala: block + room + roomNumber,
         professor: name + " (Terceiro)",
         disciplina: purpose,
         curso: "Terceiros",
         turma: "-",
         horaRetirada: timeString,
-        horaDevolucao: undefined,
+        horaDevolucao: null,
         notas: notes
     };
 
     // Adicionar ao array do turno atual na data selecionada
     const dateData = getDataForDate(selectedDate);
-    if (!dateData[activeShift]) {
+    
+    if(!dateData[activeShift]) {
         dateData[activeShift] = [];
     }
+
     dateData[activeShift].push(newRecord);
     
-    // Atualizar localStorage e notificar outros painéis (sem sincronizar data)
+    // Atualizar localStorage e notificar TODOS os painéis (professor + admin)
     localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
+    localStorage.setItem('dataUpdateTimestamp', Date.now().toString());
+    
     window.dispatchEvent(new CustomEvent('shiftDataUpdated', { 
-        detail: { shift: activeShift, data: dataByDateAndShift } 
+        detail: { 
+            shift: activeShift, 
+            data:  dataByDateAndShift 
+        } 
     }));
 
+    // Limpar formulário
     document.getElementById('tpFullName').value = '';
     document.getElementById('tpPurpose').value = '';
-    document.getElementById('tpContact').value = '';
     document.getElementById('tpNotes').value = '';
     
     closeThirdPartyForm();
     renderTableForShift(activeShift);
 }
 
+// ----------- Dropdowns -----------
+const dropdown = {
+  "Bloco A": [
+    { sala: "HIDRÁULICA",  numeros: [] },
+    { sala: "AUT PREDIAL", numeros: [] }
+  ],
+  "Bloco B": [
+    { sala: "QUÍMICA",     numeros: [] }
+  ],
+  "Bloco C": [
+    { sala: "FABRICAÇÃO",  numeros: [] }
+  ],
+  "Bloco D": [
+    { sala: "PLANTA CIM",  numeros: [] },
+    { sala: "METROLOGIA",  numeros: [] },
+    { sala: "LAB MAKER",   numeros: [] }
+  ],
+  "Bloco E": [
+    { sala: "SALAS TÉRREO", numeros: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] }
+  ],
+  "Bloco F": [
+    { sala: "LAB DE INFORMÁTICA", numeros: [1,2,3,4,5,6,7,8,9,10] },
+    { sala: "LAB ELETROTÉCNICA",  numeros: [11] },
+    { sala: "SALAS - 2º ANDAR",   numeros: [12,14,16,17,18,19,20] },
+    { sala: "LAB ACIONAMENTOS",   numeros: [13] },
+    { sala: "LAB ELETRÔNICA",     numeros: [15] }
+  ],
+  "Bloco G": [
+    { sala: "ARMAZENAGEM",        numeros: [] },
+    { sala: "SALA DE AUTOMOTIVA", numeros: [] },
+    { sala: "MOTOCICLETAS",       numeros: [] },
+    { sala: "FUNILARIA",          numeros: [] },
+    { sala: "PREDIAL II",         numeros: [] }
+  ],
+  "Bloco H": [
+    { sala: "SALA EMPILHADEIRA", numeros: [] },
+    { sala: "MICROBIOLOGIA",     numeros: [] },
+    { sala: "PANIFICAÇÃO",       numeros: [] }
+  ]
+};
+
+// Variável de seleção atual para o funcionamento dos dropdowns (cascata)
+let currentSelections = {
+    block: null,
+    room: null,
+    roomNumber: null
+};
+
+// Função Salvar Terceiros
+function saveThirdParty() {
+    const name = document.getElementById('tpFullName').value.trim();
+    const purpose = document.getElementById('tpPurpose').value.trim();
+    const notes = document.getElementById('tpNotes').value.trim();
+    
+    // Recupera as opções do dropdown selecionadas
+    const block = currentSelections.block;
+    const room = currentSelections.room;
+    const roomNumber = currentSelections.roomNumber;
+
+    // Valida se os campos obrigatórios estão vazios
+    if(!name || !purpose || !block || !room) { 
+        alert('Preencha corretamente os campos obrigatórios.'); 
+        return; 
+    }
+
+    const timeString = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', 
+                                                                minute: '2-digit' 
+    });
+    
+    // Variável que contém a forma de exibição da alocação
+    let salaIdentifier = `${block} - ${room}`;
+
+    if(roomNumber) {
+        salaIdentifier += ` - Sala ${roomNumber}`;
+    }
+    
+    // Dados do terceiro
+    const newRecord = {
+        sala: salaIdentifier,
+        professor: name + " (Terceiro)",
+        disciplina: purpose,
+        curso: "Terceiros",
+        turma: "-",
+        horaRetirada: timeString,
+        horaDevolucao: null,
+        notas: notes,
+        
+        roomDetails: {
+            block: block,
+            room: room,
+            roomNumber: roomNumber
+        }
+    };
+
+    // Adiciona o array no turno atual na data selecionada
+    const dateData = getDataForDate(selectedDate);
+    
+    if(!dateData[activeShift]) {
+        dateData[activeShift] = [];
+    }
+    
+    dateData[activeShift].push(newRecord);
+    
+    // Atualiza o localStorage e notifica os paineis (professor/ admin)
+    localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
+    localStorage.setItem('dataUpdateTimestamp', Date.now().toString());
+    
+    window.dispatchEvent(new CustomEvent('shiftDataUpdated', { 
+        detail: { 
+            shift: activeShift, 
+            data:  dataByDateAndShift 
+        } 
+    }));
+
+    // Limpa o form e reseta os dropdowns
+    document.getElementById('tpFullName').value = '';
+    document.getElementById('tpPurpose').value = '';
+    document.getElementById('tpNotes').value = '';
+    resetAllDropdowns();
+
+    closeThirdPartyForm();
+    renderTableForShift(activeShift);
+}
+
+// Inicia o sistema de Dropdowns
+function initializeDropdowns() {
+    // Configura os event listeners para todos os dropdowns
+    setupDropdownToggle(document.getElementById('block-dropdown'));
+    setupDropdownToggle(document.getElementById('room-dropdown'));
+    setupDropdownToggle(document.getElementById('room-number-dropdown'));
+    
+    // Preenche o primeiro dropdown (Bloco)
+    populateBlockDropdown();
+    
+    // Reseta os dropdowns dependentes
+    resetDropdown('room-dropdown', 'Selecione a sala', true);
+    resetDropdown('room-number-dropdown', 'Selecione o número da sala', true);
+}
+
+// Função para alternar os dropdowns
+function setupDropdownToggle(dropdownElement) {
+    if(!dropdownElement) return;
+    
+    const selected = dropdownElement.querySelector('.selected');
+    const options = dropdownElement.querySelector('.options');
+    
+    if(!selected || !options) return;
+    
+    selected.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        if(dropdownElement.classList.contains('disabled')) {
+            return;
+        }
+        
+        // Fecha os outros dropdowns
+        document.querySelectorAll('.drop-down-item .options').forEach(op => {
+            if(op !== options) {
+                op.classList.remove('show');
+                op.parentElement.querySelector('.selected').classList.remove('active');
+            }
+        });
+        
+        // Alterna o dropdown atual
+        options.classList.toggle('show');
+        selected.classList.toggle('active');
+    });
+}
+
+// Ao usuário clicar fora o dropdown é fechado
+document.addEventListener('click', function() {
+
+    document.querySelectorAll('.options').forEach(options => {
+        const selected = options.parentElement.querySelector('.selected');
+        options.classList.remove('show');
+
+        if(selected) {
+            selected.classList.remove('active');
+        }
+    });
+});
+
+// Função para resetar os dropdowns
+function resetDropdown(dropdownId, placeholderText, disable = true) {
+    const dropdown = document.getElementById(dropdownId);
+
+    // Interrompe a execução da função, caso o dropdown não for encontrado
+    if(!dropdown) return;
+    
+    // Variáveis para armazenar o texto selecionado e a lista de opções
+    let selectedText, options;
+    
+    if(dropdownId === 'block-dropdown') {
+        selectedText = document.getElementById('valueBlock');
+        options = dropdown.querySelector('.options');
+    } else if(dropdownId === 'room-dropdown') {
+        selectedText = document.getElementById('valueRoom');
+        options = document.getElementById('room-dropdown-op');
+    } else if(dropdownId === 'room-number-dropdown') {
+        selectedText = document.getElementById('valueRoomNumber');
+        options = document.getElementById('room-number-op');
+    }
+    
+    if(selectedText) selectedText.textContent = placeholderText;
+    if(options) options.innerHTML = '';    
+    (disable) ? dropdown.classList.add('disabled') : dropdown.classList.remove('disabled')
+}
+
+// Função que preenche os dropdowns de "Bloco" (primeiro dropdown)
+function populateBlockDropdown() {
+    const blockOptions = document.querySelector('#block-dropdown .options');
+    
+    if(!blockOptions) return;
+
+    const blocks = Object.keys(dropdown);
+
+    blockOptions.innerHTML = blocks.map(block => `
+        <li class="option" data-value="${block}">${block}</li>
+    `).join('');
+
+    blockOptions.querySelectorAll('.option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const selectedBlock = this.getAttribute('data-value');
+            
+            // Atualiza as seleções
+            currentSelections.block = selectedBlock;
+            currentSelections.room = null;
+            currentSelections.roomNumber = null;
+            
+            // Atualiza os ID's
+            document.getElementById('valueBlock').textContent = selectedBlock;
+            document.querySelector('#block-dropdown .selected').classList.remove('active');
+            document.querySelector('#block-dropdown .options').classList.remove('show');
+            
+            // Preenche o próximo dropdown e reinicia os seguintes
+            populateRoomDropdown(selectedBlock);
+            resetDropdown('room-number-dropdown', 'Selecione o número da sala', true);
+        });
+    });
+}
+
+// Função que preenche os dropdowns de "Sala" (segundo dropdown)
+function populateRoomDropdown(selectedBlock) {
+    const roomDropdown = document.getElementById('room-dropdown');
+    const roomOptions = document.getElementById('room-dropdown-op');
+    
+    if(!roomOptions || !roomDropdown) return;
+
+    const rooms = dropdown[selectedBlock] || [];
+
+    roomOptions.innerHTML = rooms.map(roomObj => `
+        <li class="option" data-value="${roomObj.sala}">${roomObj.sala}</li>
+    `).join('');
+
+    // Ativa o dropdown
+    roomDropdown.classList.remove('disabled');
+
+    roomOptions.querySelectorAll('.option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const selectedRoom = this.getAttribute('data-value');
+            
+            // Atualiza as seleções
+            currentSelections.room = selectedRoom;
+            currentSelections.roomNumber = null;
+            
+            // Atualizar os ID's
+            document.getElementById('valueRoom').textContent = selectedRoom;
+            document.querySelector('#room-dropdown .selected').classList.remove('active');
+            roomOptions.classList.remove('show');
+            
+            // Preenche o próximo dropdown e reinicia os seguintes
+            populateRoomNumberDropdown(selectedBlock, selectedRoom);
+        });
+    });
+}
+
+// Função que preenche os dropdowns de "Número da Sala" (terceiro dropdown)
+function populateRoomNumberDropdown(selectedBlock, selectedRoom) {
+    const roomNumberDropdown = document.getElementById('room-number-dropdown');
+    const roomNumberOptions = document.getElementById('room-number-op');
+    
+    if(!roomNumberOptions || !roomNumberDropdown) return;
+
+    // Encontra o objeto <sala> para recuperar o vetor de <numeros>
+    const roomObj = dropdown[selectedBlock].find(room => room.sala === selectedRoom);
+    const numbers = roomObj ? roomObj.numeros : [];
+
+    if(numbers.length === 0) {
+        // Se não houver números disponíveis, desativa o dropdown e marca como "N/A"
+        resetDropdown('room-number-dropdown', 'Sem numeração', true);
+        currentSelections.roomNumber = null;
+        return;
+    }
+
+    // Preenche com os números disponíveis
+    roomNumberOptions.innerHTML = numbers.map(number => `
+        <li class="option" data-value="${number}">${number}</li>
+    `).join('');
+
+    // Ativa o  dropdown
+    roomNumberDropdown.classList.remove('disabled');
+    document.getElementById('valueRoomNumber').textContent = 'Selecione o número da sala';
+
+    roomNumberOptions.querySelectorAll('.option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const selectedRoomNumber = this.getAttribute('data-value');
+            
+            // Atualiza as seleções
+            currentSelections.roomNumber = selectedRoomNumber;
+            
+            // Atualiza os ID's
+            document.getElementById('valueRoomNumber').textContent = selectedRoomNumber;
+            document.querySelector('#room-number-dropdown .selected').classList.remove('active');
+            roomNumberOptions.classList.remove('show');
+        });
+    });
+}
+
+// Reseta todos os dropdowns para o estado inicial
+function resetAllDropdowns() { 
+    // Reseta os selecionados
+    currentSelections = {
+        block: null,
+        room: null,
+        roomNumber: null
+    };
+    
+    // Reseta os "placeholders" do dropdown e os estados
+    resetDropdown('block-dropdown', 'Selecione o bloco', false);
+    resetDropdown('room-dropdown',  'Selecione a sala',  true);
+    resetDropdown('room-number-dropdown', 'Selecione o número da sala', true);
+    
+    // Preenche novamente o primeiro dropdown
+    populateBlockDropdown();
+}
+
+
 // ----------- Inicialização e mudança de turno -----------
 function initialize() {
     console.log('Inicializando painel do professor...');
     const h = new Date().getHours();
+
     activeShift = (h < 12) ? 'manhã' : ((h < 18) ? 'tarde' : 'noite');
     console.log('Turno inicial:', activeShift);
 
@@ -978,13 +1068,21 @@ function initialize() {
     renderTabs();
     
     // Configurar os eventos
-    // Botão de ordenação removido - dados sempre ordenados alfabeticamente por sala
+    document.getElementById('sortToggle')?.addEventListener('click', () => {
+        sortAlphabetically = !sortAlphabetically;
+        const btn = document.getElementById('sortToggle');
+        
+        if(btn) {
+            btn.setAttribute('aria-pressed', String(sortAlphabetically));
+            renderTableForShift(activeShift);
+        }
+    });
 
     // Iniciar verificação automática de turno
     setInterval(autoShiftTick, 60000);
     
     // Inicializar ícones
-    if (typeof lucide !== 'undefined') {
+    if(typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
 }
@@ -998,32 +1096,18 @@ function switchShift(shift) {
 
 function autoShiftTick() {
     const d = new Date();
+    
     if(d.getHours() === 12 && d.getMinutes() === 0) {
         switchShift('tarde');
     }
 }
 
-// Função para mostrar notificações
-function showNotification(message, type = 'info') {
-    // Criar elemento de notificação
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    notification.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    // Adicionar ao body
-    document.body.appendChild(notification);
-    
-    // Remover automaticamente após 5 segundos
+// Evento disparado quando todo o conteúdo DOM já foi carregado
+document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
-    }, 5000);
-}
+        initializeDropdowns();
+    }, 100);
+});
 
 // Verificar se a página já foi carregada e inicializar
 if(document.readyState === 'loading') {

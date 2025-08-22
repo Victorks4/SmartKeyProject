@@ -278,13 +278,6 @@ td {
     gap: 0.6rem;
 }
 
-.modal-content p {
-    color: rgb(128, 128, 128);
-    margin: .15rem 0 2rem 0;
-    border-left: 2px solid #dedede;
-    padding-left: 8px;
-}
-
 .modal-title h2,
 .modal-title i {
     color: #024AB6;
@@ -347,11 +340,155 @@ td {
     transform: translateY(-50%);
 }
 
+/* Dropdown List Styles */
+.drop-down-list {
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.drop-down-item {
+    position: relative;
+    width: 100%;
+    margin-bottom: 1rem;
+    transition: width .8s ease-in-out;
+}
+
+.selected, 
+#tpRoomNumber {
+    font-size: .87rem;
+    padding: 10px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #6f6f6f;
+    background: #fff;
+    border: 2px solid #ececec;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border 0.3s ease;
+}
+
+.selected:hover,
+.selected.active,
+#tpRoomNumber:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1472);
+}
+
+#roomNumberDrop {
+    max-width: 130px;
+    margin: auto;
+    padding: auto;
+}
+
+#tpRoomNumber.gradient,
+.selected.gradient {
+    /* border-image: linear-gradient(90deg, #2196f3, #00c6ff) 1; */
+    /* background: linear-gradient(90deg, #2196f3, #00c6ff); */
+    border: 2px solid rgba(11, 93, 215, 0.741);
+    background-color: rgba(2, 74, 182, 0.012);
+}
+
+.selected p {
+    margin: 0;
+}
+
+.selected.active {
+    border-radius: 8px 8px 0 0;
+}
+
+.arrow-icon {
+    color: #6c757d;
+    transition: transform .3s ease;
+}
+
+.selected.active .arrow-icon {
+    transform: rotate(-180deg);
+}
+
+.options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    max-height: 0;
+    list-style: none;
+    background: #ffffff;
+    border: 1px solid #e1e1e1;
+    border-radius: 0 0 8px 8px;
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    z-index: 10;
+}
+
+.options.show {
+    color: #575757;
+    opacity: 1;
+    margin-top: 2px;
+    font-weight: 500;
+    max-height: 500px;
+    font-size: 0.92rem;
+    transform: scaleY(1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+} 
+
+.option::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+    transition: left .7s ease;
+}
+
+.option:hover::before {
+    left: 100%;
+}
+
+.option {
+    position: relative;
+    opacity: 0;
+    padding: 10px;
+    cursor: pointer;
+    animation: slideOption 0.3s ease forwards;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.063);
+    transition: background 0.25s ease, padding-left 0.2s ease;
+}
+
+.option:hover {
+    background: #f0f8ff;    
+    padding-left: 15px;
+}
+
+@keyframes slideOption {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+label {
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
 .modal-actions {
-    display: flex;
-    justify-content: space-between;
     gap: .5rem;
     margin-top: .25rem;
+    display: flex;
+    justify-content: space-between;
 }
 
 .modal-actions button {
@@ -359,20 +496,33 @@ td {
     padding: .8rem 0;
 }
 
-#btn-register, 
+#btn-register,
 #btn-retirar-chave {
     background-color: var(--bs-primary);
-    color: white;
+    color: #fff;
+    border: none;
+    box-shadow: 0 2px 8px -2px rgba(13, 110, 253, 0.08);
+    transition: background 0.2s, transform 0.2s;
+}
+
+#btn-register:hover,
+#btn-retirar-chave:hover {
+    background-color: #0b5ed7;
+    color: #fff;
+    transform: scale(1.01);
 }
 
 #cancel-btn {
     background-color: transparent;
     border: 1px solid #ced4da;
     color: #495057;
+    transition: background 0.2s, transform 0.2s;
 }
 
 #cancel-btn:hover {
-    background-color: #DCE0E5;
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    color: #495057;
     transform: scale(1.01);
 }
 
@@ -409,6 +559,13 @@ td {
     height: 1.5rem;
     width: 1px;
     background: hsl(var(--border));
+}
+
+#msg-erro {
+    color: #DB5461;
+    font-size: 0.875rem;
+    margin-top: -1.4rem;
+    margin-bottom: 0.75rem;
 }
 
 /* Responsividade */
