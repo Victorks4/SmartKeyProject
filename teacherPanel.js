@@ -780,6 +780,16 @@ function saveThirdParty() {
         return; 
     }
 
+    // Encontra o objeto <sala> para recuperar o vetor de <numeros>
+    const roomObj = dropdown[block].find(r => r.sala === room);
+    const numbers = roomObj ? roomObj.numeros : [];
+
+    // Valida se a sala selecionada há números e, caso tenha, se algum foi selecionado
+    if(numbers.length > 0 && !roomNumber) {
+        alert('Selecione uma sala para completar o cadastro!');
+        return;
+    }
+
     const timeString = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', 
                                                                 minute: '2-digit' 
     });
@@ -869,6 +879,12 @@ function setupDropdownToggle(dropdownElement) {
         if(dropdownElement.classList.contains('disabled')) {
             return;
         }
+
+        const isCurrentlyActive = selected.classList.contains('active');
+
+        document.querySelectorAll('.drop-down-item').forEach(item => {
+            item.classList.remove('dropdown-active');
+        });
         
         // Fecha os outros dropdowns
         document.querySelectorAll('.drop-down-item .options').forEach(op => {
@@ -877,10 +893,18 @@ function setupDropdownToggle(dropdownElement) {
                 op.parentElement.querySelector('.selected').classList.remove('active');
             }
         });
-        
-        // Alterna o dropdown atual
-        options.classList.toggle('show');
-        selected.classList.toggle('active');
+
+        // Caso o dropdown não esteja ativo, ele é ativado e recebe prioridade (z-index)
+        if(!isCurrentlyActive) {
+            options.classList.add('show');
+            selected.classList.add('active');
+            // Atribui também essa prioridade ao dropdown pai
+            dropdownElement.closest('.drop-down-item').classList.add('dropdown-active');
+        } else {
+            // Se já estiver ativo, fecha
+            options.classList.remove('show');
+            selected.classList.remove('active');
+        }
     });
 }
 
@@ -889,10 +913,15 @@ document.addEventListener('click', function() {
 
     document.querySelectorAll('.options').forEach(options => {
         const selected = options.parentElement.querySelector('.selected');
+        const dropdownItem = options.closest('.drop-down-item');
+
         options.classList.remove('show');
 
         if(selected) {
             selected.classList.remove('active');
+        }
+        if(dropdownItem) {
+            dropdownItem.classList.remove('dropdown-active');
         }
     });
 });
@@ -920,7 +949,16 @@ function resetDropdown(dropdownId, placeholderText, disable = true) {
     
     if(selectedText) selectedText.textContent = placeholderText;
     if(options) options.innerHTML = '';    
-    (disable) ? dropdown.classList.add('disabled') : dropdown.classList.remove('disabled')
+    
+    if(disable) {
+        dropdown.classList.add('disabled');
+        dropdown.classList.remove('visible');
+        dropdown.classList.add('hidden');
+    } else {
+        dropdown.classList.remove('disabled');
+        dropdown.classList.remove('hidden');
+        dropdown.classList.add('visible');
+    }
 }
 
 // Função que preenche os dropdowns de "Bloco" (primeiro dropdown)
@@ -935,10 +973,23 @@ function populateBlockDropdown() {
         <li class="option" data-value="${block}">${block}</li>
     `).join('');
 
+    // Limpa todos as classes === "dropdown-active"
+    document.querySelectorAll('.drop-down-item').forEach(item => {
+        item.classList.remove('dropdown-active');
+    });
+
+    document.getElementById('block-dropdown').classList.add('dropdown-active');
+    document.getElementById('room-dropdown').classList.remove('dropdown-active');
+    document.getElementById('room-number-dropdown').classList.remove('dropdown-active');
+
     blockOptions.querySelectorAll('.option').forEach(option => {
         option.addEventListener('click', function(e) {
             e.stopPropagation();
             const selectedBlock = this.getAttribute('data-value');
+
+            if(selectedBlock !== currentSelections.block) {
+                resetAllDropdowns();
+            }
             
             // Atualiza as seleções
             currentSelections.block = selectedBlock;
@@ -949,6 +1000,21 @@ function populateBlockDropdown() {
             document.getElementById('valueBlock').textContent = selectedBlock;
             document.querySelector('#block-dropdown .selected').classList.remove('active');
             document.querySelector('#block-dropdown .options').classList.remove('show');
+            document.querySelector('#block-dropdown .selected').classList.add('gradient');
+            document.getElementById('block-dropdown').classList.add('selectedOption');
+            
+            // Remove a classe "dropdown-active" de block-dropdown
+            document.getElementById('block-dropdown').closest('.drop-down-item').classList.remove('dropdown-active');
+            document.getElementById('room-number-dropdown').classList.remove('invisible');
+            document.getElementById('room-number-dropdown').classList.add('hidden');
+            
+            // Exibe o dropdown de Salas
+            const roomDropdown = document.querySelector('#room-dropdown');
+
+            if(roomDropdown) {
+                roomDropdown.classList.remove('hidden');
+                roomDropdown.classList.add('visible');
+            }
             
             // Preenche o próximo dropdown e reinicia os seguintes
             populateRoomDropdown(selectedBlock);
@@ -973,10 +1039,21 @@ function populateRoomDropdown(selectedBlock) {
     // Ativa o dropdown
     roomDropdown.classList.remove('disabled');
 
+    // Limpa todas as classes === "dropdown-active" 
+    document.querySelectorAll('.drop-down-item').forEach(item => {
+        item.classList.remove('dropdown-active');
+    });
+
     roomOptions.querySelectorAll('.option').forEach(option => {
         option.addEventListener('click', function(e) {
             e.stopPropagation();
             const selectedRoom = this.getAttribute('data-value');
+
+            if(selectedRoom !== currentSelections.room) {
+                document.getElementById('room-number-dropdown').classList.add('active');
+                document.getElementById('room-number-dropdown').classList.remove('noOptions');
+                document.getElementById('selected-room-number').classList.remove('gradient');
+            }
             
             // Atualiza as seleções
             currentSelections.room = selectedRoom;
@@ -985,7 +1062,19 @@ function populateRoomDropdown(selectedBlock) {
             // Atualizar os ID's
             document.getElementById('valueRoom').textContent = selectedRoom;
             document.querySelector('#room-dropdown .selected').classList.remove('active');
+            document.querySelector('#room-dropdown .selected').classList.add('gradient');
             roomOptions.classList.remove('show');
+            document.getElementById('room-dropdown').classList.add('selectedOption');
+
+            // Remove "dropdown-active" de "room-dropdown"
+            document.getElementById('room-dropdown').closest('.drop-down-item').classList.remove('dropdown-active');
+            
+            // Exibe o dropdown de números de sala
+            const roomNumberDropdown = document.querySelector('#room-number-dropdown');
+            if(roomNumberDropdown) {
+                roomNumberDropdown.classList.remove('hidden');
+                roomNumberDropdown.classList.add('visible');
+            }
             
             // Preenche o próximo dropdown e reinicia os seguintes
             populateRoomNumberDropdown(selectedBlock, selectedRoom);
@@ -1008,6 +1097,12 @@ function populateRoomNumberDropdown(selectedBlock, selectedRoom) {
         // Se não houver números disponíveis, desativa o dropdown e marca como "N/A"
         resetDropdown('room-number-dropdown', 'Sem numeração', true);
         currentSelections.roomNumber = null;
+        roomNumberDropdown.classList.add('noOptions');
+        roomNumberDropdown.classList.remove('hidden');
+
+        setTimeout(() => {
+            roomNumberDropdown.classList.add('selectedOption');
+        }, 910);
         return;
     }
 
@@ -1016,9 +1111,14 @@ function populateRoomNumberDropdown(selectedBlock, selectedRoom) {
         <li class="option" data-value="${number}">${number}</li>
     `).join('');
 
-    // Ativa o  dropdown
+    // Ativa o dropdown
     roomNumberDropdown.classList.remove('disabled');
     document.getElementById('valueRoomNumber').textContent = 'Selecione o número da sala';
+
+    // Clear all dropdown-active classes
+    document.querySelectorAll('.drop-down-item').forEach(item => {
+        item.classList.remove('dropdown-active');
+    });
 
     roomNumberOptions.querySelectorAll('.option').forEach(option => {
         option.addEventListener('click', function(e) {
@@ -1031,7 +1131,12 @@ function populateRoomNumberDropdown(selectedBlock, selectedRoom) {
             // Atualiza os ID's
             document.getElementById('valueRoomNumber').textContent = selectedRoomNumber;
             document.querySelector('#room-number-dropdown .selected').classList.remove('active');
+            document.querySelector('#room-number-dropdown .selected').classList.add('gradient');
+            document.getElementById('room-number-dropdown').classList.add('selectedOption');
             roomNumberOptions.classList.remove('show');
+
+            // Remove dropdown-active from room number dropdown
+            document.getElementById('room-number-dropdown').closest('.drop-down-item').classList.remove('dropdown-active');
         });
     });
 }
@@ -1049,7 +1154,22 @@ function resetAllDropdowns() {
     resetDropdown('block-dropdown', 'Selecione o bloco', false);
     resetDropdown('room-dropdown',  'Selecione a sala',  true);
     resetDropdown('room-number-dropdown', 'Selecione o número da sala', true);
-    
+
+    // Reseta o gradiente do dropdown selecionado
+    document.querySelector('#room-dropdown .selected').classList.remove('gradient');
+    document.querySelector('#room-number-dropdown .selected').classList.remove('gradient');
+
+    // Remove all dropdown-active classes
+    document.querySelectorAll('.drop-down-item').forEach(item => {
+        item.classList.remove('dropdown-active');
+        item.classList.remove('selectedOption');
+    });
+
+    const roomNumberDropdown = document.getElementById('room-number-dropdown');
+    roomNumberDropdown.classList.remove('hidden');
+    roomNumberDropdown.classList.remove('noOptions');
+    roomNumberDropdown.classList.add('invisible');
+
     // Preenche novamente o primeiro dropdown
     populateBlockDropdown();
 }

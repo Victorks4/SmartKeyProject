@@ -117,7 +117,7 @@
     </div> <!-- Fim do Modal Login Professor -->
 
     <!-- Modal: Registrar Terceiro -->
-    <div class="modal" id="thirdPartyModal" role="dialog" aria-modal="true" aria-labelledby="tpTitle">
+    <div class="modal" id="thirdPartyModal" role="dialog" aria-modal="true" aria-labelledby="tpTitle" style="display: flex;">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title" id="tpTitle">
@@ -153,43 +153,49 @@
             </label>
 
             <div class="drop-down-list">                
-                <div id="block-dropdown" class="drop-down-item">
+                <div id="block-dropdown" class="drop-down-item visible">
                     <label class="text-sm font-medium">
                         Bloco *
                     </label>
                     
-                    <div class="selected d-flex justify-content-between align-items-center">
-                        <p id="valueBlock">Selecione o bloco</p>
-                        <i class="arrow-icon bi bi-caret-down-fill"></i>
+                    <div class="dropdown">
+                        <div class="selected d-flex justify-content-between align-items-center">
+                            <p id="valueBlock">Selecione o bloco</p>
+                            <i class="arrow-icon bi bi-caret-down-fill"></i>
+                        </div>
+                        
+                        <ul class="options"></ul>
                     </div>
-                    
-                    <ul class="options"></ul>
                 </div>
                 
-                <div id="room-dropdown" class="drop-down-item disabled">
+                <div id="room-dropdown" class="drop-down-item hidden">
                     <label class="text-sm font-medium">
                         Sala *
                     </label>
 
-                    <div onclick="" id="room-drop-list" class="selected d-flex justify-content-between align-items-center">
-                        <p id="valueRoom">Selecione a sala</p>
-                        <i class="arrow-icon bi bi-caret-down-fill"></i>
-                    </div>                     
-
-                    <ul id="room-dropdown-op" class="options"></ul>
+                    <div class="dropdown">
+                        <div onclick="" id="room-drop-list" class="selected d-flex justify-content-between align-items-center">
+                            <p id="valueRoom">Selecione a sala</p>
+                            <i class="arrow-icon bi bi-caret-down-fill"></i>
+                        </div>                     
+                        
+                        <ul id="room-dropdown-op" class="options"></ul>
+                    </div>
                 </div>
 
-                <div id="room-number-dropdown" class="drop-down-item disabled">
+                <div id="room-number-dropdown" class="drop-down-item invisible">
                     <label class="text-sm font-medium">
                         Número da Sala *
                     </label>
                     
-                    <div class="selected d-flex justify-content-between align-items-center">
-                        <p id="valueRoomNumber">Selecione o número da sala</p>
-                        <i class="arrow-icon bi bi-caret-down-fill"></i>
+                    <div class="dropdown">
+                        <div id="selected-room-number" class="selected d-flex justify-content-between align-items-center">
+                            <p id="valueRoomNumber">Selecione o número da sala</p>
+                            <i class="arrow-icon bi bi-caret-down-fill"></i>
+                        </div>
+                        
+                        <ul id="room-number-op" class="options"></ul>
                     </div>
-
-                    <ul id="room-number-op" class="options"></ul>
                 </div>
             </div>
 
