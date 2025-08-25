@@ -40,12 +40,58 @@ function convertAdminDataToTeacherFormat(data) {
                             curso: item.course || '-',
                             turma: item.turmaNumber || '-',
                             horaRetirada: item.withdrawalTime || null,
-                            horaDevolucao: item.returnTime || null
+                            horaDevolucao: item.returnTime || null,
+                            // Manter campos originais para compatibilidade
+                            room: item.room,
+                            professorName: item.professorName,
+                            subject: item.subject,
+                            course: item.course,
+                            turmaNumber: item.turmaNumber,
+                            withdrawalTime: item.withdrawalTime,
+                            returnTime: item.returnTime,
+                            status: item.status || 'disponivel',
+                            id: item.id || ''
                         };
                     }
                     // Se já está no formato do professor, manter
+                    else if (item.sala && item.professor) {
+                        return {
+                            ...item,
+                            // Adicionar campos do formato admin para compatibilidade
+                            room: item.sala,
+                            professorName: item.professor,
+                            subject: item.disciplina,
+                            course: item.curso,
+                            turmaNumber: item.turma,
+                            withdrawalTime: item.horaRetirada,
+                            returnTime: item.horaDevolucao,
+                            status: item.horaRetirada && !item.horaDevolucao ? 'em_uso' : 
+                                   item.horaRetirada && item.horaDevolucao ? 'devolvida' : 'disponivel',
+                            id: item.id || item.sala
+                        };
+                    }
+                    // Fallback para dados mal formatados
                     else {
-                        return item;
+                        return {
+                            sala: item.sala || item.room || 'Sala não especificada',
+                            professor: item.professor || item.professorName || 'Professor não especificado',
+                            disciplina: item.disciplina || item.subject || '-',
+                            curso: item.curso || item.course || '-',
+                            turma: item.turma || item.turmaNumber || '-',
+                            horaRetirada: item.horaRetirada || item.withdrawalTime || null,
+                            horaDevolucao: item.horaDevolucao || item.returnTime || null,
+                            // Campos de compatibilidade
+                            room: item.sala || item.room,
+                            professorName: item.professor || item.professorName,
+                            subject: item.disciplina || item.subject,
+                            course: item.curso || item.course,
+                            turmaNumber: item.turma || item.turmaNumber,
+                            withdrawalTime: item.horaRetirada || item.withdrawalTime,
+                            returnTime: item.horaDevolucao || item.returnTime,
+                            status: (item.horaRetirada || item.withdrawalTime) && !(item.horaDevolucao || item.returnTime) ? 'em_uso' : 
+                                   (item.horaRetirada || item.withdrawalTime) && (item.horaDevolucao || item.returnTime) ? 'devolvida' : 'disponivel',
+                            id: item.id || item.sala || item.room
+                        };
                     }
                 });
             } else {
@@ -88,6 +134,11 @@ function loadSharedData() {
             dataByDateAndShift = JSON.parse(newFormatData);
             console.log('[PROFESSOR] Dados carregados no novo formato:', dataByDateAndShift);
             console.log('[PROFESSOR] Total de datas encontradas:', Object.keys(dataByDateAndShift).length);
+            
+            // Converter dados para garantir compatibilidade
+            dataByDateAndShift = convertAdminDataToTeacherFormat(dataByDateAndShift);
+            console.log('[PROFESSOR] Dados convertidos para formato do professor:', dataByDateAndShift);
+            
             console.log('[PROFESSOR] ==> Chamando renderTableForShift com activeShift:', activeShift);
             renderTableForShift(activeShift);
             return;
@@ -120,7 +171,7 @@ function loadSharedData() {
                 dateData['noite'] = Array.isArray(parsedData['noite']) ? parsedData['noite'].filter(Boolean) : [];
             }
             
-            // Converter dados do formato do painel administrativo para o formato do painel do professor
+            // Converter dados do formato do painel administrativo para o formato do professor
             console.log('[PROFESSOR] Convertendo dados do formato administrativo...');
             for (let turno in dateData) {
                 if (Array.isArray(dateData[turno])) {
@@ -129,39 +180,56 @@ function loadSharedData() {
                         // Se o item já está no formato do professor, manter
                         if (item.sala && item.professor) {
                             return {
-                                sala: item.sala,
-                                professor: item.professor,
-                                disciplina: item.disciplina || '-',
-                                curso: item.curso || '-',
-                                turma: item.turma || '-',
-                                horaRetirada: item.horaRetirada || item.withdrawalTime || null,
-                                horaDevolucao: item.horaDevolucao || item.returnTime || null
+                                ...item,
+                                // Garantir que tenha ID único
+                                id: item.id || item.sala || `record_${Math.random().toString(36).substr(2, 9)}`
                             };
                         }
                         // Se está no formato do painel administrativo, converter
                         else if (item.room && item.professorName) {
                             console.log('[PROFESSOR] Convertendo item do formato admin:', item);
                             return {
+                                id: item.id || item.room || `record_${Math.random().toString(36).substr(2, 9)}`,
                                 sala: item.room || 'Sala não especificada',
                                 professor: item.professorName || 'Professor não especificado',
                                 disciplina: item.subject || '-',
                                 curso: item.course || '-',
                                 turma: item.turmaNumber || '-',
                                 horaRetirada: item.withdrawalTime || null,
-                                horaDevolucao: item.returnTime || null
+                                horaDevolucao: item.returnTime || null,
+                                // Manter campos originais para compatibilidade
+                                room: item.room,
+                                professorName: item.professorName,
+                                subject: item.subject,
+                                course: item.course,
+                                turmaNumber: item.turmaNumber,
+                                withdrawalTime: item.withdrawalTime,
+                                returnTime: item.returnTime,
+                                status: item.status || 'disponivel'
                             };
                         }
                         // Fallback para dados mal formatados
                         else {
                             console.log('[PROFESSOR] Usando fallback para item:', item);
                             return {
+                                id: item.id || item.sala || item.room || `record_${Math.random().toString(36).substr(2, 9)}`,
                                 sala: item.sala || item.room || 'Sala não especificada',
                                 professor: item.professor || item.professorName || 'Professor não especificado',
                                 disciplina: item.disciplina || item.subject || '-',
                                 curso: item.curso || item.course || '-',
                                 turma: item.turma || item.turmaNumber || '-',
                                 horaRetirada: item.horaRetirada || item.withdrawalTime || null,
-                                horaDevolucao: item.horaDevolucao || item.returnTime || null
+                                horaDevolucao: item.horaDevolucao || item.returnTime || null,
+                                // Campos de compatibilidade
+                                room: item.sala || item.room,
+                                professorName: item.professor || item.professorName,
+                                subject: item.disciplina || item.subject,
+                                course: item.curso || item.course,
+                                turmaNumber: item.turma || item.turmaNumber,
+                                withdrawalTime: item.horaRetirada || item.withdrawalTime,
+                                returnTime: item.horaDevolucao || item.returnTime,
+                                status: (item.horaRetirada || item.withdrawalTime) && !(item.horaDevolucao || item.returnTime) ? 'em_uso' : 
+                                       (item.horaRetirada || item.withdrawalTime) && (item.horaDevolucao || item.returnTime) ? 'devolvida' : 'disponivel'
                             };
                         }
                     });
@@ -308,12 +376,17 @@ function hideAdmLogin() {
 
 // ---------- Botão de Ação ----------
 function getActionButton(recordId, record) {
-    if (record.horaRetirada && !record.horaDevolucao) {
+    // Verificar se a chave está em uso usando campos do professor
+    const isInUse = (record.horaRetirada && !record.horaDevolucao) || 
+                   (record.withdrawalTime && !record.returnTime) ||
+                   record.status === 'em_uso';
+    
+    if (isInUse) {
         // Já retirada - opção de devolver
         return `
             <button 
                 class="btn action-btn devolver"
-                onclick="handleKey('${recordId}', 'return')"
+                onclick="handleKey('${record.id || record.sala}', 'return')"
             >
                 <i class="bi bi-arrow-return-left me-1"></i>
                 Devolver
@@ -324,7 +397,7 @@ function getActionButton(recordId, record) {
         return `
             <button 
                 class="btn action-btn retirar"
-                onclick="handleKey('${recordId}', 'remove')"
+                onclick="handleKey('${record.id || record.sala}', 'remove')"
             >
                 <i class="bi bi-key me-1"></i>
                 Retirar
@@ -341,6 +414,7 @@ function getStatusBadgeTP(record) {
     let status = 'disponivel';
     let label = 'Disponível';
 
+    // Verificar status usando campos do professor
     if (record.horaRetirada) {
         if (!record.horaDevolucao) {
             status = 'em_uso';
@@ -348,6 +422,33 @@ function getStatusBadgeTP(record) {
         } else {
             status = 'devolvida';
             label = 'Devolvida';
+        }
+    }
+    // Verificar status usando campos do administrador se os do professor não estiverem disponíveis
+    else if (record.withdrawalTime) {
+        if (!record.returnTime) {
+            status = 'em_uso';
+            label = 'Em Uso';
+        } else {
+            status = 'devolvida';
+            label = 'Devolvida';
+        }
+    }
+    // Verificar status direto se disponível
+    else if (record.status) {
+        status = record.status;
+        switch (record.status) {
+            case 'em_uso':
+                label = 'Em Uso';
+                break;
+            case 'devolvida':
+                label = 'Devolvida';
+                break;
+            case 'retirada':
+                label = 'Retirada';
+                break;
+            default:
+                label = 'Disponível';
         }
     }
 
@@ -431,17 +532,32 @@ function renderTableForShift(shift) {
     shiftData = shiftData.map(item => {
         if (!item || typeof item !== 'object') return item;
         
+        // Garantir que cada registro tenha um ID único
+        if (!item.id) {
+            item.id = item.sala || item.room || `record_${Math.random().toString(36).substr(2, 9)}`;
+        }
+        
         // Se está no formato admin (room, professorName), converter
         if (item.room && item.professorName && !item.sala && !item.professor) {
             console.log('[PROFESSOR] ==> Convertendo item do formato admin:', item);
             return {
+                id: item.id,
                 sala: item.room || 'Sala não especificada',
                 professor: item.professorName || 'Professor não especificado',
                 disciplina: item.subject || '-',
                 curso: item.course || '-',
                 turma: item.turmaNumber || '-',
                 horaRetirada: item.withdrawalTime || null,
-                horaDevolucao: item.returnTime || null
+                horaDevolucao: item.returnTime || null,
+                // Manter campos originais para compatibilidade
+                room: item.room,
+                professorName: item.professorName,
+                subject: item.subject,
+                course: item.course,
+                turmaNumber: item.turmaNumber,
+                withdrawalTime: item.withdrawalTime,
+                returnTime: item.returnTime,
+                status: item.status || 'disponivel'
             };
         }
         
@@ -509,6 +625,11 @@ function renderTableForShift(shift) {
         const disciplina = record.disciplina || '-';
         const horaRetirada = record.horaRetirada || '-';
         const horaDevolucao = record.horaDevolucao || '-';
+        
+        // Garantir que cada registro tenha um ID único
+        if (!record.id) {
+            record.id = record.sala || `record_${Math.random().toString(36).substr(2, 9)}`;
+        }
 
         return `
         <tr>
@@ -527,7 +648,7 @@ function renderTableForShift(shift) {
             <td>${horaDevolucao}</td>
             <td>${getStatusBadgeTP(record)}</td>
             <td class="text-center">
-                ${getActionButton(sala, record)}
+                ${getActionButton(record.id, record)}
             </td>
         </tr>
         `;
@@ -576,11 +697,14 @@ function renderTableForShift(shift) {
 }
 
 // ----------- Ações da chave -----------
-function handleKey(salaId, action) {
+function handleKey(recordId, action) {
     const currentData = getCurrentShiftData();
-    const record = currentData.find(r => r.sala === salaId);
+    // Tentar encontrar por ID primeiro, depois por sala
+    const record = currentData.find(r => r.id === recordId) || 
+                   currentData.find(r => r.sala === recordId);
+    
     if(!record) {
-        console.error('Registro não encontrado:', salaId);
+        console.error('Registro não encontrado:', recordId);
         return;
     }
 
@@ -592,26 +716,74 @@ function executeKeyAction(record, action) {
     const hm = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     const currentShiftData = getCurrentShiftData();
-    const recordIndex = currentShiftData.findIndex(r => r.sala === record.sala);
+    // Tentar encontrar por ID primeiro, depois por sala
+    const recordIndex = currentShiftData.findIndex(r => r.id === record.id) || 
+                        currentShiftData.findIndex(r => r.sala === record.sala);
     
     if (recordIndex !== -1) {
         if (action === 'remove') {
+            // Atualizar campos do professor
             currentShiftData[recordIndex].horaRetirada = hm;
             currentShiftData[recordIndex].horaDevolucao = undefined;
+            
+            // Atualizar campos do administrador para compatibilidade
+            currentShiftData[recordIndex].withdrawalTime = hm;
+            currentShiftData[recordIndex].returnTime = '';
+            currentShiftData[recordIndex].status = 'em_uso';
+            
+            // Mostrar notificação de sucesso
+            showNotification(`Chave retirada por ${record.professor} às ${hm}`, 'success');
         } else if (action === 'return') {
+            // Atualizar campos do professor
             currentShiftData[recordIndex].horaDevolucao = hm;
+            
+            // Atualizar campos do administrador para compatibilidade
+            currentShiftData[recordIndex].returnTime = hm;
+            currentShiftData[recordIndex].status = 'devolvida';
+            
+            // Mostrar notificação de sucesso
+            showNotification(`Chave devolvida por ${record.professor} às ${hm}`, 'info');
         }
 
         // Atualizar o localStorage com os novos dados
         localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
         
-        // Disparar evento de atualização (sem sincronizar data)
+        // Marcar timestamp de atualização para sincronização entre abas
+        localStorage.setItem('dataUpdateTimestamp', Date.now().toString());
+        
+        // Disparar evento de atualização para sincronizar com o painel administrativo
         window.dispatchEvent(new CustomEvent('shiftDataUpdated', { 
-            detail: { shift: activeShift, data: dataByDateAndShift } 
+            detail: { shift: activeShift, data: dataByDateAndShift }
         }));
+        
+        // Também salvar no formato antigo para compatibilidade
+        const currentDateData = getDataForDate(selectedDate);
+        localStorage.setItem('allShiftData', JSON.stringify(currentDateData));
     }
 
     renderTableForShift(activeShift);
+}
+
+// Função para mostrar notificações
+function showNotification(message, type = 'info') {
+    // Criar elemento de notificação
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Adicionar ao body
+    document.body.appendChild(notification);
+    
+    // Remover automaticamente após 5 segundos
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
 }
 
 // ----------- Login modal -----------
@@ -661,29 +833,67 @@ function closeThirdPartyForm() {
 function saveThirdParty() {
     const name = document.getElementById('tpFullName').value.trim();
     const purpose = document.getElementById('tpPurpose').value.trim();
-    const block = document.getElementById('valueBlock').innerHTML;
-    const room = document.getElementById('valueRoom').innerHTML;
-    const roomNumber = document.getElementById('valueRoomNumber').innerHTML;
     const notes = document.getElementById('tpNotes').value.trim();
+    
+    // Recupera as opções do dropdown selecionadas
+    const block = currentSelections.block;
+    const room = currentSelections.room;
+    const roomNumber = currentSelections.roomNumber;
 
-    if(!name || !purpose || !block || !room || !roomNumber) { 
-        alert('Nome Completo, informações de contato e motivo são obrigatórios.'); 
+    // Valida se os campos obrigatórios estão vazios
+    if(!name || !purpose || !block || !room) { 
+        alert('Preencha corretamente os campos obrigatórios.'); 
         return; 
+    }
+
+    // Encontra o objeto <sala> para recuperar o vetor de <numeros>
+    const roomObj = dropdown[block].find(r => r.sala === room);
+    const numbers = roomObj ? roomObj.numeros : [];
+
+    // Valida se a sala selecionada há números e, caso tenha, se algum foi selecionado
+    if(numbers.length > 0 && !roomNumber) {
+        alert('Selecione uma sala para completar o cadastro!');
+        return;
     }
 
     const timeString = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', 
                                                                 minute: '2-digit' 
     });
     
+    // Variável que contém a forma de exibição da alocação
+    let salaIdentifier = `${block} - ${room}`;
+
+    if(roomNumber) {
+        salaIdentifier += ` - Sala ${roomNumber}`;
+    }
+    
+    // Dados do terceiro
     const newRecord = {
-        sala: block + room + roomNumber,
+        id: `terceiro_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        sala: salaIdentifier,
         professor: name + " (Terceiro)",
         disciplina: purpose,
         curso: "Terceiros",
         turma: "-",
         horaRetirada: timeString,
         horaDevolucao: null,
-        notas: notes
+        notas: notes,
+        
+        roomDetails: {
+            block: block,
+            room: room,
+            roomNumber: roomNumber
+        },
+        
+        // Campos de compatibilidade com o painel administrativo
+        room: salaIdentifier,
+        professorName: name + " (Terceiro)",
+        subject: purpose,
+        course: "Terceiros",
+        turmaNumber: "-",
+        withdrawalTime: timeString,
+        returnTime: null,
+        status: 'em_uso'
     };
 
     // Adicionar ao array do turno atual na data selecionada
@@ -763,91 +973,7 @@ let currentSelections = {
     roomNumber: null
 };
 
-// Função Salvar Terceiros
-function saveThirdParty() {
-    const name = document.getElementById('tpFullName').value.trim();
-    const purpose = document.getElementById('tpPurpose').value.trim();
-    const notes = document.getElementById('tpNotes').value.trim();
-    
-    // Recupera as opções do dropdown selecionadas
-    const block = currentSelections.block;
-    const room = currentSelections.room;
-    const roomNumber = currentSelections.roomNumber;
 
-    // Valida se os campos obrigatórios estão vazios
-    if(!name || !purpose || !block || !room) { 
-        alert('Preencha corretamente os campos obrigatórios.'); 
-        return; 
-    }
-
-    // Encontra o objeto <sala> para recuperar o vetor de <numeros>
-    const roomObj = dropdown[block].find(r => r.sala === room);
-    const numbers = roomObj ? roomObj.numeros : [];
-
-    // Valida se a sala selecionada há números e, caso tenha, se algum foi selecionado
-    if(numbers.length > 0 && !roomNumber) {
-        alert('Selecione uma sala para completar o cadastro!');
-        return;
-    }
-
-    const timeString = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', 
-                                                                minute: '2-digit' 
-    });
-    
-    // Variável que contém a forma de exibição da alocação
-    let salaIdentifier = `${block} - ${room}`;
-
-    if(roomNumber) {
-        salaIdentifier += ` - Sala ${roomNumber}`;
-    }
-    
-    // Dados do terceiro
-    const newRecord = {
-        sala: salaIdentifier,
-        professor: name + " (Terceiro)",
-        disciplina: purpose,
-        curso: "Terceiros",
-        turma: "-",
-        horaRetirada: timeString,
-        horaDevolucao: null,
-        notas: notes,
-        
-        roomDetails: {
-            block: block,
-            room: room,
-            roomNumber: roomNumber
-        }
-    };
-
-    // Adiciona o array no turno atual na data selecionada
-    const dateData = getDataForDate(selectedDate);
-    
-    if(!dateData[activeShift]) {
-        dateData[activeShift] = [];
-    }
-    
-    dateData[activeShift].push(newRecord);
-    
-    // Atualiza o localStorage e notifica os paineis (professor/ admin)
-    localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
-    localStorage.setItem('dataUpdateTimestamp', Date.now().toString());
-    
-    window.dispatchEvent(new CustomEvent('shiftDataUpdated', { 
-        detail: { 
-            shift: activeShift, 
-            data:  dataByDateAndShift 
-        } 
-    }));
-
-    // Limpa o form e reseta os dropdowns
-    document.getElementById('tpFullName').value = '';
-    document.getElementById('tpPurpose').value = '';
-    document.getElementById('tpNotes').value = '';
-    resetAllDropdowns();
-
-    closeThirdPartyForm();
-    renderTableForShift(activeShift);
-}
 
 // Inicia o sistema de Dropdowns
 function initializeDropdowns() {

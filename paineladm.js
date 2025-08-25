@@ -118,9 +118,12 @@ async function processFileImport(file, selectedShift) {
 
                 // Usar o turno ativo atual para o novo registro
                 const defaultShift = activeShift;
+                
+                // Gerar ID único se não houver registro
+                const uniqueId = registro || `import_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`;
 
                 return {
-                    id: registro || (index + 1).toString(), // Usar G-number como ID se disponível
+                    id: uniqueId,
                     room: sala,
                     course: curso,
                     turmaNumber: turmaStr,
@@ -131,7 +134,15 @@ async function processFileImport(file, selectedShift) {
                     withdrawalTime: '', // Será preenchido quando a chave for retirada
                     returnTime: '', // Será preenchido quando a chave for devolvida
                     requiresLogin: true,
-                    shift: defaultShift
+                    shift: defaultShift,
+                    // Campos de compatibilidade com o painel do professor
+                    sala: sala,
+                    professor: professorName,
+                    disciplina: disciplina,
+                    curso: curso,
+                    turma: turmaStr,
+                    horaRetirada: null,
+                    horaDevolucao: null
                 };
             });
 
@@ -634,8 +645,6 @@ window.addEventListener('unload', function() {
     }
 });
 
-// Inicializar o calendário e o atualizador de data
-// Inicializar os event listeners do modal de seleção de turno
 // Função para carregar dados salvos
 function loadSavedData() {
     // Tentar carregar dados no novo formato (por data)
@@ -643,6 +652,41 @@ function loadSavedData() {
     if (newFormatData) {
         try {
             dataByDateAndShift = JSON.parse(newFormatData);
+            
+            // Converter dados para garantir compatibilidade com o painel do professor
+            for (let date in dataByDateAndShift) {
+                for (let turno in dataByDateAndShift[date]) {
+                    if (Array.isArray(dataByDateAndShift[date][turno])) {
+                        dataByDateAndShift[date][turno] = dataByDateAndShift[date][turno].map(item => {
+                            if (!item || typeof item !== 'object') return item;
+                            
+                            // Garantir que cada registro tenha um ID único
+                            if (!item.id) {
+                                item.id = item.room || item.sala || `record_${Math.random().toString(36).substr(2, 9)}`;
+                            }
+                            
+                            // Se está no formato do professor, adicionar campos do admin
+                            if (item.sala && item.professor && !item.room) {
+                                return {
+                                    ...item,
+                                    room: item.sala,
+                                    professorName: item.professor,
+                                    subject: item.disciplina,
+                                    course: item.curso,
+                                    turmaNumber: item.turma,
+                                    withdrawalTime: item.horaRetirada,
+                                    returnTime: item.horaDevolucao,
+                                    status: item.horaRetirada && !item.horaDevolucao ? 'em_uso' : 
+                                           item.horaRetirada && item.horaDevolucao ? 'devolvida' : 'disponivel'
+                                };
+                            }
+                            
+                            // Se já está no formato do admin, manter
+                            return item;
+                        });
+                    }
+                }
+            }
             
             // Ordenar dados de todos os turnos alfabeticamente por nome do professor
             for (let date in dataByDateAndShift) {
@@ -972,6 +1016,18 @@ function renderTable() {
     
     console.log(`Dados a serem renderizados (${activeShift}) na data ${selectedDate}:`, shiftData);
 
+    // Garantir que todos os registros tenham IDs únicos
+    shiftData = shiftData.map(item => {
+        if (!item || typeof item !== 'object') return item;
+        
+        // Garantir que cada registro tenha um ID único
+        if (!item.id) {
+            item.id = item.room || item.sala || `record_${Math.random().toString(36).substr(2, 9)}`;
+        }
+        
+        return item;
+    });
+
     // Filtrar dados inválidos
     shiftData = shiftData.filter(item => {
         if (!item || typeof item !== 'object') return false;
@@ -1020,7 +1076,7 @@ function renderTable() {
             withdrawalTime: record.withdrawalTime || '-',
             returnTime: record.returnTime || '-',
             status: record.status || 'disponivel',
-            id: record.id || '',
+            id: record.id || record.room || '',
             shift: record.shift || activeShift
         };
 
@@ -1104,6 +1160,9 @@ function handleKeyAction(recordId, currentStatus) {
         record.status = 'devolvida';
         record.returnTime = timeString;
         
+        // Atualizar campos do painel do professor para compatibilidade
+        record.horaDevolucao = timeString;
+        
         // Mostrar notificação Bootstrap
         showNotification(`Chave devolvida por ${record.professorName} às ${record.returnTime}`, 'success');
     } else if (currentStatus === 'retirada' || currentStatus === 'devolvida' || currentStatus === 'disponivel') {
@@ -1111,6 +1170,10 @@ function handleKeyAction(recordId, currentStatus) {
         record.status = 'em_uso';
         record.withdrawalTime = timeString;
         record.returnTime = '';  // String vazia ao invés de undefined
+        
+        // Atualizar campos do painel do professor para compatibilidade
+        record.horaRetirada = timeString;
+        record.horaDevolucao = undefined;
         
         // Mostrar notificação Bootstrap
         showNotification(`Chave retirada por ${record.professorName} às ${record.withdrawalTime}`, 'info');
