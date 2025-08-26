@@ -59,6 +59,13 @@ td {
     left: 15px;
 }
 
+/* @media(max-width: 1024px) {
+    .main-content {
+        max-width: 990px;
+        width: 100%;
+    }
+} */
+
 @media (max-width: 576px) {
     .navbar .container-fluid {
         grid-template-columns: 1fr auto;
@@ -296,7 +303,6 @@ td {
     font-size: 0.97rem;
     font-weight: 500;
     color: #495057;
-    margin-bottom: 12px;
 }
 
 .modal input,
@@ -343,7 +349,7 @@ td {
 /* Dropdown List Styles */
 .drop-down-list {
     gap: 1rem;
-    margin-bottom: 1.5rem;
+    margin: 1.5rem 0 2.17rem 0;
     z-index: 1;
 }
 
@@ -352,20 +358,19 @@ td {
     opacity: 0;
     width: 100%;
     height: fit-content;
-    margin-bottom: 1rem;
-    transform: translateY(20px);
-    transition: all .6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(12px);
+    transition: all .8s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .drop-down-item.selectedOption {
-    display: flex;
+    flex-direction: row;
     align-items: center;
-    transform: translateX(20px); /* Add this for rightward movement */
-    /* gap: 1.25rem; */
 }
 
 .drop-down-item.selectedOption label {
-    /* max-width: 55px; */
     width: 60%;
     margin: 0;
     align-self: center;
@@ -379,7 +384,7 @@ td {
 .drop-down-item.hidden {
     pointer-events: none;
     opacity: 0.6;
-    display: block;
+    margin-bottom: 1rem;
 }
 
 .drop-down-item.invisible {
@@ -391,8 +396,7 @@ td {
 .drop-down-item.noOptions {
     opacity: 0.89;
     pointer-events: none;
-    transform: translateY(0);
-    
+    transform: translateY(0);    
 }
 
 .drop-down-item.noOptions .selected{
@@ -427,12 +431,6 @@ td {
 #tpRoomNumber:hover {
     transform: translateY(-2px);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1472);
-}
-
-#roomNumberDrop {
-    max-width: 130px;
-    margin: auto;
-    padding: auto;
 }
 
 #tpRoomNumber.gradient,
@@ -526,13 +524,6 @@ td {
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-label {
-    color: #333;
-    font-weight: 600;
-    margin-bottom: 8px;
-    display: block;
 }
 
 .disabled {

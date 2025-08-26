@@ -889,10 +889,63 @@ function openThirdPartyForm() {
     document.getElementById('thirdPartyModal').style.display = 'flex'; 
 }
 
-function closeThirdPartyForm() { 
+function closeThirdPartyForm() {
     document.getElementById('thirdPartyModal').style.display = 'none'; 
+    document.getElementById('tpFullName').value = '';
+    document.getElementById('tpPurpose').value = '';
+    document.getElementById('tpNotes').value = '';
+    resetAllDropdowns();
 }
 
+// ----------- Dropdowns -----------
+const dropdown = {
+  "Bloco A": [
+    { sala: "HIDRÁULICA",  numeros: [] },
+    { sala: "AUT PREDIAL", numeros: [] }
+  ],
+  "Bloco B": [
+    { sala: "QUÍMICA",     numeros: [] }
+  ],
+  "Bloco C": [
+    { sala: "FABRICAÇÃO",  numeros: [] }
+  ],
+  "Bloco D": [
+    { sala: "PLANTA CIM",  numeros: [] },
+    { sala: "METROLOGIA",  numeros: [] },
+    { sala: "LAB MAKER",   numeros: [] }
+  ],
+  "Bloco E": [
+    { sala: "SALAS TÉRREO", numeros: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] }
+  ],
+  "Bloco F": [
+    { sala: "LAB DE INFORMÁTICA", numeros: [1,2,3,4,5,6,7,8,9,10] },
+    { sala: "LAB ELETROTÉCNICA",  numeros: [11] },
+    { sala: "SALAS - 2º ANDAR",   numeros: [12,14,16,17,18,19,20] },
+    { sala: "LAB ACIONAMENTOS",   numeros: [13] },
+    { sala: "LAB ELETRÔNICA",     numeros: [15] }
+  ],
+  "Bloco G": [
+    { sala: "ARMAZENAGEM",        numeros: [] },
+    { sala: "SALA DE AUTOMOTIVA", numeros: [] },
+    { sala: "MOTOCICLETAS",       numeros: [] },
+    { sala: "FUNILARIA",          numeros: [] },
+    { sala: "PREDIAL II",         numeros: [] }
+  ],
+  "Bloco H": [
+    { sala: "SALA EMPILHADEIRA", numeros: [] },
+    { sala: "MICROBIOLOGIA",     numeros: [] },
+    { sala: "PANIFICAÇÃO",       numeros: [] }
+  ]
+};
+
+// Variável de seleção atual para o funcionamento dos dropdowns (cascata)
+let currentSelections = {
+    block: null,
+    room: null,
+    roomNumber: null
+};
+
+// Função Salvar Terceiros
 function saveThirdParty() {
     const name = document.getElementById('tpFullName').value.trim();
     const purpose = document.getElementById('tpPurpose').value.trim();
@@ -987,56 +1040,6 @@ function saveThirdParty() {
     closeThirdPartyForm();
     renderTableForShift(activeShift);
 }
-
-// ----------- Dropdowns -----------
-const dropdown = {
-  "Bloco A": [
-    { sala: "HIDRÁULICA",  numeros: [] },
-    { sala: "AUT PREDIAL", numeros: [] }
-  ],
-  "Bloco B": [
-    { sala: "QUÍMICA",     numeros: [] }
-  ],
-  "Bloco C": [
-    { sala: "FABRICAÇÃO",  numeros: [] }
-  ],
-  "Bloco D": [
-    { sala: "PLANTA CIM",  numeros: [] },
-    { sala: "METROLOGIA",  numeros: [] },
-    { sala: "LAB MAKER",   numeros: [] }
-  ],
-  "Bloco E": [
-    { sala: "SALAS TÉRREO", numeros: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] }
-  ],
-  "Bloco F": [
-    { sala: "LAB DE INFORMÁTICA", numeros: [1,2,3,4,5,6,7,8,9,10] },
-    { sala: "LAB ELETROTÉCNICA",  numeros: [11] },
-    { sala: "SALAS - 2º ANDAR",   numeros: [12,14,16,17,18,19,20] },
-    { sala: "LAB ACIONAMENTOS",   numeros: [13] },
-    { sala: "LAB ELETRÔNICA",     numeros: [15] }
-  ],
-  "Bloco G": [
-    { sala: "ARMAZENAGEM",        numeros: [] },
-    { sala: "SALA DE AUTOMOTIVA", numeros: [] },
-    { sala: "MOTOCICLETAS",       numeros: [] },
-    { sala: "FUNILARIA",          numeros: [] },
-    { sala: "PREDIAL II",         numeros: [] }
-  ],
-  "Bloco H": [
-    { sala: "SALA EMPILHADEIRA", numeros: [] },
-    { sala: "MICROBIOLOGIA",     numeros: [] },
-    { sala: "PANIFICAÇÃO",       numeros: [] }
-  ]
-};
-
-// Variável de seleção atual para o funcionamento dos dropdowns (cascata)
-let currentSelections = {
-    block: null,
-    room: null,
-    roomNumber: null
-};
-
-
 
 // Inicia o sistema de Dropdowns
 function initializeDropdowns() {
@@ -1194,6 +1197,7 @@ function populateBlockDropdown() {
             
             // Remove a classe "dropdown-active" de block-dropdown
             document.getElementById('block-dropdown').closest('.drop-down-item').classList.remove('dropdown-active');
+
             document.getElementById('room-number-dropdown').classList.remove('invisible');
             document.getElementById('room-number-dropdown').classList.add('hidden');
             
@@ -1260,8 +1264,14 @@ function populateRoomDropdown(selectedBlock) {
             
             // Exibe o dropdown de números de sala
             const roomNumberDropdown = document.querySelector('#room-number-dropdown');
-            if(roomNumberDropdown) {
+
+            const roomObj = dropdown[selectedBlock].find(room => room.sala === selectedRoom);
+            const numbers = roomObj ? roomObj.numeros : [];
+
+            if(numbers.length != 0) {
                 roomNumberDropdown.classList.remove('hidden');
+                roomNumberDropdown.classList.remove('selectedOption');
+                roomNumberDropdown.classList.remove('gradient');
                 roomNumberDropdown.classList.add('visible');
             }
             
@@ -1345,6 +1355,7 @@ function resetAllDropdowns() {
     resetDropdown('room-number-dropdown', 'Selecione o número da sala', true);
 
     // Reseta o gradiente do dropdown selecionado
+    document.querySelector('#block-dropdown .selected').classList.remove('gradient');
     document.querySelector('#room-dropdown .selected').classList.remove('gradient');
     document.querySelector('#room-number-dropdown .selected').classList.remove('gradient');
 
