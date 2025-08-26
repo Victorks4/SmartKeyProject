@@ -185,6 +185,16 @@ async function processFileImport(file, selectedShift) {
                 dateData[selectedShift] = sortedData;
                 console.log(`Dados importados e ordenados com sucesso para o turno ${selectedShift}. Total de registros:`, sortedData.length);
             
+                // Salvar no Firebase imediatamente após importação
+                if (typeof saveDataToFirebase === 'function') {
+                    console.log('🔥 Salvando dados importados no Firebase...');
+                    saveDataToFirebase(selectedDate, selectedShift, sortedData).then(() => {
+                        console.log('✅ Dados importados salvos no Firebase com sucesso!');
+                    }).catch(error => {
+                        console.error('❌ Erro ao salvar dados importados no Firebase:', error);
+                    });
+                }
+            
                 // Atualizar as visualizações se estivermos no turno selecionado
                 if (activeShift === selectedShift) {
                     updateTable();

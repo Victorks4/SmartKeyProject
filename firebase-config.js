@@ -138,3 +138,123 @@ async function loadAllDataForDate(date) {
         return false;
     }
 }
+
+// Função específica para o painel do professor - sincronização em tempo real
+function syncTeacherDataRealtime(date, shift) {
+    console.log(`🔄 SYNC [PROFESSOR]: Iniciando sincronização para ${date}/${shift}`);
+    
+    if (!database) {
+        console.error('❌ SYNC [PROFESSOR]: Database não disponível para sincronização');
+        return;
+    }
+    
+    const ref = database.ref(`chaves/${date}/${shift}`);
+    console.log(`🔄 SYNC [PROFESSOR]: Referência criada: ${ref.toString()}`);
+    
+    ref.on('value', (snapshot) => {
+        const data = snapshot.val() || [];
+        console.log(`📥 SYNC [PROFESSOR]: Dados recebidos do Firebase para ${date}/${shift}:`, data);
+        
+        // Verifica se a variável global do painel professor existe
+        if (typeof dataByDateAndShift !== 'undefined') {
+            // Inicializar estrutura se não existir
+            if (!dataByDateAndShift[date]) {
+                dataByDateAndShift[date] = {
+                    'manhã': [],
+                    'tarde': [],
+                    'noite': []
+                };
+            }
+            
+            const oldData = JSON.stringify(dataByDateAndShift[date][shift] || []);
+            const newData = JSON.stringify(data);
+            
+            console.log(`🔍 SYNC [PROFESSOR]: Comparando dados - Antigo: ${oldData.length} chars, Novo: ${newData.length} chars`);
+            
+            // Converter dados do formato admin para professor se necessário
+            const convertedData = data.map(item => {
+                if (item.room && item.professorName) {
+                    // Formato admin - converter para professor
+                    return {
+                        sala: item.room || 'Sala não especificada',
+                        professor: item.professorName || 'Professor não especificado',
+                        disciplina: item.subject || '-',
+                        curso: item.course || '-',
+                        turma: item.turmaNumber || '-',
+                        horaRetirada: item.withdrawalTime || null,
+                        horaDevolucao: item.returnTime || null,
+                        id: item.id || item.room
+                    };
+                } else {
+                    // Já está no formato do professor ou é compatível
+                    return item;
+                }
+            });
+            
+            dataByDateAndShift[date][shift] = convertedData;
+            
+            // Só atualizar se estamos visualizando esta data e turno e se os dados mudaram
+            if (typeof selectedDate !== 'undefined' && typeof activeShift !== 'undefined' && 
+                date === selectedDate && shift === activeShift && oldData !== newData) {
+                console.log('✅ SYNC [PROFESSOR]: Atualizando tabela - dados mudaram!');
+                if (typeof renderTableForShift === 'function') {
+                    renderTableForShift(activeShift);
+                }
+            } else {
+                console.log('⏭️ SYNC [PROFESSOR]: Não atualizando - mesmos dados ou data/turno diferente');
+            }
+        }
+    }, (error) => {
+        console.error('❌ SYNC [PROFESSOR]: Erro na sincronização:', error);
+    });
+}
+
+// Função para carregar dados do Firebase para o painel do professor
+async function loadTeacherDataFromFirebase(date) {
+    console.log(`🔄 [PROFESSOR]: Carregando dados do Firebase para ${date}`);
+    
+    try {
+        const manhaData = await loadDataFromFirebase(date, 'manhã');
+        const tardeData = await loadDataFromFirebase(date, 'tarde');
+        const noiteData = await loadDataFromFirebase(date, 'noite');
+        
+        // Inicializar estrutura se não existir
+        if (!dataByDateAndShift[date]) {
+            dataByDateAndShift[date] = {
+                'manhã': [],
+                'tarde': [],
+                'noite': []
+            };
+        }
+        
+        // Converter dados para o formato do professor
+        const convertShiftData = (data) => {
+            return (data || []).map(item => {
+                if (item.room && item.professorName) {
+                    return {
+                        sala: item.room || 'Sala não especificada',
+                        professor: item.professorName || 'Professor não especificado',
+                        disciplina: item.subject || '-',
+                        curso: item.course || '-',
+                        turma: item.turmaNumber || '-',
+                        horaRetirada: item.withdrawalTime || null,
+                        horaDevolucao: item.returnTime || null,
+                        id: item.id || item.room
+                    };
+                } else {
+                    return item;
+                }
+            });
+        };
+        
+        dataByDateAndShift[date]['manhã'] = convertShiftData(manhaData);
+        dataByDateAndShift[date]['tarde'] = convertShiftData(tardeData);
+        dataByDateAndShift[date]['noite'] = convertShiftData(noiteData);
+        
+        console.log(`✅ [PROFESSOR]: Dados carregados do Firebase para ${date}:`, dataByDateAndShift[date]);
+        return true;
+    } catch (error) {
+        console.error('❌ [PROFESSOR]: Erro ao carregar dados do Firebase:', error);
+        return false;
+    }
+}

@@ -1,6 +1,5 @@
 let activeAction = null;
 let activeShift = 'manhã';
-let sortAlphabetically = false;
 let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 
@@ -119,34 +118,63 @@ function getCurrentShiftData() {
     return result;
 }
 
-// Carregar dados do localStorage
-function loadSharedData() {
+// Carregar dados do Firebase e localStorage como fallback
+async function loadSharedData() {
     console.log('[PROFESSOR] ==> loadSharedData iniciada');
     console.log('[PROFESSOR] ==> selectedDate atual:', selectedDate);
     console.log('[PROFESSOR] ==> activeShift atual:', activeShift);
     
-    // Tentar carregar dados no novo formato (por data)
-    const newFormatData = localStorage.getItem('allDateShiftData');
-    console.log('[PROFESSOR] Dados brutos do localStorage:', newFormatData);
-    
-    if(newFormatData) {
+    // Primeiro, tentar carregar dados do Firebase
+    let firebaseLoaded = false;
+    if (typeof loadTeacherDataFromFirebase === 'function') {
+        console.log('[PROFESSOR] 🔥 Tentando carregar dados do Firebase...');
         try {
-            dataByDateAndShift = JSON.parse(newFormatData);
-            console.log('[PROFESSOR] Dados carregados no novo formato:', dataByDateAndShift);
-            console.log('[PROFESSOR] Total de datas encontradas:', Object.keys(dataByDateAndShift).length);
-            
-            // Converter dados para garantir compatibilidade
-            dataByDateAndShift = convertAdminDataToTeacherFormat(dataByDateAndShift);
-            console.log('[PROFESSOR] Dados convertidos para formato do professor:', dataByDateAndShift);
-            
-            console.log('[PROFESSOR] ==> Chamando renderTableForShift com activeShift:', activeShift);
-            renderTableForShift(activeShift);
-            return;
-        } catch (e) {
-            console.error('[PROFESSOR] Erro ao carregar dados no novo formato:', e);
+            firebaseLoaded = await loadTeacherDataFromFirebase(selectedDate);
+            if (firebaseLoaded) {
+                console.log('[PROFESSOR] ✅ Dados carregados do Firebase com sucesso!');
+                
+                // Iniciar sincronização em tempo real para todos os turnos
+                if (typeof syncTeacherDataRealtime === 'function') {
+                    console.log('[PROFESSOR] 🔄 Iniciando sincronização em tempo real...');
+                    syncTeacherDataRealtime(selectedDate, 'manhã');
+                    syncTeacherDataRealtime(selectedDate, 'tarde');
+                    syncTeacherDataRealtime(selectedDate, 'noite');
+                }
+                
+                renderTableForShift(activeShift);
+                return;
+            }
+        } catch (error) {
+            console.error('[PROFESSOR] ❌ Erro ao carregar do Firebase:', error);
         }
-    } else {
-        console.log('[PROFESSOR] Nenhum dado encontrado em allDateShiftData');
+    }
+    
+    // Fallback: tentar carregar dados do localStorage se Firebase falhou
+    if (!firebaseLoaded) {
+        console.log('[PROFESSOR] 📁 Carregando dados do localStorage como fallback...');
+        
+        const newFormatData = localStorage.getItem('allDateShiftData');
+        console.log('[PROFESSOR] Dados brutos do localStorage:', newFormatData);
+        
+        if(newFormatData) {
+            try {
+                dataByDateAndShift = JSON.parse(newFormatData);
+                console.log('[PROFESSOR] Dados carregados no novo formato:', dataByDateAndShift);
+                console.log('[PROFESSOR] Total de datas encontradas:', Object.keys(dataByDateAndShift).length);
+                
+                // Converter dados para garantir compatibilidade
+                dataByDateAndShift = convertAdminDataToTeacherFormat(dataByDateAndShift);
+                console.log('[PROFESSOR] Dados convertidos para formato do professor:', dataByDateAndShift);
+                
+                console.log('[PROFESSOR] ==> Chamando renderTableForShift com activeShift:', activeShift);
+                renderTableForShift(activeShift);
+                return;
+            } catch (e) {
+                console.error('[PROFESSOR] Erro ao carregar dados no novo formato:', e);
+            }
+        } else {
+            console.log('[PROFESSOR] Nenhum dado encontrado em allDateShiftData');
+        }
     }
     
     // Fallback: tentar carregar dados no formato antigo e migrar
@@ -310,17 +338,48 @@ document.addEventListener('DOMContentLoaded', function() {
         dateSelector.value = selectedDate;
         
         // Evento de mudança de data
-        dateSelector.addEventListener('change', function() {
+        dateSelector.addEventListener('change', async function() {
             const oldDate = selectedDate;
             selectedDate = this.value;
             console.log(`Data alterada de ${oldDate} para ${selectedDate}`);
             
-            // Verificar se há dados para esta data
-            const dateData = getDataForDate(selectedDate);
-            const shiftData = dateData[activeShift] || [];
-            console.log(`Dados encontrados para ${selectedDate} no turno ${activeShift}:`, shiftData);
+            // Parar sincronização da data anterior
+            if (typeof stopSyncDataRealtime === 'function') {
+                console.log('[PROFESSOR] 🛑 Parando sincronização da data anterior...');
+                stopSyncDataRealtime(oldDate, 'manhã');
+                stopSyncDataRealtime(oldDate, 'tarde');
+                stopSyncDataRealtime(oldDate, 'noite');
+            }
             
-            // Não sincronizar data - navegação independente
+            // Carregar dados da nova data do Firebase
+            let firebaseLoaded = false;
+            if (typeof loadTeacherDataFromFirebase === 'function') {
+                console.log(`[PROFESSOR] 🔥 Carregando dados do Firebase para nova data: ${selectedDate}`);
+                try {
+                    firebaseLoaded = await loadTeacherDataFromFirebase(selectedDate);
+                    if (firebaseLoaded) {
+                        console.log('[PROFESSOR] ✅ Dados da nova data carregados do Firebase!');
+                        
+                        // Iniciar sincronização para a nova data
+                        if (typeof syncTeacherDataRealtime === 'function') {
+                            console.log('[PROFESSOR] 🔄 Iniciando sincronização para nova data...');
+                            syncTeacherDataRealtime(selectedDate, 'manhã');
+                            syncTeacherDataRealtime(selectedDate, 'tarde');
+                            syncTeacherDataRealtime(selectedDate, 'noite');
+                        }
+                    }
+                } catch (error) {
+                    console.error('[PROFESSOR] ❌ Erro ao carregar nova data do Firebase:', error);
+                }
+            }
+            
+            // Se não conseguiu carregar do Firebase, verificar localStorage
+            if (!firebaseLoaded) {
+                console.log('[PROFESSOR] 📁 Verificando localStorage para nova data...');
+                const dateData = getDataForDate(selectedDate);
+                const shiftData = dateData[activeShift] || [];
+                console.log(`Dados encontrados para ${selectedDate} no turno ${activeShift}:`, shiftData);
+            }
             
             renderTableForShift(activeShift);
         });
@@ -332,8 +391,15 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('[PROFESSOR] ==> selectedDate inicial:', selectedDate);
     
     renderTabs(); // Garantir que as abas sejam renderizadas
-    loadSharedData();
-    renderTableForShift(activeShift);
+    
+    // Carregar dados de forma assíncrona
+    loadSharedData().then(() => {
+        console.log('[PROFESSOR] ==> Dados carregados, renderizando tabela...');
+        renderTableForShift(activeShift);
+    }).catch(error => {
+        console.error('[PROFESSOR] ==> Erro ao carregar dados:', error);
+        renderTableForShift(activeShift); // Tentar renderizar mesmo com erro
+    });
     
     // Teste: verificar se há dados no localStorage
     setTimeout(function() {
@@ -490,15 +556,12 @@ function sorted(data) {
             console.warn('Alguns itens foram removidos por serem inválidos:', data);
         }
 
-        if (sortAlphabetically) {
-            return validData.sort((a, b) => {
-                if (!a.professor || !b.professor) return 0;
-                return (a.professor || '').localeCompare((b.professor || ''), 'pt-BR');
-            });
-        }
+        // Sempre ordenar alfabeticamente por professor para manter consistência com painel administrativo
         return validData.sort((a, b) => {
-            if (!a.sala || !b.sala) return 0;
-            return (a.sala || '').localeCompare((b.sala || ''), 'pt-BR');
+            const professorA = (a.professor || '').trim();
+            const professorB = (b.professor || '').trim();
+            if (!professorA || !professorB) return 0;
+            return professorA.localeCompare(professorB, 'pt-BR');
         });
     } catch (error) {
         console.error('Erro ao ordenar dados:', error);
@@ -1312,17 +1375,6 @@ function initialize() {
     // Carregar dados e configurar interface
     loadSharedData();
     renderTabs();
-    
-    // Configurar os eventos
-    document.getElementById('sortToggle')?.addEventListener('click', () => {
-        sortAlphabetically = !sortAlphabetically;
-        const btn = document.getElementById('sortToggle');
-        
-        if(btn) {
-            btn.setAttribute('aria-pressed', String(sortAlphabetically));
-            renderTableForShift(activeShift);
-        }
-    });
 
     // Iniciar verificação automática de turno
     setInterval(autoShiftTick, 60000);
