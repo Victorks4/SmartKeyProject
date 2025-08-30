@@ -411,7 +411,24 @@ td {
     align-items: center;
     z-index: 1000;
     visibility: visible;
+    pointer-events: auto;
 }
+
+
+/* Bloqueia interação no conteúdo subjacente quando overlay está ativo */
+body.overlay-open .main-content,
+body.overlay-open nav,
+body.overlay-open .navbar,
+body.overlay-open .toolbar,
+body.overlay-open #shiftContent {
+    pointer-events: none !important;
+}
+
+/* Esconde visualmente do foco por teclado (tab) quando overlay está ativo */
+body.overlay-open .main-content *:focus {
+    outline: none !important;
+}
+
 .popup{
     background: white;
     padding: 20px;

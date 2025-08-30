@@ -615,6 +615,12 @@ td {
     margin-bottom: 0.75rem;
 }
 
+/* Ainda vou melhorar isso daq (mds) kkkkk */
+.text-info-fast {
+    margin-top: 1.2rem;
+    color: var(--bs-success);
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
     .table-responsive {

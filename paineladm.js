@@ -879,6 +879,7 @@ function checkLogin() {
     const isLoggedIn = localStorage.getItem('adminLoggedIn');
     if (isLoggedIn === 'true') {
         document.getElementById('overlay').style.display = 'none';
+        document.body.classList.remove('overlay-open');
         // Aguardar um pouco para garantir que o DOM está pronto
         setTimeout(() => {
             initializePainelAdm();
@@ -889,6 +890,9 @@ function checkLogin() {
 function logout() {
     localStorage.removeItem('adminLoggedIn');
     document.getElementById('overlay').style.display = 'flex';
+    // implementar estilização da classe no css 
+    document.body.classList.add('overlay-open');
+    trapFocusInOverlay();
 }
 
 function login(){
@@ -897,6 +901,7 @@ function login(){
     if(username === 'admin' && senha === 'adm@123'){
         localStorage.setItem('adminLoggedIn', 'true');
         document.getElementById('overlay').style.display = 'none';
+        document.body.classList.remove('overlay-open');
         // Inicializar o painel após login bem-sucedido
         setTimeout(() => {
             initializePainelAdm();
@@ -916,8 +921,6 @@ function cancel(){
         window.location.href = 'teacherPanel.html';
     }
 }
-   
-
 
 // Array que irá armazenar os dados importados
 let mockData = [];
@@ -983,8 +986,6 @@ function getActionButton(recordId, status) {
         </button>
     `;
 }
-
-
 
 // Função para atualizar a data atual
 function updateCurrentDate() {
@@ -1316,5 +1317,78 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelButton = document.getElementById('cancel-btn');
     if (cancelButton && !cancelButton.getAttribute('onclick')) {
         cancelButton.addEventListener('click', cancel);
+    }
+});
+
+// Impede foco/tab no conteúdo fora do overlay e mantém foco em ciclo dentro do popup
+function trapFocusInOverlay() {
+    const overlay = document.getElementById('overlay');
+    if (!overlay || overlay.style.display === 'none') return;
+
+    document.body.classList.add('overlay-open');
+
+    const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const popup = overlay.querySelector('.popup');
+    if (!popup) return;
+
+    const focusable = Array.from(popup.querySelectorAll(focusableSelectors))
+        .filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1);
+
+    const firstEl = focusable[0];
+    const lastEl = focusable[focusable.length - 1];
+
+    // Força foco inicial
+    if (firstEl) firstEl.focus();
+
+    function handleKeydown(e) {
+        if (e.key === 'Tab') {
+            if (focusable.length === 0) {
+                e.preventDefault();
+                return;
+            }
+            if (e.shiftKey) {
+                if (document.activeElement === firstEl) {
+                    e.preventDefault();
+                    lastEl.focus();
+                }
+            } else {
+                if (document.activeElement === lastEl) {
+                    e.preventDefault();
+                    firstEl.focus();
+                }
+            }
+        } else if (e.key === 'Escape') {
+            // Permite fechar com ESC
+            cancel();
+        }
+    }
+
+    function preventFocusOutside(e) {
+        if (!popup.contains(e.target)) {
+            e.stopPropagation();
+            e.preventDefault();
+            if (firstEl) firstEl.focus();
+        }
+    }
+
+    document.addEventListener('keydown', handleKeydown, true);
+    document.addEventListener('focusin', preventFocusOutside, true);
+
+    // Remover handlers ao fechar
+    const observer = new MutationObserver(() => {
+        if (overlay.style.display === 'none') {
+            document.removeEventListener('keydown', handleKeydown, true);
+            document.removeEventListener('focusin', preventFocusOutside, true);
+            observer.disconnect();
+        }
+    });
+    observer.observe(overlay, { attributes: true, attributeFilter: ['style', 'class'] });
+}
+
+// Ativar trapFocus se o overlay iniciar visível (sem login)
+document.addEventListener('DOMContentLoaded', function() {
+    const overlay = document.getElementById('overlay');
+    if (overlay && overlay.style.display !== 'none') {
+        trapFocusInOverlay();
     }
 });
