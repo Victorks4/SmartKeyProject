@@ -1006,118 +1006,105 @@ function updateCurrentDate() {
     }
 }
 
-// Função para renderizar a tabela (similar ao teacherPanel)
+// // Função de para renderizar a tabela
 function renderTable() {
-    console.log('Renderizando dados para o turno:', activeShift);
+    console.log('Renderizando dados do turno:', activeShift);
     const container = document.getElementById('shiftContent');
-    if (!container) {
-        console.error('Elemento shiftContent não encontrado!');
+    
+    if(!container) {
+        console.error('Elemento shiftContent não encontrado');
         return;
     }
     
-    // Atualizar a data atual
     updateCurrentDate();
     
-    // Usar os dados do turno atual na data selecionada
     let shiftData = getCurrentShiftData();
-    if (!Array.isArray(shiftData)) {
+    console.log('##### shiftData:', shiftData);
+    
+    if(!Array.isArray(shiftData)) {
         console.warn('Dados do turno não são um array:', activeShift);
         shiftData = [];
     }
     
-    console.log(`Dados a serem renderizados (${activeShift}) na data ${selectedDate}:`, shiftData);
-
-    // Garantir que todos os registros tenham IDs únicos
-    shiftData = shiftData.map(item => {
-        if (!item || typeof item !== 'object') return item;
-        
-        // Garantir que cada registro tenha um ID único
-        if (!item.id) {
-            item.id = item.room || item.sala || `record_${Math.random().toString(36).substr(2, 9)}`;
-        }
-        
-        return item;
-    });
-
-    // Filtrar dados inválidos
-    shiftData = shiftData.filter(item => {
-        if (!item || typeof item !== 'object') return false;
-        return item.room && typeof item.room === 'string' &&
-               item.professorName && typeof item.professorName === 'string' &&
-               item.room.trim() !== '' && item.professorName.trim() !== '';
-    });
+    // Filtro, normalização e ordenação
+    const validData = shiftData
     
-    // Ordenar dados alfabeticamente por nome do professor
-    shiftData = shiftData.sort((a, b) => {
-        const professorA = (a.professorName || '').trim();
-        const professorB = (b.professorName || '').trim();
-        if (!professorA || !professorB) return 0;
-        return professorA.localeCompare(professorB, 'pt-BR');
-    });
+    .filter(isValidRecord)
+    .map(normalizeRecord)
+    .sort((a, b) => (a.professorName || '').localeCompare(b.professorName || '', 'pt-BR'));
     
-    console.log(`Dados válidos após filtro e ordenação:`, shiftData);
-
     const shiftCapitalized = activeShift.charAt(0).toUpperCase() + activeShift.slice(1);
-    // Corrigir problema de fuso horário ao exibir a data
-    const [year, month, day] = selectedDate.split('-');
-    const formattedDate = `${day}/${month}/${year}`;
-
-    // Se não há dados, mostrar mensagem
-    let rows = '';
-    if (shiftData.length === 0) {
-        rows = `
-            <tr>
-                <td colspan="9" class="text-center text-muted py-4">
-                    <i class="bi bi-calendar-x me-2"></i>
-                    Nenhum dado encontrado para ${formattedDate} no turno da ${shiftCapitalized.toLowerCase()}
-                    <br>
-                    <small class="text-muted">Importe um arquivo ou selecione outra data</small>
-                </td>
-            </tr>
-        `;
-    } else {
-        rows = shiftData.map(record => {
-        // Garantir que temos valores seguros para exibição
-        const safeRecord = {
-            room: record.room || '',
-            course: record.course || '',
-            turmaNumber: record.turmaNumber || '',
-            professorName: record.professorName || 'PROFESSOR',
-            subject: record.subject || 'DISCIPLINA',
-            withdrawalTime: record.withdrawalTime || '-',
-            returnTime: record.returnTime || '-',
-            status: record.status || 'disponivel',
-            id: record.id || record.room || '',
-            shift: record.shift || activeShift
-        };
-
-        return `
-        <tr>
-            <td>${safeRecord.room}</td>
-            <td>${safeRecord.course}</td>
-            <td>
-                <span class="badge fw-bold text-dark">${safeRecord.turmaNumber}</span>
-            </td>
-            <td class="fw-medium">
-                <i class="bi bi-person-circle table-icon"></i>
-                ${safeRecord.professorName}
-            </td>
-            <td>
-                <i class="bi bi-book table-icon"></i>
-                ${safeRecord.subject}
-            </td>
-            <td>${safeRecord.withdrawalTime}</td>
-            <td>${safeRecord.returnTime}</td>
-            <td>${getStatusBadge(safeRecord.status)}</td>
-            <td class="text-center">
-                ${getActionButton(safeRecord.id, safeRecord.status)}
-            </td>
-        </tr>
-        `;
-        }).join('');
-    }
+    const formattedDate = formatDate(selectedDate);
     
-    container.innerHTML = `
+    container.innerHTML = generateTableHTML(validData, shiftCapitalized, formattedDate);
+}
+
+// Função de validação
+function isValidRecord(item) {
+    if(!item || typeof item !== 'object') return false;
+    
+    const room = getFirstValidValue(item, ['room', 'sala', 'roomName', 'classroom']);
+    const teacher = getFirstValidValue(item, ['professorName', 'professor', 'teacherName']);
+    
+    return (room && teacher && room.trim() && teacher.trim());
+}
+
+// Função de normalização
+function normalizeRecord(item) {
+    return {
+        ...item,
+        room: getFirstValidValue(item, ['room', 'sala', 'roomName', 'classroom']) || '',
+        professorName: getFirstValidValue(item, ['professorName', 'professor', 'teacherName']) || '',
+        course: getFirstValidValue(item, ['course', 'curso']) || '',
+        subject: getFirstValidValue(item, ['subject', 'disciplina']) || '',
+        turmaNumber: getFirstValidValue(item, ['turmaNumber', 'turma']) || '',
+        withdrawalTime: getFirstValidValue(item, ['withdrawalTime', 'horaRetirada']) || '',
+        returnTime: getFirstValidValue(item, ['returnTime', 'horaDevolucao']) || '',
+        status: item.status || determineStatus(item),
+        id: item.id || generateId(item),
+        shift: item.shift || activeShift
+    };
+}
+
+// Função para obter o primeiro valor não vazio
+function getFirstValidValue(obj, fields) {
+    return fields.find(field => obj[field] && 
+                       obj[field].toString().trim()) && 
+                       obj[fields.find(field => obj[field] && 
+                       obj[field].toString().trim())];
+}
+
+// Função de determinação do status (em uso, devolvida ou disponível)
+function determineStatus(record) {
+    const hasWithdrawal = getFirstValidValue(record, ['withdrawalTime', 'horaRetirada']);
+    const hasReturn = getFirstValidValue(record, ['returnTime', 'horaDevolucao']);
+    
+    if(hasWithdrawal && hasReturn) return 'devolvida';
+    if(hasWithdrawal) return 'em_uso';
+    else return 'disponivel';
+}
+
+// Finção de geração de ID único
+function generateId(record) {
+    const room = getFirstValidValue(record, ['room', 'sala']) || 'unknown';
+    const prof = (getFirstValidValue(record, ['professorName', 'professor']) || 'unknown').replace(/\s+/g, '');
+    
+    return `${Date.now()}_${prof}_${room}`.toLowerCase();
+}
+
+// Formatação de data (AAAA-MM-DD <para> DD/MM/AAAA)
+function formatDate(dateStr) {
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+}
+
+// Geração do HTML da tabela
+function generateTableHTML(validData, shiftCapitalized, formattedDate) {
+    const rows = validData.length === 0 
+        ? generateEmptyRow(shiftCapitalized, formattedDate)
+        : validData.map(generateTableRow).join('');
+    
+    return `
         <div class="card-header d-flex align-items-center justify-content-between">
             <h2 class="card-title">
                 <i class="bi bi-clock"></i>
@@ -1145,11 +1132,50 @@ function renderTable() {
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        ${rows || ''}
+                        ${rows}
                     </tbody>
                 </table>
             </div>
         </div>
+    `;
+}
+
+// Geração de linha de tabela vazia
+function generateEmptyRow(shiftCapitalized, formattedDate) {
+    return `
+        <tr>
+            <td colspan="9" class="text-center text-muted py-4">
+                <i class="bi bi-calendar-x me-2"></i>
+                Nenhum dado encontrado para ${formattedDate} no turno da ${shiftCapitalized.toLowerCase()}
+                <br>
+                <small class="text-muted">Importe um arquivo ou selecione outra data</small>
+            </td>
+        </tr>
+    `;
+}
+
+// Geração de linha de tabela com dados
+function generateTableRow(record) {
+    return `
+        <tr>
+            <td>${record.room}</td>
+            <td>${record.course}</td>
+            <td><span class="badge fw-bold text-dark">${record.turmaNumber}</span></td>
+            <td class="fw-medium">
+                <i class="bi bi-person-circle table-icon"></i>
+                ${record.professorName}
+            </td>
+            <td>
+                <i class="bi bi-book table-icon"></i>
+                ${record.subject}
+            </td>
+            <td>${record.withdrawalTime || '-'}</td>
+            <td>${record.returnTime || '-'}</td>
+            <td>${getStatusBadge(record.status)}</td>
+            <td class="text-center">
+                ${getActionButton(record.id, record.status)}
+            </td>
+        </tr>
     `;
 }
 

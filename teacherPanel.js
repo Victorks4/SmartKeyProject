@@ -1535,6 +1535,18 @@ function executeKeyAction(record, action) {
             showNotification(`Chave devolvida por ${record.professor} às ${hm}`, 'info');
         }
 
+        // Adicionar metadados de sincronização
+        const completeTableData = {
+            timestamp: Date.now(),
+            lastModified: now.toISOString(),
+            shift: activeShift,
+            date: selectedDate,
+            totalRecords: currentShiftData.length,
+            modifiedRecordId: record.id || record.sala,
+            action: action,
+            data: currentShiftData
+        };
+
         // Atualizar o localStorage com os novos dados
         localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
         
@@ -1543,28 +1555,85 @@ function executeKeyAction(record, action) {
         
         // Disparar evento de atualização para sincronizar com o painel administrativo
         window.dispatchEvent(new CustomEvent('shiftDataUpdated', { 
-            detail: { shift: activeShift, data: dataByDateAndShift }
+            detail: completeTableData
         }));
         
-        // Salvar no Firebase para persistência e sincronização em tempo real
+        // Salvar TODA A TABELA no Firebase para persistência e sincronização em tempo real
         if(typeof saveDataToFirebase === 'function') {
-            console.log('🔥 [AÇÃO CHAVE]: Salvando dados no Firebase após ação...');
-
-            saveDataToFirebase(selectedDate, activeShift, currentShiftData).then(() => {
-                console.log('✅ [AÇÃO CHAVE]: Dados salvos no Firebase com sucesso!');
+            // Garantir que enviamos a tabela completa, não apenas o registro modificado
+            saveDataToFirebase(selectedDate, activeShift, currentShiftData).then(() => {                
+                // Notificar admin panel que a tabela completa foi atualizada
+                if(typeof notifyAdminPanelUpdate === 'function') {
+                    notifyAdminPanelUpdate(completeTableData);
+                }
             }).catch(error => {
-                console.error('❌ [AÇÃO CHAVE]: Erro ao salvar dados no Firebase:', error);
+                console.error('| Erro ao salvar TABELA COMPLETA no Firebase:', error);
+                console.error('| Dados que falharam:', {
+                    date: selectedDate,
+                    shift: activeShift,
+                    recordCount: currentShiftData.length
+                });
             });
         } else {
-            console.warn('⚠️ [AÇÃO CHAVE]: Função saveDataToFirebase não disponível');
+            console.warn('| ERRO: Função saveDataToFirebase não disponível');
         }
         
         // Também salvar no formato antigo para compatibilidade
         const currentDateData = getDataForDate(selectedDate);
         localStorage.setItem('allShiftData', JSON.stringify(currentDateData));
+
+        // Forçar sincronização com painel admin se disponível
+        if(typeof syncWithAdminPanel === 'function') {
+            syncWithAdminPanel(completeTableData);
+        }
+
+        // Verificar se os dados foram realmente salvos
+        setTimeout(() => {
+            verifyDataSyncronization(selectedDate, activeShift, currentShiftData);
+        }, 1000);
+        
+    } else {
+        console.warn('| ERRO: Registro não encontrado para ação:', {
+            recordId: record.id,
+            sala: record.sala,
+            action: action
+        });
     }
 
     renderTableForShift(activeShift);
+}
+
+// Função auxiliar para verificar se os dados foram sincronizados corretamente
+function verifyDataSyncronization(date, shift, expectedData) {
+    if(typeof getFirebaseData === 'function') {
+        getFirebaseData(date, shift).then(firebaseData => {
+            if(firebaseData && firebaseData.length === expectedData.length) {
+                console.log('| Dados sincronizados corretamente no firebase');
+            } else {
+                console.warn('| ERRO: problema na sincronização:', {
+                    expected: expectedData.length,
+                    firebase: firebaseData ? firebaseData.length : 0
+                });
+            }
+        }).catch(error => {
+            console.error('| Erro ao verificar sincronização:', error);
+        });
+    }
+}
+
+// Função auxiliar para notificar o painel administrativo sobre atualizações
+function notifyAdminPanelUpdate(completeTableData) {
+    // Enviar via WebSocket se disponível
+    if(typeof sendWebSocketMessage === 'function') {
+        sendWebSocketMessage('COMPLETE_TABLE_UPDATE', completeTableData);
+    }
+    
+    // Ou via custom event para comunicação entre componentes
+    window.dispatchEvent(new CustomEvent('adminPanelTableUpdate', {
+        detail: completeTableData
+    }));
+    
+    console.log('Sucesso em notificar paineladm');
 }
 
 // Função para mostrar notificações
