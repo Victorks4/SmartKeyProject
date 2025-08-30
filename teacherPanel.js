@@ -1162,10 +1162,10 @@ function hideAdmLogin() {
 function getActionButton(recordId, record) {
     // Verificar se a chave está em uso usando campos do professor
     const isInUse = (record.horaRetirada && !record.horaDevolucao) || 
-                   (record.withdrawalTime && !record.returnTime) ||
-                   record.status === 'em_uso';
+                    (record.withdrawalTime && !record.returnTime)  ||
+                    record.status === 'em_uso';
     
-    if (isInUse) {
+    if(isInUse) {
         // Já retirada - opção de devolver
         return `
             <button 
@@ -1482,21 +1482,22 @@ function handleKey(recordId, action) {
     const currentData = getCurrentShiftData();
     // Tentar encontrar por ID primeiro, depois por sala
     const record = currentData.find(r => r.id === recordId) || 
-                   currentData.find(r => r.sala === recordId);
+                   currentData.find(r => r.sala === recordId) ||
+                   currentData.find(r => r.curso === recordId);
     
     if(!record) {
         console.error('Registro não encontrado:', recordId);
         return;
     }
 
-    // Para ações de remoção, abrir modal de login para validação
-    if(action === 'remove') {
+    // Para ações de remoção por professores, abrir modal de login para validação
+    if(action === 'remove' && record.curso != "Terceiros") {
         activeAction = { record, action };
         openLogin();
         return;
     }
 
-    // Para outras ações (ex.: devolução), executar diretamente
+    // Para outras ações (ex.: devolução) e para remoção de chaves por terceiros, executar diretamente
     executeKeyAction(record, action);
 }
 
@@ -1544,6 +1545,19 @@ function executeKeyAction(record, action) {
         window.dispatchEvent(new CustomEvent('shiftDataUpdated', { 
             detail: { shift: activeShift, data: dataByDateAndShift }
         }));
+        
+        // Salvar no Firebase para persistência e sincronização em tempo real
+        if(typeof saveDataToFirebase === 'function') {
+            console.log('🔥 [AÇÃO CHAVE]: Salvando dados no Firebase após ação...');
+
+            saveDataToFirebase(selectedDate, activeShift, currentShiftData).then(() => {
+                console.log('✅ [AÇÃO CHAVE]: Dados salvos no Firebase com sucesso!');
+            }).catch(error => {
+                console.error('❌ [AÇÃO CHAVE]: Erro ao salvar dados no Firebase:', error);
+            });
+        } else {
+            console.warn('⚠️ [AÇÃO CHAVE]: Função saveDataToFirebase não disponível');
+        }
         
         // Também salvar no formato antigo para compatibilidade
         const currentDateData = getDataForDate(selectedDate);
@@ -1828,6 +1842,19 @@ function saveThirdParty() {
     // Atualizar localStorage e notificar TODOS os painéis (professor + admin)
     localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
     localStorage.setItem('dataUpdateTimestamp', Date.now().toString());
+    
+    // Salvar no Firebase para persistência e sincronização em tempo real
+    if(typeof saveDataToFirebase === 'function') {
+        console.log('🔥 [TERCEIROS]: Salvando dados de terceiro no Firebase...');
+
+        saveDataToFirebase(selectedDate, activeShift, dateData[activeShift]).then(() => {
+            console.log('✅ [TERCEIROS]: Dados de terceiro salvos no Firebase com sucesso!');
+        }).catch(error => {
+            console.error('❌ [TERCEIROS]: Erro ao salvar dados de terceiro no Firebase:', error);
+        });
+    } else {
+        console.warn('⚠️ [TERCEIROS]: Função saveDataToFirebase não disponível');
+    }
     
     window.dispatchEvent(new CustomEvent('shiftDataUpdated', { 
         detail: { 
@@ -2204,6 +2231,14 @@ function initialize() {
 
     // Iniciar verificação automática de turno
     setInterval(autoShiftTick, 60000);
+    
+    // Inicializar sincronização Firebase se estiver disponível
+    if(typeof initializeFirebaseSync === 'function') {
+        console.log('🔥 [PROFESSOR]: Inicializando sincronização Firebase...');
+        initializeFirebaseSync();
+    } else {
+        console.warn('⚠️ [PROFESSOR]: Função initializeFirebaseSync não disponível');
+    }
     
     // Inicializar ícones
     if(typeof lucide !== 'undefined') {

@@ -258,3 +258,27 @@ async function loadTeacherDataFromFirebase(date) {
         return false;
     }
 }
+
+// Função para inicializar sincronização Firebase no painel do professor
+function initializeFirebaseSync() {
+    console.log('🔥 [PROFESSOR]: Inicializando sincronização Firebase...');
+    
+    if (!database) {
+        console.error('❌ [PROFESSOR]: Database não disponível para sincronização');
+        return;
+    }
+    
+    // Sincronizar dados para a data atual e turno atual
+    if (typeof selectedDate !== 'undefined' && typeof activeShift !== 'undefined') {
+        console.log(`🔄 [PROFESSOR]: Iniciando sincronização para ${selectedDate}/${activeShift}`);
+        
+        // Sincronizar todos os turnos da data atual usando a função específica do professor
+        syncTeacherDataRealtime(selectedDate, 'manhã');
+        syncTeacherDataRealtime(selectedDate, 'tarde');
+        syncTeacherDataRealtime(selectedDate, 'noite');
+        
+        console.log('✅ [PROFESSOR]: Sincronização Firebase inicializada com sucesso!');
+    } else {
+        console.warn('⚠️ [PROFESSOR]: Variáveis selectedDate ou activeShift não definidas');
+    }
+}

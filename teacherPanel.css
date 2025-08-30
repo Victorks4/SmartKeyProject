@@ -100,7 +100,7 @@ td {
     letter-spacing: 0.5px;
 }
 
-.status-badge.em-uso {
+.status-badge.em_uso {
     background-color: var(--bs-primary);
     color: white;
 }
@@ -113,6 +113,11 @@ td {
 .status-badge.retirada {
     background-color: var(--bs-warning);
     color: #212529;
+}
+
+.status-badge.disponivel {
+    background-color: var(--bs-info);
+    color: white;
 }
 
 #btnAdm {

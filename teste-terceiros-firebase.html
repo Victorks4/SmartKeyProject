@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Terceiros Firebase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste - Integração Terceiros com Firebase</h1>
+    
+    <div class="test-section info">
+        <h3>Status do Sistema</h3>
+        <p>Este teste verifica se os dados de terceiros estão sendo salvos corretamente no Firebase.</p>
+        <div id="status">Verificando...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>Teste de Salvamento</h3>
+        <p>Clique no botão abaixo para simular o registro de um terceiro:</p>
+        <button onclick="testThirdPartyRegistration()">Registrar Terceiro de Teste</button>
+        <button onclick="checkFirebaseData()">Verificar Dados no Firebase</button>
+        <button onclick="clearLog()">Limpar Log</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Log de Atividades</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+
+    <script>
+        let logElement;
+        let statusElement;
+
+        function log(message) {
+            if (!logElement) logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+
+        function updateStatus(message, type = 'info') {
+            if (!statusElement) statusElement = document.getElementById('status');
+            statusElement.innerHTML = `<span class="${type}">${message}</span>`;
+        }
+
+        function clearLog() {
+            if (logElement) logElement.textContent = '';
+        }
+
+        function testThirdPartyRegistration() {
+            log('🧪 Iniciando teste de registro de terceiro...');
+            
+            // Simular dados de terceiro
+            const testData = {
+                id: `terceiro_test_${Date.now()}`,
+                sala: "Bloco F - LAB DE INFORMÁTICA - Sala 1",
+                professor: "João Silva (Terceiro)",
+                disciplina: "Teste de Sistema",
+                curso: "Terceiros",
+                turma: "-",
+                horaRetirada: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                horaDevolucao: null,
+                notas: "Dados de teste para verificar integração Firebase",
+                roomDetails: {
+                    block: "Bloco F",
+                    room: "LAB DE INFORMÁTICA",
+                    roomNumber: "1"
+                },
+                room: "Bloco F - LAB DE INFORMÁTICA - Sala 1",
+                professorName: "João Silva (Terceiro)",
+                subject: "Teste de Sistema",
+                course: "Terceiros",
+                turmaNumber: "-",
+                withdrawalTime: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                returnTime: null,
+                status: 'em_uso'
+            };
+
+            const today = new Date().toISOString().split('T')[0];
+            const currentShift = getCurrentShift();
+            
+            log(`📅 Data: ${today}`);
+            log(`🕐 Turno: ${currentShift}`);
+            log(`👤 Terceiro: ${testData.professor}`);
+            log(`📍 Local: ${testData.sala}`);
+
+            // Verificar se Firebase está disponível
+            if (typeof saveDataToFirebase === 'function') {
+                log('🔥 Firebase disponível, salvando dados...');
+                
+                // Simular array de dados do turno
+                const shiftData = [testData];
+                
+                saveDataToFirebase(today, currentShift, shiftData).then(() => {
+                    log('✅ Dados salvos no Firebase com sucesso!');
+                    updateStatus('✅ Teste concluído com sucesso!', 'success');
+                }).catch(error => {
+                    log(`❌ Erro ao salvar no Firebase: ${error}`);
+                    updateStatus('❌ Erro ao salvar no Firebase', 'error');
+                });
+            } else {
+                log('❌ Função saveDataToFirebase não disponível');
+                updateStatus('❌ Firebase não disponível', 'error');
+            }
+        }
+
+        function checkFirebaseData() {
+            log('🔍 Verificando dados no Firebase...');
+            
+            const today = new Date().toISOString().split('T')[0];
+            const currentShift = getCurrentShift();
+            
+            if (typeof loadDataFromFirebase === 'function') {
+                loadDataFromFirebase(today, currentShift).then(data => {
+                    log(`📊 Dados encontrados no Firebase para ${today}/${currentShift}:`);
+                    log(`   - Total de registros: ${data.length}`);
+                    
+                    if (data.length > 0) {
+                        data.forEach((item, index) => {
+                            log(`   ${index + 1}. ${item.professorName || item.professor} - ${item.room || item.sala}`);
+                        });
+                    } else {
+                        log('   - Nenhum registro encontrado');
+                    }
+                }).catch(error => {
+                    log(`❌ Erro ao carregar dados: ${error}`);
+                });
+            } else {
+                log('❌ Função loadDataFromFirebase não disponível');
+            }
+        }
+
+        function getCurrentShift() {
+            const hour = new Date().getHours();
+            if (hour < 12) return 'manhã';
+            if (hour < 18) return 'tarde';
+            return 'noite';
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Teste inicializado');
+            updateStatus('✅ Sistema pronto para testes', 'success');
+            
+            // Verificar disponibilidade do Firebase
+            if (typeof firebase !== 'undefined') {
+                log('✅ Firebase SDK carregado');
+            } else {
+                log('❌ Firebase SDK não carregado');
+                updateStatus('❌ Firebase SDK não disponível', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
+
