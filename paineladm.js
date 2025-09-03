@@ -80,12 +80,18 @@ async function handleFileImport(file) {
 async function processFileImport(file, selectedShift) {
     if (!file) return;
 
-    // Verificar extensão do arquivo
+    // Verificar extensão do arquivo - aceitar todos os formatos Excel e CSV
     const fileExt = file.name.split('.').pop().toLowerCase();
-    if (!['xlsx', 'xls', 'csv'].includes(fileExt)) {
-        alert('Por favor, use apenas arquivos Excel (.xlsx, .xls) ou CSV (.csv)');
+    const validExcelFormats = ['xlsx', 'xls', 'xlsm', 'xlsb', 'xltx', 'xltm', 'xlam'];
+    const validCSVFormats = ['csv', 'tsv', 'txt'];
+    const allValidFormats = [...validExcelFormats, ...validCSVFormats];
+    
+    if (!allValidFormats.includes(fileExt)) {
+        alert(`Formato de arquivo não suportado: .${fileExt}\nFormatos aceitos: Excel (${validExcelFormats.join(', ')}) e CSV/texto (${validCSVFormats.join(', ')})`);
         return;
     }
+    
+    console.log(`Processando arquivo ${file.name} (formato: .${fileExt})`);
 
     // Mostrar indicador de carregamento
     const importBtn = document.querySelector('button[title="Importar Arquivo"]');
@@ -109,12 +115,20 @@ async function processFileImport(file, selectedShift) {
                 const disciplina = decodeText(row[4]);
                 const registro = decodeText(row[5]);
 
-                // Ignorar valores FALSE ou ---
-                if (sala === 'FALSE' || sala === '---' || 
-                    curso === 'FALSE' || curso === '---' ||
-                    disciplina === 'FALSE' || disciplina === '---') {
+                // Ignorar somente quando a sala for claramente inválida
+                if (sala === 'FALSE' || sala === '---' || !sala || !sala.trim()) {
                     return null;
                 }
+                
+                    // Pular somente linhas que são claramente cabeçalho/divisória
+                    // (exatamente "SALA"/"SALAS" ou linhas com separadores), mas
+                    // NÃO descartar salas válidas como "SALA 01", "SALA A01", etc.
+                    const salaTrim = (sala || '').trim();
+                    const isHeaderSala = /^sala(s)?$/i.test(salaTrim);
+                    const isDivider = salaTrim.startsWith('---');
+                    if (!salaTrim || isHeaderSala || isDivider) {
+                        return null;
+                    }
 
                 // Usar o turno ativo atual para o novo registro
                 const defaultShift = activeShift;
@@ -149,23 +163,35 @@ async function processFileImport(file, selectedShift) {
                 // Filtrar e validar os dados convertidos
                 const validData = convertedData.filter(item => {
                     // Verificar se é um registro válido
-                    const isValidRoom = item.room && 
-                                     item.room.trim() !== '' && 
-                                     item.room !== 'FALSE' &&
-                                     !item.room.includes('---') &&
-                                     !item.room.toLowerCase().includes('sala');
+                    if (!item || !item.room) return false;
+                    const room = item.room.toString();
+                    const roomTrim = room.trim();
+                    const isDivider = roomTrim.startsWith('---');
+                    const isFalse = roomTrim.toUpperCase() === 'FALSE';
+                    const isEmpty = roomTrim === '';
+                    // Aceitar qualquer sala não vazia (inclusive "SALA 01" e afins)
+                    const isValidRoom = !(isDivider || isFalse || isEmpty);
 
-                    // Remover espaços em branco extras e manter valores originais
+                    // Normalização leve
                     if (isValidRoom) {
-                        item.room = item.room.trim();
-                        // Manter os valores originais do curso e disciplina se existirem
-                        if (item.course) item.course = item.course.trim();
-                        if (item.subject) item.subject = item.subject.trim();
-                        if (item.professorName) item.professorName = item.professorName.trim();
+                        item.room = roomTrim;
+                        if (item.course) item.course = item.course.toString().trim();
+                        if (item.subject) item.subject = item.subject.toString().trim();
+                        if (item.disciplina) item.disciplina = item.disciplina.toString().trim();
+                        if (item.professorName) item.professorName = item.professorName.toString().trim();
+                        if (item.turmaNumber) item.turmaNumber = item.turmaNumber.toString().trim();
                         item.status = 'disponivel';
+                        
+                        // Debug: verificar campos de disciplina
+                        if (!item.subject && !item.disciplina) {
+                            console.warn('⚠️ Registro sem disciplina:', item);
+                        } else {
+                            console.log('✅ Disciplina encontrada:', { subject: item.subject, disciplina: item.disciplina });
+                        }
                     }
 
-                    return isValidRoom && (item.course || item.subject); // Pelo menos um dos dois deve existir
+                    // Não obrigar curso/disciplinas/professor para manter a linha; serão mostrados como "-"
+                    return isValidRoom;
                 });
 
                 if (validData.length === 0) {
@@ -326,11 +352,17 @@ function decodeText(text) {
     }
 }
 
-// Função para ler o arquivo
 function readFileData(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        const isCSV = file.name.toLowerCase().endsWith('.csv');
+        const fileExt = file.name.split('.').pop().toLowerCase();
+        
+        // Detectar se é CSV/texto ou Excel
+        const isCSVType = ['csv', 'tsv', 'txt'].includes(fileExt);
+        const isExcelType = ['xlsx', 'xls', 'xlsm', 'xlsb', 'xltx', 'xltm', 'xlam'].includes(fileExt);
+        
+        console.log(`Processando arquivo: ${file.name}`);
+        console.log(`Tipo detectado: ${isCSVType ? 'CSV/Texto' : isExcelType ? 'Excel' : 'Desconhecido'}`);
         
         reader.onerror = function(e) {
             reject(new Error('Erro ao ler o arquivo: ' + e.target.error));
@@ -344,11 +376,15 @@ function readFileData(file) {
                 }
 
                 let workbook;
-                if (isCSV) {
-                    // Processar CSV com encoding correto para caracteres especiais
+                if (isCSVType) {
+                    // Processar CSV/TSV/TXT com encoding correto para caracteres especiais
                     const content = e.target.result;
+                    console.log(`Processando como arquivo de texto (${fileExt})`);
                     
-                    // Tentar diferentes encodings para CSV
+                    // Configurar separador baseado na extensão
+                    const separator = fileExt === 'tsv' ? '\t' : fileExt === 'txt' ? '\t' : ',';
+                    
+                    // Tentar diferentes encodings para CSV/texto
                     try {
                         // Primeira tentativa: UTF-8
                         workbook = XLSX.read(content, { 
@@ -357,7 +393,13 @@ function readFileData(file) {
                             cellText: false,
                             cellDates: true,
                             codepage: 65001, // UTF-8
-                            charset: 'UTF-8'
+                            charset: 'UTF-8',
+                            // Opções para lidar com células mescladas
+                            cellStyles: true,
+                            sheetStubs: true,
+                            defval: '',
+                            // Separador personalizado
+                            FS: separator
                         });
                     } catch (e) {
                         console.log('Tentativa UTF-8 falhou, tentando ISO-8859-1...');
@@ -369,7 +411,11 @@ function readFileData(file) {
                                 cellText: false,
                                 cellDates: true,
                                 codepage: 28591, // ISO-8859-1
-                                charset: 'ISO-8859-1'
+                                charset: 'ISO-8859-1',
+                                cellStyles: true,
+                                sheetStubs: true,
+                                defval: '',
+                                FS: separator
                             });
                         } catch (e2) {
                             console.log('Tentativa ISO-8859-1 falhou, tentando Windows-1252...');
@@ -380,33 +426,49 @@ function readFileData(file) {
                                 cellText: false,
                                 cellDates: true,
                                 codepage: 1252, // Windows-1252
-                                charset: 'Windows-1252'
+                                charset: 'Windows-1252',
+                                cellStyles: true,
+                                sheetStubs: true,
+                                defval: '',
+                                FS: separator
                             });
                         }
                     }
                     
                     if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
-                        throw new Error('Arquivo CSV inválido');
+                        throw new Error(`Arquivo ${fileExt.toUpperCase()} inválido ou vazio`);
                     }
-                } else {
-                    // Processar Excel
+                } else if (isExcelType) {
+                    // Processar qualquer formato Excel
                     const data = new Uint8Array(e.target.result);
                     if (!data || data.length === 0) {
                         throw new Error('Arquivo vazio ou corrompido');
                     }
 
+                    console.log(`Processando como arquivo Excel (${fileExt})`);
+                    
+                    // Configuração robusta para diferentes formatos Excel
                     workbook = XLSX.read(data, { 
                         type: 'array',
                         raw: true, // Mantém os dados brutos
                         cellText: false, // Não converte para texto ainda
                         cellDates: true,
                         cellNF: false,
-                        codepage: 65001 // UTF-8
+                        codepage: 65001, // UTF-8
+                        // Opções para lidar com células mescladas
+                        cellStyles: true,
+                        sheetStubs: true, // Incluir células vazias
+                        defval: null, // Valor padrão para células vazias
+                        // Opções para diferentes formatos Excel
+                        password: "", // Para arquivos protegidos (vazio = sem senha)
+                        WTF: false // Modo de compatibilidade
                     });
 
                     if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
-                        throw new Error('Arquivo Excel inválido ou sem planilhas');
+                        throw new Error(`Arquivo Excel (${fileExt}) inválido ou sem planilhas`);
                     }
+                } else {
+                    throw new Error(`Formato de arquivo não reconhecido: ${fileExt}`);
                 }
                 
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -414,163 +476,457 @@ function readFileData(file) {
                     throw new Error('Primeira planilha está vazia ou inválida');
                 }
                 
-                // Configurar opções para ignorar linhas e colunas vazias
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
+                // Converter planilha para JSON lidando com células mescladas
+                let allData = XLSX.utils.sheet_to_json(firstSheet, { 
                     header: 1,
                     raw: false,
-                    blankrows: false, 
-                    skipHidden: true,    // pula linhas/colunas ocultas
-                    defval: null,        // células vazias serão null ao invés de string vazia
-                    dateNF: 'dd/mm/yyyy', // formato de data
-                    encoding: 'ISO-8859-1'     // encoding para caracteres especiais
+                    blankrows: true, // Incluir linhas em branco para manter estrutura
+                    skipHidden: false,
+                    defval: '', // Usar string vazia para células vazias
+                    dateNF: 'dd/mm/yyyy',
+                    encoding: 'ISO-8859-1'
                 });
 
-                console.log('Dados lidos do arquivo:', jsonData); // Debug
+                console.log('Dados brutos lidos do arquivo (com células mescladas):', allData);
 
-                // Processar o arquivo linha por linha
-                let columnMap = {
-                    sala: -1,
-                    curso: -1,
-                    turma: -1,
-                    professor: -1,
-                    disciplina: -1
-                };
-
-                // Encontrar cabeçalho e mapear colunas
-                let startIndex = -1;
-                for (let i = 0; i < jsonData.length; i++) {
-                    const row = jsonData[i];
-                    if (!Array.isArray(row)) continue;
-
-                    // Verificar se é uma linha de cabeçalho
-                    let foundHeader = false;
-                    for (let j = 0; j < row.length; j++) {
-                        if (!row[j]) continue;
-                        const cellValue = String(row[j]).trim().toUpperCase();
+                // Processar células mescladas - propagar valores das células mescladas
+                if (firstSheet['!merges']) {
+                    console.log('📊 Detectadas células mescladas:', firstSheet['!merges']);
+                    
+                    // Para cada região mesclada, propagar o valor da primeira célula para todas as células da região
+                    firstSheet['!merges'].forEach(merge => {
+                        const startRow = merge.s.r;
+                        const endRow = merge.e.r;
+                        const startCol = merge.s.c;
+                        const endCol = merge.e.c;
                         
-                        if (cellValue === 'SALA' || cellValue === 'SALAS') {
-                            columnMap.sala = j;
-                            foundHeader = true;
-                        } else if (cellValue === 'CURSO' || cellValue === 'CURSOS') {
-                            columnMap.curso = j;
-                        } else if (cellValue === 'TURMA' || cellValue === 'TURMAS') {
-                            columnMap.turma = j;
-                        } else if (cellValue.includes('PROFESSOR')) {
-                            columnMap.professor = j;
-                        } else if (cellValue === 'DISCIPLINA' || cellValue.includes('DISCIPLINAS')) {
-                            columnMap.disciplina = j;
+                        // Obter o valor da primeira célula da região mesclada
+                        const firstCellRef = XLSX.utils.encode_cell({r: startRow, c: startCol});
+                        const firstCellValue = firstSheet[firstCellRef] ? firstSheet[firstCellRef].v : '';
+                        
+                        if (firstCellValue) {
+                            console.log(`🔗 Propagando valor "${firstCellValue}" da célula mesclada ${firstCellRef}`);
+                            
+                            // Propagar para todas as linhas e colunas afetadas no array allData
+                            for (let row = startRow; row <= endRow; row++) {
+                                for (let col = startCol; col <= endCol; col++) {
+                                    if (allData[row] && col < allData[row].length) {
+                                        if (!allData[row][col] || allData[row][col] === '') {
+                                            allData[row][col] = firstCellValue;
+                                        }
+                                    }
+                                }
+                            }
                         }
-                    }
+                    });
+                    
+                    console.log('Dados após processar células mescladas:', allData.slice(0, 10));
+                }
 
-                    if (foundHeader) {
-                        startIndex = i;
+                // Detectar automaticamente onde está o cabeçalho (lidando com células mescladas)
+                let headerRowIndex = -1;
+                let headers = [];
+                
+                // Procurar por uma linha que contenha termos de cabeçalho esperados
+                for (let i = 0; i < allData.length; i++) {
+                    const row = allData[i];
+                    if (!Array.isArray(row) || row.length === 0) continue;
+                    
+                    // Verificar se esta linha contém cabeçalhos típicos
+                    const rowStr = row.join('').toUpperCase();
+                    const hasHeaderTerms = ['SALA', 'CURSO', 'TURMA', 'PROFESSOR', 'DISCIPLINA', 'MATERIA', 'MATÉRIA'].some(term => 
+                        rowStr.includes(term)
+                    );
+                    
+                    // Verificar se pelo menos 3 células não estão vazias
+                    const nonEmptyCells = row.filter(cell => cell && String(cell).trim() !== '').length;
+                    
+                    if (hasHeaderTerms && nonEmptyCells >= 3) {
+                        headerRowIndex = i;
+                        // Limpar headers vazios e normalizar
+                        headers = row.map(cell => {
+                            const cellStr = String(cell || '').trim();
+                            return cellStr;
+                        });
+                        
+                        console.log(`Cabeçalho detectado na linha ${i}:`, headers);
+                        console.log('Conteúdo da linha:', row);
+                        
+                        // Debug das colunas identificadas
+                        headers.forEach((header, index) => {
+                            if (header) {
+                                console.log(`Coluna ${index}: "${header}"`);
+                            }
+                        });
                         break;
                     }
                 }
 
-                // Se não encontrou o cabeçalho, tentar identificar pela primeira linha de dados
-                if (startIndex === -1) {
-                    for (let i = 0; i < jsonData.length; i++) {
-                        const row = jsonData[i];
-                        if (!Array.isArray(row) || row.length < 2) continue;
-                        
-                        // Verificar se a linha parece conter dados válidos
-                        const firstCell = String(row[0] || '').trim();
-                        if (firstCell && !firstCell.includes('FALSE') && !firstCell.includes('---')) {
-                            startIndex = i - 1; // Considerar esta como primeira linha de dados
-                            // Mapear colunas baseado na estrutura esperada
-                            columnMap = {
-                                sala: 0,
-                                curso: 1,
-                                turma: 2,
-                                professor: 3,
-                                disciplina: 4
-                            };
-                            break;
+                if (headerRowIndex === -1) {
+                    throw new Error('Não foi possível detectar automaticamente o cabeçalho do arquivo. Verifique se o arquivo contém colunas como SALA, CURSO, PROFESSOR, etc.');
+                }
+
+                // Extrair dados após o cabeçalho (similar ao slice no Node.js)
+                const dataRows = allData.slice(headerRowIndex + 1);
+                console.log(`Processando ${dataRows.length} linhas de dados após o cabeçalho`);
+                console.log('Primeiras 3 linhas de dados brutos:', dataRows.slice(0, 3));
+
+                // Mapear dados em objetos (lidando com células mescladas)
+                const mappedData = dataRows
+                    .filter(row => {
+                        // Incluir linhas que tenham pelo menos uma célula com conteúdo
+                        const hasContent = Array.isArray(row) && row.some(cell => cell && String(cell).trim() !== '');
+                        if (!hasContent && dataRows.indexOf(row) < 5) {
+                            console.log(`❌ Linha ${dataRows.indexOf(row) + 1} filtrada (sem conteúdo):`, row);
+                        } else if (hasContent && dataRows.indexOf(row) < 5) {
+                            console.log(`✅ Linha ${dataRows.indexOf(row) + 1} aprovada:`, row);
                         }
-                    }
-                }
-
-                if (startIndex === -1) {
-                    throw new Error('Não foi possível encontrar o cabeçalho das colunas no arquivo.');
-                }
-
-                // Extrair apenas as colunas relevantes e formatar os dados
-                const formattedData = jsonData.slice(startIndex + 1)
-                    .filter(row => Array.isArray(row) && row.some(cell => cell)) // Manter linhas que têm pelo menos uma célula com conteúdo
-                    .map(row => {
+                        return hasContent;
+                    })
+                    .map((row, index) => {
                         try {
-                            // Verificar se os índices das colunas são válidos
-                            if (columnMap.sala === -1) {
-                                throw new Error('Coluna SALA não encontrada no arquivo');
-                            }
-
-                            // Obter valores com validação
-                            const getSafeValue = (index) => {
-                                if (index === -1) return '';
-                                const value = row[index];
-                                if (!value) return '';
-                                const strValue = String(value).trim();
-                                // Não retornar "FALSE" como valor e tratar células vazias
-                                return strValue === 'FALSE' || strValue === '---' ? '' : strValue;
-                            };
-
-                            const sala = getSafeValue(columnMap.sala);
+                            let obj = {};
                             
-                            // Pular linhas de cabeçalho ou divisória
-                            if (!sala || sala.toUpperCase().includes('SALA') || sala.includes('---')) {
-                                return null;
+                            // Garantir que a linha tenha o mesmo comprimento dos headers
+                            const normalizedRow = [...row];
+                            while (normalizedRow.length < headers.length) {
+                                normalizedRow.push('');
                             }
+                            
+                            headers.forEach((header, colIndex) => {
+                                const cellValue = normalizedRow[colIndex];
+                                // Para células mescladas, usar o valor propagado ou string vazia
+                                const finalValue = cellValue && String(cellValue).trim() !== '' ? String(cellValue).trim() : '';
+                                obj[header] = finalValue;
+                            });
+                            
+                            // Adicionar índice para debug
+                            obj._rowIndex = headerRowIndex + 1 + index;
+                            return obj;
+                        } catch (error) {
+                            console.error('Erro ao mapear linha:', error, row);
+                            return null;
+                        }
+                    })
+                    .filter(obj => obj !== null);
 
-                            let professor = getSafeValue(columnMap.professor);
-                            let disciplina = getSafeValue(columnMap.disciplina);
-                            const curso = getSafeValue(columnMap.curso);
-                            const turma = getSafeValue(columnMap.turma);
-                            const registro = getSafeValue(columnMap.registro);
+                console.log('Primeiros 5 registros mapeados:', mappedData.slice(0, 5));
 
-                            // Se o professor ou disciplina estiver vazio, tentar encontrar em linhas adjacentes
-                            if (!professor || !disciplina) {
-                                for (let i = -2; i <= 2; i++) {
-                                    const adjRow = jsonData[startIndex + 1 + i];
-                                    if (adjRow) {
-                                        const adjProf = adjRow[columnMap.professor];
-                                        if (!professor && adjProf) {
-                                            const profStr = String(adjProf).trim();
-                                            if (profStr !== 'FALSE') {
-                                                professor = profStr;
-                                            }
+                // Debug adicional: mostrar estrutura completa dos primeiros registros
+                console.log('🔍 ANÁLISE DETALHADA DA ESTRUTURA:');
+                console.log('Headers detectados:', headers);
+                if (mappedData.length > 0) {
+                    console.log('Primeiro registro completo:', mappedData[0]);
+                    console.log('Chaves disponíveis:', Object.keys(mappedData[0]));
+                    console.log('Valores do primeiro registro:');
+                    Object.keys(mappedData[0]).forEach((key, index) => {
+                        console.log(`  ${index}: "${key}" = "${mappedData[0][key]}"`);
+                    });
+                }
+
+                // Processar dados para preencher campos vazios com valores das linhas anteriores (células mescladas)
+                console.log('📋 Processando dados para preencher campos de células mescladas...');
+                for (let i = 1; i < mappedData.length; i++) {
+                    const currentRow = mappedData[i];
+                    const previousRow = mappedData[i - 1];
+                    
+                    // Para cada campo, se estiver vazio, tentar usar o valor da linha anterior
+                    Object.keys(currentRow).forEach(key => {
+                        if (key !== '_rowIndex' && (!currentRow[key] || currentRow[key] === '')) {
+                            if (previousRow[key] && previousRow[key] !== '') {
+                                currentRow[key] = previousRow[key];
+                                if (i < 3) console.log(`🔗 Preenchendo campo vazio "${key}" com valor "${previousRow[key]}" da linha anterior`);
+                            }
+                        }
+                    });
+                }
+
+                // Converter objetos mapeados para formato esperado pelo sistema
+                const formattedData = mappedData
+                    .map((obj, index) => {
+                        // Tentar identificar as colunas por nome (flexível)
+                        const findColumn = (patterns, excludePatterns = []) => {
+                            // Debug detalhado apenas para o primeiro registro
+                            if (index === 0) {
+                                console.log(`🔍 [Registro ${index + 1}] Procurando coluna para padrões: ${patterns.join(', ')}`);
+                                console.log(`🔍 [Registro ${index + 1}] Excluir padrões: ${excludePatterns.join(', ')}`);
+                                console.log(`🔍 [Registro ${index + 1}] Objeto disponível:`, obj);
+                                console.log(`🔍 [Registro ${index + 1}] Chaves disponíveis:`, Object.keys(obj));
+                            }
+                            
+                            for (let pattern of patterns) {
+                                for (let key in obj) {
+                                    const keyUpper = key.toUpperCase();
+                                    const patternUpper = pattern.toUpperCase();
+                                    
+                                    // Verificar se não deve ser excluída
+                                    const shouldExclude = excludePatterns.some(exclude => 
+                                        keyUpper.includes(exclude.toUpperCase())
+                                    );
+                                    if (shouldExclude) {
+                                        if (index === 0) console.log(`  ❌ Excluindo coluna "${key}" (contém: ${excludePatterns.join(', ')})`);
+                                        continue;
+                                    }
+                                    
+                                    // Busca exata primeiro
+                                    if (keyUpper === patternUpper) {
+                                        const value = obj[key];
+                                        if (value && String(value).trim() !== '') {
+                                            if (index === 0) console.log(`  ✅ Encontrado por correspondência exata: "${key}" = "${value}"`);
+                                            return String(value).trim();
                                         }
+                                    }
+                                    
+                                    // Busca por inclusão
+                                    if (keyUpper.includes(patternUpper)) {
+                                        const value = obj[key];
+                                        if (value && String(value).trim() !== '') {
+                                            if (index === 0) console.log(`  ✅ Encontrado por inclusão: "${key}" = "${value}"`);
+                                            return String(value).trim();
+                                        }
+                                    }
+                                }
+                            }
+                            if (index === 0) console.log(`  ❌ Nenhuma coluna encontrada para: ${patterns.join(', ')}`);
+                            
+                            // Debug extra: se for sala e não encontrou nada, mostrar todas as colunas
+                            if (index === 0 && patterns.includes('SALA')) {
+                                console.log('🚨 SALA NÃO ENCONTRADA! Analisando todas as colunas disponíveis:');
+                                Object.keys(obj).forEach((key, idx) => {
+                                    const value = obj[key];
+                                    const hasContent = value && String(value).trim() !== '';
+                                    console.log(`  ${idx}: "${key}" = "${value}" ${hasContent ? '✅' : '❌'}`);
+                                });
+                            }
+                            
+                            return '';
+                        };
+
+                        const sala = findColumn(['SALA', 'ROOM', 'CLASSROOM']);
+                        const curso = findColumn(['CURSO', 'COURSE']);
+                        const turma = findColumn(['TURMA', 'CLASS', 'TURNO']);
+                        const professor = findColumn(['PROFESSOR', 'TEACHER', 'DOCENTE']);
+                        // Para disciplina, tentar vários padrões possíveis
+                        const disciplina = findColumn([
+                            'DISCIPLINA', 'SUBJECT', 'MATERIA', 'MATÉRIA', 
+                            'COMPONENTE', 'UNIDADE', 'UC', 'CURRICULAR',
+                            'COMPONENTE CURRICULAR', 'UNIDADE CURRICULAR'
+                        ], ['PROFESSOR', 'CURSO', 'COURSE']);
+                        const registro = findColumn(['REGISTRO', 'ID', 'CODIGO', 'CÓDIGO']);
+
+                        // Debug especial: mostrar todos os valores encontrados
+                        if (index < 5) {
+                            console.log(`🎯 VALORES ENCONTRADOS ${index + 1}:`, {
+                                sala: `"${sala}" (${typeof sala})`,
+                                curso: `"${curso}" (${typeof curso})`,
+                                turma: `"${turma}" (${typeof turma})`,
+                                professor: `"${professor}" (${typeof professor})`,
+                                disciplina: `"${disciplina}" (${typeof disciplina})`,
+                                registro: `"${registro}" (${typeof registro})`
+                            });
+                        }
+
+                        // Fallback: se disciplina não foi encontrada, procurar manualmente
+                        let disciplinaFinal = disciplina;
+                        if (!disciplinaFinal) {
+                            if (index === 0) {
+                                console.log('🔍 Procurando disciplina manualmente - TODAS as colunas disponíveis:');
+                                Object.keys(obj).forEach((key, idx) => {
+                                    console.log(`  ${idx}: "${key}" = "${obj[key]}"`);
+                                });
+                            }
+                            
+                            // Estratégia 1: Buscar qualquer coluna que não seja sala, curso, turma, professor
+                            const knownFields = [sala, curso, turma, professor, registro].filter(f => f);
+                            for (let key in obj) {
+                                const value = obj[key];
+                                if (value && String(value).trim() !== '') {
+                                    const valueTrim = String(value).trim();
+                                    
+                                    // Se não é nenhum dos campos conhecidos
+                                    if (!knownFields.includes(valueTrim)) {
+                                        // Verificar se não é código de turma (padrão G + números)
+                                        if (!valueTrim.match(/^G\d+/) && 
+                                            !valueTrim.match(/^\d+$/) && 
+                                            valueTrim.length > 2) {
+                                            disciplinaFinal = valueTrim;
+                                            if (index === 0) console.log(`📍 Disciplina encontrada por eliminação na coluna "${key}": "${disciplinaFinal}"`);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Estratégia 2: Se ainda não encontrou, pegar a primeira coluna não identificada
+                            if (!disciplinaFinal) {
+                                const allKeys = Object.keys(obj);
+                                for (let i = 0; i < allKeys.length; i++) {
+                                    const key = allKeys[i];
+                                    const value = obj[key];
+                                    
+                                    if (value && String(value).trim() !== '') {
+                                        const valueTrim = String(value).trim();
                                         
-                                        const adjDisc = adjRow[columnMap.disciplina];
-                                        if (!disciplina && adjDisc) {
-                                            const discStr = String(adjDisc).trim();
-                                            if (discStr !== 'FALSE') {
-                                                disciplina = discStr;
+                                        // Pular campos já identificados
+                                        if (valueTrim !== sala && valueTrim !== curso && 
+                                            valueTrim !== turma && valueTrim !== professor && 
+                                            valueTrim !== registro) {
+                                            
+                                            // Se parece com uma disciplina (não é código)
+                                            if (!valueTrim.match(/^(G\d+|\d+|SALA|LAB)$/i) && 
+                                                valueTrim.length > 3) {
+                                                disciplinaFinal = valueTrim;
+                                                if (index === 0) console.log(`📍 Disciplina encontrada por tentativa na coluna "${key}": "${disciplinaFinal}"`);
+                                                break;
                                             }
                                         }
                                     }
                                 }
                             }
+                        }
 
-                            return [
-                                sala,
-                                curso,
-                                turma,
-                                professor,
-                                disciplina,
-                                registro
-                            ];
-                        } catch (error) {
-                            console.error('Erro ao processar linha:', error, row);
+                        // Debug: mostrar mapeamento para os primeiros registros
+                        if (index < 3) {
+                            console.log(`Registro ${index + 1} mapeado:`, {
+                                sala, curso, turma, professor, 
+                                disciplina: disciplinaFinal, 
+                                registro,
+                                objetoOriginal: obj,
+                                chaves: Object.keys(obj)
+                            });
+                            
+                            // Debug específico para disciplina
+                            if (!disciplinaFinal) {
+                                console.log('🔍 Debug disciplina vazia - verificando todas as colunas:');
+                                Object.keys(obj).forEach((key, idx) => {
+                                    const keyUpper = key.toUpperCase();
+                                    const isDisciplinaCol = keyUpper.includes('DISCIPLINA') || keyUpper.includes('MATERIA') || keyUpper.includes('MATÉRIA');
+                                    console.log(`  Coluna ${idx} "${key}": "${obj[key]}" ${isDisciplinaCol ? '← POSSÍVEL DISCIPLINA' : ''}`);
+                                });
+                            } else if (disciplinaFinal === professor) {
+                                console.warn('⚠️ Disciplina igual ao professor:', {
+                                    disciplina: disciplinaFinal,
+                                    professor: professor
+                                });
+                            } else if (disciplinaFinal === curso) {
+                                console.warn('⚠️ Disciplina igual ao curso:', {
+                                    disciplina: disciplinaFinal,
+                                    curso: curso
+                                });
+                            } else {
+                                console.log('✅ Disciplina válida encontrada:', disciplinaFinal);
+                            }
+                        }
+
+                        // Debug: mostrar todos os valores de sala para entender o problema
+                        if (index < 5) {
+                            console.log(`🔍 Debug Sala ${index + 1}:`, {
+                                sala: sala,
+                                salaType: typeof sala,
+                                salaLength: sala ? sala.length : 0,
+                                salaEmpty: !sala,
+                                salaFalse: sala === 'FALSE',
+                                salaDash: sala === '---',
+                                salaRegex: sala ? /^sala(s)?$/i.test(String(sala).trim()) : false,
+                                salaStartsDash: sala ? String(sala).startsWith('---') : false
+                            });
+                        }
+
+                        // Validação mais tolerante da sala
+                        const salaStr = String(sala || '').trim();
+                        const salaInvalida = !salaStr || 
+                                           salaStr === '' ||
+                                           salaStr.toUpperCase() === 'FALSE' || 
+                                           salaStr === '---' || 
+                                           /^sala(s)?$/i.test(salaStr) ||
+                                           salaStr.startsWith('---');
+
+                        if (salaInvalida) {
+                            if (index < 5) console.log(`❌ Registro ${index + 1} rejeitado por sala inválida: "${sala}" (string: "${salaStr}")`);
                             return null;
                         }
-                    })
-                    .filter(row => row !== null && row[0] && row[0].trim() !== ''); // Remover linhas nulas e vazias
 
+                        if (index < 5) console.log(`✅ Registro ${index + 1} aprovado com sala: "${sala}" (string: "${salaStr}")`);
+
+                        // Validar disciplina: evitar confusão com curso, professor, etc.
+                        if (disciplinaFinal) {
+                            // Se disciplina for igual ao curso, procurar a verdadeira disciplina
+                            if (disciplinaFinal === curso) {
+                                console.warn(`⚠️ Disciplina "${disciplinaFinal}" é igual ao curso, procurando disciplina real...`);
+                                disciplinaFinal = '';
+                                
+                                // Buscar em outras colunas por uma disciplina válida
+                                for (let key in obj) {
+                                    const keyUpper = key.toUpperCase();
+                                    const value = obj[key];
+                                    
+                                    // Buscar especificamente colunas que parecem ser de disciplina
+                                    if ((keyUpper.includes('DISCIPLINA') || keyUpper.includes('MATERIA') || keyUpper.includes('MATÉRIA')) &&
+                                        !keyUpper.includes('PROFESSOR') && !keyUpper.includes('CURSO')) {
+                                        
+                                        if (value && String(value).trim() !== '' && 
+                                            value !== professor && value !== sala && value !== curso && value !== turma) {
+                                            const valorTrim = String(value).trim();
+                                            disciplinaFinal = valorTrim;
+                                            console.log(`🔧 Disciplina corrigida: "${disciplinaFinal}" (encontrada na coluna "${key}")`);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Se ainda for igual ao professor, procurar alternativa
+                            if (disciplinaFinal === professor) {
+                                console.warn(`⚠️ Disciplina "${disciplinaFinal}" é igual ao professor, procurando disciplina real...`);
+                                disciplinaFinal = '';
+                                
+                                for (let key in obj) {
+                                    const value = obj[key];
+                                    if (value && String(value).trim() !== '' && 
+                                        value !== professor && value !== sala && value !== curso && value !== turma) {
+                                        const valorTrim = String(value).trim();
+                                        // Verificar se parece com disciplina (não é número, não é sala)
+                                        if (!valorTrim.match(/^(SALA|A\d+|B\d+|C\d+|\d+)$/i) && valorTrim.length > 2) {
+                                            disciplinaFinal = valorTrim;
+                                            console.log(`🔧 Disciplina corrigida: "${disciplinaFinal}" (encontrada na coluna "${key}")`);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        return [
+                            sala,
+                            curso,
+                            turma,
+                            professor,
+                            disciplinaFinal,
+                            registro
+                        ];
+                    })
+                    .filter(row => row !== null);
+
+                console.log(`📊 RESUMO DO PROCESSAMENTO:`);
+                console.log(`- Linhas brutas após cabeçalho: ${dataRows.length}`);
+                console.log(`- Linhas válidas mapeadas: ${mappedData.length}`);
+                console.log(`- Registros formatados: ${formattedData.length}`);
+                console.log(`- Registros rejeitados: ${mappedData.length - formattedData.length}`);
+                
                 if (formattedData.length === 0) {
-                    throw new Error('Nenhum dado válido encontrado na planilha. Verifique o formato.');
+                    console.error('🚨 ERRO: Nenhum registro válido encontrado!');
+                    console.log('Debug completo das últimas etapas:');
+                    console.log('1. Headers detectados:', headers);
+                    console.log('2. Primeira linha de dados:', dataRows[0]);
+                    console.log('3. Primeiro objeto mapeado:', mappedData[0]);
+                    console.log('4. Resultado do processamento:', formattedData);
+                    
+                    throw new Error(`Nenhum dado válido encontrado na planilha após detectar cabeçalho. 
+Debug: ${dataRows.length} linhas brutas, ${mappedData.length} mapeadas, ${formattedData.length} formatadas.
+Verifique se há dados válidos após a linha de cabeçalho.`);
                 }
 
+                console.log('Primeiros 3 registros formatados:', formattedData.slice(0, 3));
                 resolve(formattedData);
             } catch (error) {
                 console.error('Erro ao processar arquivo:', error);
@@ -579,10 +935,14 @@ function readFileData(file) {
         };
 
         // Iniciar a leitura do arquivo depois de configurar os handlers
-        if (isCSV) {
-            reader.readAsText(file);
-        } else {
+        if (isCSVType) {
+            // Ler como texto para CSV/TSV/TXT
+            reader.readAsText(file, 'UTF-8');
+        } else if (isExcelType) {
+            // Ler como array buffer para Excel
             reader.readAsArrayBuffer(file);
+        } else {
+            reject(new Error(`Formato de arquivo não suportado: ${fileExt}`));
         }
     });
 }
@@ -1044,19 +1404,18 @@ function isValidRecord(item) {
     if(!item || typeof item !== 'object') return false;
     
     const room = getFirstValidValue(item, ['room', 'sala', 'roomName', 'classroom']);
-    const teacher = getFirstValidValue(item, ['professorName', 'professor', 'teacherName']);
-    
-    return (room && teacher && room.trim() && teacher.trim());
+    // Aceitar registros que tenham ao menos a sala preenchida
+    return (room && room.trim());
 }
 
 // Função de normalização
 function normalizeRecord(item) {
-    return {
+    const normalized = {
         ...item,
         room: getFirstValidValue(item, ['room', 'sala', 'roomName', 'classroom']) || '',
         professorName: getFirstValidValue(item, ['professorName', 'professor', 'teacherName']) || '',
         course: getFirstValidValue(item, ['course', 'curso']) || '',
-        subject: getFirstValidValue(item, ['subject', 'disciplina']) || '',
+        subject: getFirstValidValue(item, ['subject', 'disciplina', 'materia']) || '',
         turmaNumber: getFirstValidValue(item, ['turmaNumber', 'turma']) || '',
         withdrawalTime: getFirstValidValue(item, ['withdrawalTime', 'horaRetirada']) || '',
         returnTime: getFirstValidValue(item, ['returnTime', 'horaDevolucao']) || '',
@@ -1064,6 +1423,8 @@ function normalizeRecord(item) {
         id: item.id || generateId(item),
         shift: item.shift || activeShift
     };
+    
+    return normalized;
 }
 
 // Função para obter o primeiro valor não vazio
@@ -1156,21 +1517,29 @@ function generateEmptyRow(shiftCapitalized, formattedDate) {
 
 // Geração de linha de tabela com dados
 function generateTableRow(record) {
+    const room = record.room || record.sala || '-';
+    const course = record.course || record.curso || '-';
+    const turma = record.turmaNumber || record.turma || '-';
+    const professor = record.professorName || record.professor || '-';
+    const subject = record.subject || record.disciplina || record.materia || '-';
+    const withdrawalTime = record.withdrawalTime || record.horaRetirada || '-';
+    const returnTime = record.returnTime || record.horaDevolucao || '-';
+    
     return `
         <tr>
-            <td>${record.room}</td>
-            <td>${record.course}</td>
-            <td><span class="badge fw-bold text-dark">${record.turmaNumber}</span></td>
+            <td>${room}</td>
+            <td>${course}</td>
+            <td><span class="badge fw-bold text-dark">${turma}</span></td>
             <td class="fw-medium">
                 <i class="bi bi-person-circle table-icon"></i>
-                ${record.professorName}
+                ${professor}
             </td>
             <td>
                 <i class="bi bi-book table-icon"></i>
-                ${record.subject}
+                ${subject}
             </td>
-            <td>${record.withdrawalTime || '-'}</td>
-            <td>${record.returnTime || '-'}</td>
+            <td>${withdrawalTime}</td>
+            <td>${returnTime}</td>
             <td>${getStatusBadge(record.status)}</td>
             <td class="text-center">
                 ${getActionButton(record.id, record.status)}
