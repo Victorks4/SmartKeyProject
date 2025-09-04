@@ -1496,7 +1496,7 @@ function handleKey(recordId, action) {
     }
 
     // Para ações de remoção por professores, abrir modal de login para validação
-    if(action === 'remove' && record.curso != "Terceiros") {
+    if((action === 'remove' || action === 'return') && record.curso != "Terceiros") {
         activeAction = { record, action };
         openLogin();
         return;
@@ -1729,6 +1729,14 @@ function closeLogin() {
     activeAction = null; 
 }
 
+// Faz o que for digitado no campo de fast ser convertido para UPPERCASE automáticamente
+const inputFast = document.getElementById("loginFast");
+
+inputFast.addEventListener("input", () => {
+    inputFast.value = inputFast.value.toUpperCase();
+});
+
+// Função para confirmar login
 function confirmLogin() {
     const fastId = (document.getElementById('loginFast').value || '').trim();
 

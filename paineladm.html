@@ -87,11 +87,11 @@
         <div class="row-actions d-flex items-center justify-between mb-3">
             <div class="tabs" id="shiftTabs"></div>
             <div class="toolbar">
-                <button type="button" class="btn btn-outline" title="Adicionar Nova Chave">
+                <button onclick="registerTeacher()" type="button" class="btn btn-outline" title="Adicionar Nova Chave">
                     <i class="bi bi-plus-lg me-1"></i>
                     Adicionar
                 </button>
-                <button type="button" class="btn btn-outline" title="Editar Configurações">
+                <button onclick="editTeacherInfo()" type="button" class="btn btn-outline" title="Editar Configurações">
                     <i class="bi bi-pencil me-1"></i>
                     Editar
                 </button>
@@ -176,6 +176,8 @@
             </div>
         </div>
     </div>
+
+    <!-- Estou criando os pop-ups para add e editar professor  -->
 
     <!-- Custom JS -->
     <script src="paineladm.js"></script>
