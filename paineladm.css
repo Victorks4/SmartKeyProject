@@ -168,6 +168,334 @@ td {
     margin-bottom: 2rem;
 }
 
+/* Modal */
+#registerTeacherModal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, .5);
+    z-index: 999;
+}
+
+.teacher-modal-content {
+    background: #fff;
+    border-radius: 0.75rem;
+    width: 488px;
+    max-width: 92vw;
+    padding: 1.8rem 1.93rem 1.5rem;
+    box-shadow: 0 4px 12px -2px hsl(210 85% 9% 0.08);
+}
+
+.teacher-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 4px;
+    margin-bottom: 1.3rem;
+}
+
+.teacher-modal-header .btn {
+    color: rgb(116, 116, 116);
+}
+
+#loginTitle {
+    gap: 0.25em;
+}
+
+#loginTitle i {
+    font-size: 2.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transform: rotate(-45deg);
+}
+
+.teacher-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.teacher-modal-title h2,
+.teacher-modal-title i {
+    color: #024AB6;
+}
+
+.teacher-modal-title i {
+    font-size: 2.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.teacher-modal label {
+    display: block;
+    font-size: 0.97rem;
+    font-weight: 500;
+    color: #495057;
+}
+
+.teacher-modal input {
+    width: 100%;
+    padding: .98rem .98rem 12px;
+    margin: .25rem 0 1.12rem;
+    font-size: .846rem;
+    border: none;
+    border-bottom: 1px solid #dedede;
+    border-radius: 0.4rem;
+    background: #fff;
+    color: hsl(210 85% 9%);
+}
+
+.teacher-modal input:focus {
+    outline: none;
+    border-bottom: 1px solid var(--bs-primary);
+}
+
+.input-item {
+    position: relative;
+}
+
+.input-item input {
+    padding-left: 44px;
+}
+
+.input-item i {
+    position: absolute;
+    top: 28px;
+    left: 0.75rem;
+    font-size: 1.2rem;
+    color: rgb(95, 95, 95);
+    transform: translateY(-50%);
+}
+
+/* Estilos Dropdown */
+.drop-down-list {
+    z-index: 1;
+}
+
+.drop-down-item {
+    position: relative;
+    opacity: 1;
+    width: 100%;
+    height: fit-content;
+    transition: all .8s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.65rem;
+}
+
+.drop-down-item.dropdown-active {
+    z-index: 1000;
+}
+
+.dropdown {
+    margin-top: .25rem;
+    position: relative;
+    width: 100%;
+    z-index: inherit;
+}
+
+.selected {
+    min-width: 22px;
+    font-size: .87rem;
+    padding: 10px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #6f6f6f;
+    background: #fff;
+    border: 2px solid #ececec;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border 0.3s ease;
+}
+
+.selected:hover,
+.selected.active {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1472);
+}
+
+.selected.gradient {
+    border-left: 4px solid rgba(11, 93, 215, 0.682);
+    background-color: rgba(2, 74, 182, 0.007);
+}
+
+.selected p {
+    margin: 0;
+}
+
+.selected.active {
+    border-radius: 8px 8px 0 0;
+}
+
+.arrow-icon {
+    color: #6c757d;
+    transition: transform .3s ease;
+}
+
+.selected.active .arrow-icon {
+    transform: rotate(-180deg);
+}
+
+.options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    list-style: none;
+    background: #ffffff;
+    border: 1px solid #e1e1e1;
+    border-radius: 0 0 8px 8px;
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: all 0.3s ease;
+    z-index: 10;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.options.show {
+    color: #575757;
+    opacity: 1;
+    margin-top: 2px;
+    font-weight: 500;
+    max-height: 500px;
+    font-size: 0.92rem;
+    transform: scaleY(1);
+    box-shadow: 0px 1px 12px rgba(0, 0, 0, 0.163);
+    max-height: 184px;
+} 
+
+.option {
+    position: relative;
+    padding: 10px;
+    cursor: pointer;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.063);
+    transition: background 0.25s ease, padding-left 0.2s ease;
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+.option::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+    transition: left .7s ease;
+}
+
+.option:hover::before {
+    left: 100%;
+}
+
+.option:hover {
+    background: #f0f8ff;    
+    padding-left: 15px;
+}
+
+/* Remove the problematic slideOption animation */
+@keyframes slideOption {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.options.show {
+    border: 2px solid #e1e1e1 !important;
+    border: 2px solid #e1e1e1 !important;
+}
+
+.option {
+    border-bottom: 1px solid #eee;
+    color: #575757;
+    font-weight: 500;
+    font-size: 0.91rem;
+}
+.option:last-child {
+border-bottom: none;
+}
+
+/* Scrollbar customization */
+.options::-webkit-scrollbar {
+    width: 8px;
+}
+
+.options::-webkit-scrollbar-track {
+    background: #e1e1e1;
+}
+
+.options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.options::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.teacher-modal-actions {
+    gap: .5rem;
+    margin-top: .25rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.teacher-modal-actions button {
+    flex: 1;
+    padding: .8rem 0;
+}
+
+#btn-register,
+#btn-retirar-chave {
+    background-color: var(--bs-primary);
+    color: #fff;
+    border: none;
+    box-shadow: 0 2px 8px -2px rgba(13, 110, 253, 0.08);
+    transition: background 0.2s, transform 0.2s;
+}
+
+#btn-register:hover,
+#btn-retirar-chave:hover {
+    background-color: #0b5ed7;
+    color: #fff;
+    transform: scale(1.01);
+}
+
+#cancel-btn {
+    background-color: transparent;
+    border: 1px solid #ced4da;
+    color: #495057;
+    transition: background 0.2s, transform 0.2s;
+}
+
+#cancel-btn:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    color: #495057;
+    transform: scale(1.01);
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
     .stats-card {
@@ -375,7 +703,7 @@ td {
     background: #dee2e6;
 }
 
-/* Estilos específicos para os botões do modal de importação */
+/* Estilos específicos para os botões do teacher-modal de importação */
 #confirmImportShift {
     background-color: var(--bs-primary) !important;
     border-color: var(--bs-primary) !important;

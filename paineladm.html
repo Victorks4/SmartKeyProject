@@ -87,7 +87,7 @@
         <div class="row-actions d-flex items-center justify-between mb-3">
             <div class="tabs" id="shiftTabs"></div>
             <div class="toolbar">
-                <button onclick="registerTeacher()" type="button" class="btn btn-outline" title="Adicionar Nova Chave">
+                <button onclick="openRegisterTeacherModal()" type="button" class="btn btn-outline" title="Adicionar Nova Chave">
                     <i class="bi bi-plus-lg me-1"></i>
                     Adicionar
                 </button>
@@ -177,7 +177,113 @@
         </div>
     </div>
 
-    <!-- Estou criando os pop-ups para add e editar professor  -->
+    <!-- Modal: Cadastrar novo Professor -->
+    <div class="teacher-modal" id="registerTeacherModal" role="dialog" aria-modal="true" aria-labelledby="tpTitle">
+        <div class="teacher-modal-content">
+            <div class="teacher-modal-header">
+                <div class="teacher-modal-title" id="tpTitle">
+                    <i class="bi bi-person-fill-add"></i>
+                    <h2>Cadastro Novo Professor</h2>
+                </div>
+
+                <button class="btn-close-popup" onclick="closeThirdPartyForm()" aria-label="Fechar">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <label class="text-sm font-medium">Nome Completo *
+                <div class="input-item">
+                    <i class="bi bi-person"></i>
+                    <input 
+                        type="text" 
+                        id="tpFullName" 
+                        placeholder="Nome completo do professor"
+                        autocomplete="off"
+                    >
+                </div>
+            </label>
+
+            <label class="text-sm font-medium">Curso *
+                <div class="input-item">
+                    <i class="bi bi-person"></i>
+                    <input 
+                        type="text" 
+                        id="tpCourse" 
+                        placeholder="Curso do docente"
+                        autocomplete="off"
+                    >
+                </div>
+            </label>
+
+            <label class="text-sm font-medium">Disciplina *
+                <div class="input-item">
+                    <i class="bi bi-person"></i>
+                    <input 
+                        type="text" 
+                        id="tpDiscipline" 
+                        placeholder="Disciplina do docente"
+                        autocomplete="off"
+                    >
+                </div>
+            </label>
+
+
+            <!-- <div class="drop-down-list d-flex flex-column">                
+                <div id="classes-dropdown" class="drop-down-item visible">
+                    <label class="text-sm font-medium">
+                        Turma *
+                    </label>
+                    
+                    <div class="dropdown">
+                        <div id="selected-classes" class="selected d-flex justify-content-between align-items-center">
+                            <p id="valueClasses">Selecione a turma</p>
+                            <i class="arrow-icon bi bi-caret-down-fill"></i>
+                        </div>
+                        
+                        <ul id="classes-options" class="options"></ul>
+                    </div>
+                </div>
+            </div> -->
+
+            <div class="drop-down-list d-flex flex-column"> 
+                <div id="classes-dropdown" class="drop-down-item visible">
+                    <label class="text-sm font-medium">
+                        Número da Turma *
+                    </label>
+                    
+                    <div class="dropdown">
+                        <div id="selected-classes" class="selected d-flex justify-content-between align-items-center">
+                            <p id="valueClasses">Selecione o número da turma</p>
+                            <i class="arrow-icon bi bi-caret-down-fill"></i>
+                        </div>
+                        
+                        <ul id="classes-options" class="options"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <label class="text-sm font-medium mb-2">Fast *
+                <div class="input-item">
+                    <i class="bi bi-person"></i>
+                    <input 
+                        type="text" 
+                        id="tpFast" 
+                        placeholder="Crie um FAST para o professor"
+                        autocomplete="off"
+                    >
+                </div>
+            </label>
+
+            <div class="teacher-modal-actions">
+                <button id="cancel-btn" class="btn btn-outline" onclick="closeThirdPartyForm()">
+                    Cancelar
+                </button>
+                <button id="btn-register" class="btn btn-outline" onclick="saveNewTeacher()">
+                    Cadastrar Professor
+                </button>
+            </div>
+        </div>
+    </div> <!-- Fim do Modal Registrar Terceiro -->
 
     <!-- Custom JS -->
     <script src="paineladm.js"></script>

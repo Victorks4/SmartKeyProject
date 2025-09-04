@@ -1235,6 +1235,223 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 
+// Cadastrar novos professores
+const turmas = [
+    "G93626", "G93631", "G96172", "G93634", "G99151",
+    "G91383", "G100440", "G96183", "G99171", "G91135",
+    "G98087", "G91463", "G96170", "G20242CHPQLDT1", "G96173",
+    "G93635", "G99165", "G99182", "G93629", "99477",
+    "G96177", "99493", "99493", "G99169", "G96180",
+    "G96167", "G91141", "G99177", "G91386", "G99184",
+    "G99185", "G100523", "G98091", "G93640", "G91384",
+    "G91143"
+];
+
+function populateClassesDropdown() {
+    const classesOptions = document.getElementById('classes-options');
+    
+    if(!classesOptions) return;
+    
+    // Limpa o conteúdo existente e limpa as opções
+    classesOptions.innerHTML = turmas.map(classCode => `
+        <li class="option" data-value="${classCode}">${classCode}</li>
+    `).join('');
+    
+    const options = classesOptions.querySelectorAll('.option');
+    
+    options.forEach((option) => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+
+            const selectedClass = this.getAttribute('data-value');
+            console.log('Option clicked:', selectedClass);
+            
+            // Atualiza a tela com a classe selecionada
+            const valueElement = document.getElementById('valueClasses');
+
+            if(valueElement) {
+                valueElement.textContent = selectedClass;
+            }
+            
+            // Fecha o dropdown e atualiza os estilos
+            const selectedElement = document.getElementById('selected-classes');
+            const dropdownItem = document.getElementById('classes-dropdown');
+            
+            if(selectedElement) {
+                selectedElement.classList.remove('active');
+                selectedElement.classList.add('gradient');
+            }
+            
+            classesOptions.classList.remove('show');
+            
+            if(dropdownItem) {
+                dropdownItem.classList.remove('dropdown-active');
+            }
+        });
+    });
+}
+
+// Função que alterna os dropdowns
+function initializeDropdown() {
+    const selectedElement = document.getElementById('selected-classes');
+    const classesOptions = document.getElementById('classes-options');
+    const dropdownItem = document.getElementById('classes-dropdown');
+    
+    if(!selectedElement || !classesOptions) return;
+    
+    selectedElement.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        // Alterna o dropdown
+        const isActive = this.classList.contains('active');
+        
+        // Fecha todos os dropdowns
+        document.querySelectorAll('.selected').forEach(sel => sel.classList.remove('active'));
+        document.querySelectorAll('.options').forEach(op => op.classList.remove('show'));
+        document.querySelectorAll('.drop-down-item').forEach(item => item.classList.remove('dropdown-active'));
+        
+        if(!isActive) {
+            this.classList.add('active');
+            classesOptions.classList.add('show');
+
+            if(dropdownItem) {
+                dropdownItem.classList.add('dropdown-active');
+            }
+
+            console.log('Dropdown aberto com sucesso!');
+            console.log('classesOptions: ', classesOptions.className);
+            console.log('classesOptions -> lenght: ', classesOptions.children.length);
+        } else {
+            console.log('Dropdown fechado com sucesso!');
+        }
+    });
+}
+
+// Fecha o dropdown ao clicar fora
+document.addEventListener('click', function(e) {
+    if(e.target.closest('.dropdown')) return;
+    
+    document.querySelectorAll('.options').forEach(options => {
+        const selected = options.parentElement.querySelector('.selected');
+        const dropdownItem = options.closest('.drop-down-item');
+        
+        options.classList.remove('show');
+        
+        if(selected) {
+            selected.classList.remove('active');
+        }
+        if(dropdownItem) {
+            dropdownItem.classList.remove('dropdown-active');
+        }
+    });
+});
+
+// Função para abrir o modal de cadastro de professor
+function openRegisterTeacherModal() {
+    document.getElementById('registerTeacherModal').style.display = 'flex';
+}
+
+// Faz o que for digitado no campo de fast ser convertido para UPPERCASE automáticamente
+const inputFast = document.getElementById("tpFast");
+
+inputFast.addEventListener("input", () => {
+    inputFast.value = inputFast.value.toUpperCase();
+});
+
+// Função para salvar novo professor
+function saveNewTeacher() {
+    const name = document.getElementById('tpFullName').value.trim();
+    const course = document.getElementById('tpCourse').value.trim(); 
+    const discipline = document.getElementById('tpDiscipline').value.trim();
+    const turma = document.getElementById('valueClasses').textContent.trim();
+    const fast = document.getElementById('tpFast').value.trim();
+
+    if(!name || !course || !discipline || !turma || turma === 'Selecione o número da turma' || !fast) {
+        alert('Preencha todos os campos obrigatórios!');
+        return;
+    }
+
+    // objeto do professor
+    const novoProfessor = {
+        name,
+        course,
+        discipline,
+        turma,
+        fast,
+        dataCadastro: new Date().toISOString()
+    };
+
+    // Adiciona o novo professor ao turno atual e data selecionada
+    const dateData = getDataForDate(selectedDate);
+
+    dateData[activeShift].push({
+        room: '-',
+        course: novoProfessor.course,
+        turmaNumber: novoProfessor.turma,
+        professorName: novoProfessor.name,
+        subject: novoProfessor.discipline,
+        withdrawalTime: '',
+        returnTime: '',
+        status: 'disponivel',
+        id: `prof_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+        shift: activeShift,
+        fast: novoProfessor.fast,
+        dataCadastro: novoProfessor.dataCadastro
+    });
+
+    // Salva os dados cadastrados no Firebase
+    if(typeof saveDataToFirebase === 'function') {
+        saveDataToFirebase(selectedDate, activeShift, dateData[activeShift])
+            .then(() => {
+                console.log('Novo professor salvo no Firebase!');
+            })
+            .catch(error => {
+                console.error('Erro ao salvar novo professor no Firebase:', error);
+            });
+    }
+
+    // Atualiza o localStorage para sincronização das páginas
+    localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
+
+    // Atualiza tabela
+    renderTable();
+
+    // Fecha modal
+    document.getElementById('registerTeacherModal').style.display = 'none';;
+
+    // Limpar campos
+    document.getElementById('tpFast').value = '';
+    document.getElementById('tpCourse').value = '';
+    document.getElementById('tpFullName').value = '';
+    document.getElementById('tpDiscipline').value = '';
+    document.getElementById('valueClasses').textContent = 'Selecione o número da turma';
+}
+
+function initializeAll() {
+    populateClassesDropdown();
+    initializeDropdown();
+}
+
+if(document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeAll();
+
+        const addButton = document.querySelector('button[title="Adicionar Nova Chave"]');
+
+        if(addButton) {
+            addButton.addEventListener('click', openRegisterTeacherModal);
+        }
+    });
+} else {
+    initializeAll();
+    // Adiciona evento ao botão "Adicionar"
+    const addButton = document.querySelector('button[title="Adicionar Nova Chave"]');
+
+    if(addButton) {
+        addButton.addEventListener('click', openRegisterTeacherModal);
+    }
+}
+
 function checkLogin() {
     const isLoggedIn = localStorage.getItem('adminLoggedIn');
     if (isLoggedIn === 'true') {

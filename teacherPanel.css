@@ -244,7 +244,7 @@ td {
 .modal {
     position: fixed;
     inset: 0;
-    display: none;
+    display: flex;
     justify-content: center;
     align-items: center;
     background: rgba(0, 0, 0, .5);
@@ -404,7 +404,7 @@ td {
     transform: translateY(0);    
 }
 
-.drop-down-item.noOptions .selected{
+.drop-down-item.noOptions .selected {
     border-left: 4px solid hsla(208, 6%, 52%, 0.766);
 }
 
