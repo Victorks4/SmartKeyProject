@@ -432,16 +432,12 @@ td {
 }
 
 .selected:hover,
-.selected.active,
-#tpRoomNumber:hover {
+.selected.active{
     transform: translateY(-2px);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1472);
 }
 
-#tpRoomNumber.gradient,
 .selected.gradient {
-    /* border-image: linear-gradient(90deg, #2196f3, #00c6ff) 1; */
-    /* background: linear-gradient(90deg, #2196f3, #00c6ff); */
     border-left: 4px solid rgba(11, 93, 215, 0.682);
     background-color: rgba(2, 74, 182, 0.007);
 }
@@ -616,8 +612,7 @@ td {
 #msg-erro {
     color: #DB5461;
     font-size: 0.875rem;
-    margin-top: -1.4rem;
-    margin-bottom: 0.75rem;
+    margin-top: -.65rem;
 }
 
 /* Ainda vou melhorar isso daq (mds) kkkkk */
