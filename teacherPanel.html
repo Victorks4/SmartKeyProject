@@ -85,7 +85,7 @@
             <div class="modal-header login-header">
                 <div class="modal-title d-flex align-items-start" id="loginTitle">
                     <i class="bi bi-key-fill"></i>
-                    <h2>Digite o seu Fast</h2>
+                    <h2>Digite o seu FATS</h2>
                 </div>                
                 
                 <button class="btn-close-popup" onclick="closeLogin()" aria-label="Fechar">
@@ -93,15 +93,15 @@
                 </button>
             </div>
 
-            <label class="text-sm font-medium">Fast do professor *
+            <label class="text-sm font-medium">FATS do professor *
                 <div class="input-item">
                     <i class="bi bi-card-list"></i>
                     <input 
                         type="text" 
                         id="loginFast" 
-                        placeholder="Insira seu Fast para retirar a chave"
-                        autocomplete="off"
-                        >
+                  placeholder="Insira seu FATS para retirar a chave"
+                  autocomplete="off"
+             
                 </div>
             </label>
             
@@ -154,10 +154,26 @@
                 </div>
             </label>
 
-            <div class="drop-down-list d-flex flex-column">                
-                <div id="block-dropdown" class="drop-down-item visible">
+            <div class="drop-down-list d-flex flex-column">
+                <!-- Pergunta sobre quantas chaves -->
+                <div id="key-quantity-section" class="drop-down-item visible">
+                    <label class="text-sm font-medium mb-3">
+                        Quantas chaves você deseja pegar?
+                    </label>
+                    <div class="d-flex gap-3">
+                        <button type="button" class="btn btn-outline-primary" onclick="selectKeyMode('single')">
+                            <i class="bi bi-key"></i> Uma chave específica
+                        </button>
+                        <button type="button" class="btn btn-outline-success" onclick="selectKeyMode('multiple')">
+                            <i class="bi bi-keys"></i> Múltiplas chaves
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Seleção de bloco -->
+                <div id="block-dropdown" class="drop-down-item hidden">
                     <label class="text-sm font-medium">
-                        Bloco *
+                        Selecione o Bloco *
                     </label>
                     
                     <div class="dropdown">
@@ -170,6 +186,7 @@
                     </div>
                 </div>
                 
+                <!-- Seleção de sala (apenas para modo single) -->
                 <div id="room-dropdown" class="drop-down-item hidden">
                     <label class="dropdown-header">
                         Sala *
@@ -185,6 +202,7 @@
                     </div>
                 </div>
 
+                <!-- Seleção de número da sala (apenas para modo single) -->
                 <div id="room-number-dropdown" class="drop-down-item invisible">
                     <label class="text-sm font-medium">
                         Número da Sala *
@@ -197,6 +215,36 @@
                         </div>
                         
                         <ul id="room-number-op" class="options"></ul>
+                    </div>
+                </div>
+
+                <!-- Seção para seleção múltipla de chaves por bloco -->
+                <div id="multiple-selection-section" class="drop-down-item invisible">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <label class="text-sm font-medium">
+                            Chaves Disponíveis no <span id="selected-block-name">Bloco</span>
+                        </label>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAllAvailableKeys()">
+                                <i class="bi bi-check-all"></i> Todas Disponíveis
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearAllSelectedKeys()">
+                                <i class="bi bi-x-circle"></i> Limpar
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-warning" onclick="goBackToKeyQuantity()">
+                                <i class="bi bi-arrow-left"></i> Voltar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="available-keys-container" class="available-keys-container">
+                        <!-- As chaves disponíveis serão inseridas aqui -->
+                    </div>
+                    
+                    <div id="selected-keys-summary" class="selected-keys-summary mt-3">
+                        <small class="text-muted">
+                            <span id="selected-count">0</span> chave(s) selecionada(s)
+                        </small>
                     </div>
                 </div>
             </div>

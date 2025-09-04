@@ -4,6 +4,11 @@ let sortAlphabetically = false;
 let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 
+// Variáveis para seleção múltipla de chaves
+let selectedKeys = [];
+let multipleSelectionMode = false;
+let currentKeyMode = null; // 'single' ou 'multiple'
+
 // Mapa de docentes para CODPROF (DOCENTE -> CODPROF) | "*No próximo commit vou deixar em outra página
 const docentesCodprof = {
     "Adalberto da Silva Correia": "FATS1578",
@@ -1782,6 +1787,19 @@ function closeThirdPartyForm() {
     document.getElementById('tpFullName').value = '';
     document.getElementById('tpPurpose').value = '';
     document.getElementById('tpNotes').value = '';
+    
+    // Resetar seleção múltipla e modo
+    selectedKeys = [];
+    multipleSelectionMode = false;
+    currentKeyMode = null;
+    hideMultipleSelectionSection();
+    
+    // Voltar para a pergunta inicial
+    document.getElementById('key-quantity-section').classList.remove('hidden');
+    document.getElementById('key-quantity-section').classList.add('visible');
+    document.getElementById('block-dropdown').classList.remove('visible');
+    document.getElementById('block-dropdown').classList.add('hidden');
+    
     resetAllDropdowns();
 }
 
@@ -1840,20 +1858,302 @@ let currentSelections = {
     roomNumber: null
 };
 
+// Funções para controlar o modo de seleção de chaves
+function selectKeyMode(mode) {
+    currentKeyMode = mode;
+    
+    // Esconder a seção de quantidade de chaves
+    document.getElementById('key-quantity-section').classList.remove('visible');
+    document.getElementById('key-quantity-section').classList.add('hidden');
+    
+    // Mostrar seleção de bloco
+    document.getElementById('block-dropdown').classList.remove('hidden');
+    document.getElementById('block-dropdown').classList.add('visible');
+    
+    if (mode === 'multiple') {
+        multipleSelectionMode = true;
+    } else {
+        multipleSelectionMode = false;
+    }
+}
+
+function goBackToKeyQuantity() {
+    // Resetar tudo
+    currentKeyMode = null;
+    multipleSelectionMode = false;
+    selectedKeys = [];
+    
+    // Mostrar novamente a pergunta inicial
+    document.getElementById('key-quantity-section').classList.remove('hidden');
+    document.getElementById('key-quantity-section').classList.add('visible');
+    
+    // Esconder todas as outras seções
+    hideMultipleSelectionSection();
+    document.getElementById('block-dropdown').classList.remove('visible');
+    document.getElementById('block-dropdown').classList.add('hidden');
+    document.getElementById('room-dropdown').classList.remove('visible');
+    document.getElementById('room-dropdown').classList.add('hidden');
+    document.getElementById('room-number-dropdown').classList.remove('visible');
+    document.getElementById('room-number-dropdown').classList.add('invisible');
+    
+    // Resetar dropdowns
+    resetAllDropdowns();
+}
+
+// Funções para seleção múltipla de chaves
+function showMultipleSelectionSection() {
+    const section = document.getElementById('multiple-selection-section');
+    section.classList.remove('invisible');
+    section.classList.add('visible');
+    multipleSelectionMode = true;
+    populateAvailableKeys();
+}
+
+function hideMultipleSelectionSection() {
+    const section = document.getElementById('multiple-selection-section');
+    section.classList.remove('visible');
+    section.classList.add('invisible');
+    multipleSelectionMode = false;
+    selectedKeys = [];
+    updateSelectedKeysCount();
+}
+
+function populateAvailableKeys() {
+    const container = document.getElementById('available-keys-container');
+    const block = currentSelections.block;
+    
+    if (!block) {
+        container.innerHTML = '<div class="empty-keys-message">Selecione um bloco primeiro</div>';
+        return;
+    }
+
+    // Atualizar o nome do bloco no título
+    document.getElementById('selected-block-name').textContent = block;
+
+    // Obter dados atuais para verificar disponibilidade
+    const dateData = getDataForDate(selectedDate);
+    const currentShiftData = dateData[activeShift] || [];
+    
+    container.innerHTML = '';
+    
+    if (currentKeyMode === 'multiple') {
+        // Modo múltiplo: mostrar todas as chaves do bloco
+        const blockRooms = dropdown[block];
+        
+        if (!blockRooms || blockRooms.length === 0) {
+            container.innerHTML = '<div class="empty-keys-message">Nenhuma sala encontrada neste bloco</div>';
+            return;
+        }
+        
+        blockRooms.forEach(roomObj => {
+            const room = roomObj.sala;
+            const numbers = roomObj.numeros || [];
+            
+            if (numbers.length === 0) {
+                // Sala sem numeração - apenas uma chave
+                const salaIdentifier = `${block} - ${room}`;
+                const isInUse = currentShiftData.some(record => record.sala === salaIdentifier);
+                
+                const keyItem = createKeySelectionItem(salaIdentifier, isInUse, {
+                    block: block,
+                    room: room,
+                    roomNumber: null
+                });
+                container.appendChild(keyItem);
+            } else {
+                // Sala com numeração - múltiplas chaves
+                numbers.forEach(number => {
+                    const salaIdentifier = `${block} - ${room} - Sala ${number}`;
+                    const isInUse = currentShiftData.some(record => record.sala === salaIdentifier);
+                    
+                    const keyItem = createKeySelectionItem(salaIdentifier, isInUse, {
+                        block: block,
+                        room: room,
+                        roomNumber: number
+                    });
+                    container.appendChild(keyItem);
+                });
+            }
+        });
+    } else {
+        // Modo single: funcionalidade original (baseada em room selecionada)
+        const room = currentSelections.room;
+        
+        if (!room) {
+            container.innerHTML = '<div class="empty-keys-message">Selecione uma sala primeiro</div>';
+            return;
+        }
+
+        // Encontrar as salas/números disponíveis
+        const roomObj = dropdown[block].find(r => r.sala === room);
+        const numbers = roomObj ? roomObj.numeros : [];
+        
+        if (numbers.length === 0) {
+            // Sala sem numeração - apenas uma chave
+            const salaIdentifier = `${block} - ${room}`;
+            const isInUse = currentShiftData.some(record => record.sala === salaIdentifier);
+            
+            const keyItem = createKeySelectionItem(salaIdentifier, isInUse, {
+                block: block,
+                room: room,
+                roomNumber: null
+            });
+            container.appendChild(keyItem);
+        } else {
+            // Sala com numeração - múltiplas chaves
+            numbers.forEach(number => {
+                const salaIdentifier = `${block} - ${room} - Sala ${number}`;
+                const isInUse = currentShiftData.some(record => record.sala === salaIdentifier);
+                
+                const keyItem = createKeySelectionItem(salaIdentifier, isInUse, {
+                    block: block,
+                    room: room,
+                    roomNumber: number
+                });
+                container.appendChild(keyItem);
+            });
+        }
+    }
+    
+    updateSelectedKeysCount();
+}
+
+function createKeySelectionItem(salaIdentifier, isInUse, roomDetails) {
+    const item = document.createElement('div');
+    item.className = `key-selection-item ${isInUse ? 'unavailable' : ''}`;
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.disabled = isInUse;
+    checkbox.value = salaIdentifier;
+    checkbox.addEventListener('change', () => toggleKeySelection(salaIdentifier, roomDetails, checkbox.checked));
+    
+    const keyInfo = document.createElement('div');
+    keyInfo.className = 'key-info';
+    
+    const keyName = document.createElement('div');
+    keyName.className = 'key-name';
+    keyName.textContent = salaIdentifier;
+    
+    const keyStatus = document.createElement('div');
+    keyStatus.className = `key-status ${isInUse ? 'in-use' : 'available'}`;
+    keyStatus.textContent = isInUse ? 'Em uso' : 'Disponível';
+    
+    keyInfo.appendChild(keyName);
+    keyInfo.appendChild(keyStatus);
+    
+    item.appendChild(checkbox);
+    item.appendChild(keyInfo);
+    
+    if (!isInUse) {
+        item.addEventListener('click', (e) => {
+            if (e.target !== checkbox) {
+                checkbox.checked = !checkbox.checked;
+                toggleKeySelection(salaIdentifier, roomDetails, checkbox.checked);
+            }
+        });
+    }
+    
+    return item;
+}
+
+function toggleKeySelection(salaIdentifier, roomDetails, isSelected) {
+    if (isSelected) {
+        if (!selectedKeys.find(key => key.identifier === salaIdentifier)) {
+            selectedKeys.push({
+                identifier: salaIdentifier,
+                roomDetails: roomDetails
+            });
+        }
+    } else {
+        selectedKeys = selectedKeys.filter(key => key.identifier !== salaIdentifier);
+    }
+    
+    updateSelectedKeysCount();
+    updateKeyItemAppearance();
+}
+
+function updateKeyItemAppearance() {
+    const items = document.querySelectorAll('.key-selection-item');
+    items.forEach(item => {
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        if (checkbox && checkbox.checked) {
+            item.classList.add('selected');
+        } else {
+            item.classList.remove('selected');
+        }
+    });
+}
+
+function updateSelectedKeysCount() {
+    const countElement = document.getElementById('selected-count');
+    if (countElement) {
+        countElement.textContent = selectedKeys.length;
+    }
+}
+
+function selectAllAvailableKeys() {
+    const checkboxes = document.querySelectorAll('.key-selection-item:not(.unavailable) input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        if (!checkbox.checked) {
+            checkbox.checked = true;
+            const item = checkbox.closest('.key-selection-item');
+            const salaIdentifier = checkbox.value;
+            
+            // Extrair detalhes da sala a partir do identificador
+            const parts = salaIdentifier.split(' - ');
+            const roomDetails = {
+                block: parts[0],
+                room: parts[1],
+                roomNumber: parts[2] ? parts[2].replace('Sala ', '') : null
+            };
+            
+            toggleKeySelection(salaIdentifier, roomDetails, true);
+        }
+    });
+}
+
+function clearAllSelectedKeys() {
+    const checkboxes = document.querySelectorAll('.key-selection-item input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    selectedKeys = [];
+    updateSelectedKeysCount();
+    updateKeyItemAppearance();
+}
+
 // Função Salvar Terceiros
 function saveThirdParty() {
     const name = document.getElementById('tpFullName').value.trim();
     const purpose = document.getElementById('tpPurpose').value.trim();
     const notes = document.getElementById('tpNotes').value.trim();
     
+    // Valida se os campos obrigatórios estão vazios
+    if(!name || !purpose) { 
+        alert('Preencha corretamente os campos obrigatórios.'); 
+        return; 
+    }
+
+    // Verificar se estamos em modo de seleção múltipla
+    if (multipleSelectionMode && selectedKeys.length > 0) {
+        // Salvar múltiplas chaves
+        saveMultipleThirdPartyKeys(name, purpose, notes);
+    } else {
+        // Salvar chave única (modo tradicional)
+        saveSingleThirdPartyKey(name, purpose, notes);
+    }
+}
+
+function saveSingleThirdPartyKey(name, purpose, notes) {
     // Recupera as opções do dropdown selecionadas
     const block = currentSelections.block;
     const room = currentSelections.room;
     const roomNumber = currentSelections.roomNumber;
 
     // Valida se os campos obrigatórios estão vazios
-    if(!name || !purpose || !block || !room) { 
-        alert('Preencha corretamente os campos obrigatórios.'); 
+    if(!block || !room) { 
+        alert('Selecione um bloco e sala.'); 
         return; 
     }
 
@@ -1879,7 +2179,46 @@ function saveThirdParty() {
     }
     
     // Dados do terceiro
-    const newRecord = {
+    const newRecord = createThirdPartyRecord(name, purpose, notes, salaIdentifier, {
+        block: block,
+        room: room,
+        roomNumber: roomNumber
+    }, timeString);
+
+    // Adicionar ao array do turno atual na data selecionada
+    addRecordToCurrentShift([newRecord]);
+    
+    // Limpar formulário e fechar modal
+    clearFormAndClose();
+}
+
+function saveMultipleThirdPartyKeys(name, purpose, notes) {
+    if (selectedKeys.length === 0) {
+        alert('Selecione pelo menos uma chave.');
+        return;
+    }
+
+    const timeString = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', 
+                                                                minute: '2-digit' 
+    });
+
+    // Criar registros para cada chave selecionada
+    const newRecords = selectedKeys.map(keyData => {
+        return createThirdPartyRecord(name, purpose, notes, keyData.identifier, keyData.roomDetails, timeString);
+    });
+
+    // Adicionar todos os registros ao turno atual
+    addRecordToCurrentShift(newRecords);
+    
+    // Limpar formulário e fechar modal
+    clearFormAndClose();
+    
+    // Mostrar notificação de sucesso
+    showNotification(`${selectedKeys.length} chave(s) registrada(s) com sucesso para ${name}!`, 'success');
+}
+
+function createThirdPartyRecord(name, purpose, notes, salaIdentifier, roomDetails, timeString) {
+    return {
         id: `terceiro_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         sala: salaIdentifier,
         professor: name + " (Terceiro)",
@@ -1890,11 +2229,7 @@ function saveThirdParty() {
         horaDevolucao: null,
         notas: notes,
         
-        roomDetails: {
-            block: block,
-            room: room,
-            roomNumber: roomNumber
-        },
+        roomDetails: roomDetails,
         
         // Campos de compatibilidade com o painel administrativo
         room: salaIdentifier,
@@ -1906,7 +2241,9 @@ function saveThirdParty() {
         returnTime: null,
         status: 'em_uso'
     };
+}
 
+function addRecordToCurrentShift(records) {
     // Adicionar ao array do turno atual na data selecionada
     const dateData = getDataForDate(selectedDate);
     
@@ -1914,7 +2251,9 @@ function saveThirdParty() {
         dateData[activeShift] = [];
     }
 
-    dateData[activeShift].push(newRecord);
+    records.forEach(record => {
+        dateData[activeShift].push(record);
+    });
     
     // Atualizar localStorage e notificar TODOS os painéis (professor + admin)
     localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
@@ -1939,11 +2278,17 @@ function saveThirdParty() {
             data:  dataByDateAndShift 
         } 
     }));
+}
 
+function clearFormAndClose() {
     // Limpar formulário
     document.getElementById('tpFullName').value = '';
     document.getElementById('tpPurpose').value = '';
     document.getElementById('tpNotes').value = '';
+    
+    // Resetar seleções
+    selectedKeys = [];
+    multipleSelectionMode = false;
     
     closeThirdPartyForm();
     renderTableForShift(activeShift);
@@ -2109,15 +2454,22 @@ function populateBlockDropdown() {
             document.getElementById('room-number-dropdown').classList.remove('invisible');
             document.getElementById('room-number-dropdown').classList.add('hidden');
             
-            // Exibe o dropdown de Salas
-            const roomDropdown = document.querySelector('#room-dropdown');
+            if (currentKeyMode === 'multiple') {
+                // Modo múltiplo: mostrar imediatamente todas as chaves do bloco
+                showMultipleSelectionSection();
+            } else {
+                // Modo single: continuar com o fluxo normal
+                // Exibe o dropdown de Salas
+                const roomDropdown = document.querySelector('#room-dropdown');
 
-            if(roomDropdown) {
-                roomDropdown.classList.remove('hidden');
-                roomDropdown.classList.add('visible');
+                if(roomDropdown) {
+                    roomDropdown.classList.remove('hidden');
+                    roomDropdown.classList.add('visible');
+                }
+                
+                // Preenche o próximo dropdown e reinicia os seguintes
+                populateRoomDropdown(selectedBlock);
             }
-            
-            // Preenche o próximo dropdown e reinicia os seguintes
             populateRoomDropdown(selectedBlock);
             resetDropdown('room-number-dropdown', 'Selecione o número da sala', true);
         });
@@ -2181,6 +2533,9 @@ function populateRoomDropdown(selectedBlock) {
                 roomNumberDropdown.classList.remove('selectedOption');
                 roomNumberDropdown.classList.remove('gradient');
                 roomNumberDropdown.classList.add('visible');
+            } else {
+                // Se não há números de sala, mostrar a seção de seleção múltipla
+                showMultipleSelectionSection();
             }
             
             // Preenche o próximo dropdown e reinicia os seguintes
@@ -2244,6 +2599,9 @@ function populateRoomNumberDropdown(selectedBlock, selectedRoom) {
 
             // Remove dropdown-active from room number dropdown
             document.getElementById('room-number-dropdown').closest('.drop-down-item').classList.remove('dropdown-active');
+            
+            // Mostrar seção de seleção múltipla
+            showMultipleSelectionSection();
         });
     });
 }
