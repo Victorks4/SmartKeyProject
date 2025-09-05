@@ -271,7 +271,6 @@ async function processFileImport(file, selectedShift) {
     }
 }
 
-
 // Função para determinar o turno baseado na sala (pode ser customizada conforme necessário)
 function getShiftFromRoom(room) {
     if (!room) return '';
@@ -1351,6 +1350,24 @@ function openRegisterTeacherModal() {
     document.getElementById('registerTeacherModal').style.display = 'flex';
 }
 
+function closeRegisterTeacherModal() {
+    document.getElementById('registerTeacherModal').style.display = 'none';
+    // limpar os campos e reiniciar o dropdown !!!!
+    document.getElementById('tpFast').value = '';
+    document.getElementById('tpCourse').value = '';
+    document.getElementById('tpFullName').value = '';
+    document.getElementById('tpDiscipline').value = '';
+    resetDropdown();
+}
+
+function resetDropdown() {
+    document.getElementById('valueClasses').innerText = 'Selecione o número da turma';
+    const selectedElement = document.getElementById('selected-classes');
+    selectedElement.classList.remove('gradient');
+    selectedElement.classList.add('active');
+    selectedElement.classList.add('active');
+}
+
 // Faz o que for digitado no campo de fast ser convertido para UPPERCASE automáticamente
 const inputFast = document.getElementById("tpFast");
 
@@ -1420,11 +1437,7 @@ function saveNewTeacher() {
     document.getElementById('registerTeacherModal').style.display = 'none';;
 
     // Limpar campos
-    document.getElementById('tpFast').value = '';
-    document.getElementById('tpCourse').value = '';
-    document.getElementById('tpFullName').value = '';
-    document.getElementById('tpDiscipline').value = '';
-    document.getElementById('valueClasses').textContent = 'Selecione o número da turma';
+    closeRegisterTeacherModal();
 }
 
 function initializeAll() {
@@ -1910,12 +1923,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Botão Adicionar
-    const addButton = document.querySelector('button[title="Adicionar Nova Chave"]');
-    if (addButton) {
-        addButton.addEventListener('click', function() {
-            showNotification('Funcionalidade de adicionar será implementada em breve!', 'warning');
-        });
-    }
+    // const addButton = document.querySelector('button[title="Adicionar Nova Chave"]');
+    // if (addButton) {
+    //     addButton.addEventListener('click', function() {
+    //         showNotification('Funcionalidade de adicionar será implementada em breve!', 'warning');
+    //     });
+    // }
     
     // Botão Editar
     const editButton = document.querySelector('button[title="Editar Configurações"]');

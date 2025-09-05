@@ -787,3 +787,10 @@ body.overlay-open .main-content *:focus {
 .popup button:hover{
     background:gray;
 }
+
+.btn-close-popup {
+    background-color: transparent;
+    border: none;
+    color: #6c757d;
+    font-size: 2.25rem;
+}

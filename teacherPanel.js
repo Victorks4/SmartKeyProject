@@ -1779,11 +1779,11 @@ function confirmLogin() {
 
 // ----------- Terceiros modal -----------
 function openThirdPartyForm() { 
-    document.getElementById('thirdPartyModal').style.display = 'flex'; 
+    document.getElementById('thirdPartyModal').classList.add('active'); 
 }
 
 function closeThirdPartyForm() {
-    document.getElementById('thirdPartyModal').style.display = 'none'; 
+    document.getElementById('thirdPartyModal').classList.remove('active'); 
     document.getElementById('tpFullName').value = '';
     document.getElementById('tpPurpose').value = '';
     document.getElementById('tpNotes').value = '';
