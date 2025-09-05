@@ -258,8 +258,7 @@ td {
 .modal-content {
     background: #fff;
     border-radius: 0.75rem;
-    width: 488px;
-    max-width: 92vw;
+    width: 506px;
     padding: 1.8rem 1.93rem 1.5rem;
     box-shadow: 0 4px 12px -2px hsl(210 85% 9% 0.08);
 }
@@ -479,7 +478,9 @@ td {
     transform: scaleY(0);
     transform-origin: top;
     transition: all 0.3s ease;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 300px;
     z-index: 10;
 }
 
@@ -492,6 +493,7 @@ td {
     font-size: 0.92rem;
     transform: scaleY(1);
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    max-height: 184px;
 } 
 
 .option::before {
@@ -692,6 +694,10 @@ td {
 #key-quantity-section .btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+#key-quantity-section .btn:hover #green-key-img {
+    filter: brightness(0) invert(1);
 }
 
 /* Tabs */

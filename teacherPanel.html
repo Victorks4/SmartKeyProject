@@ -119,7 +119,7 @@
     </div> <!-- Fim do Modal Login Professor -->
 
     <!-- Modal: Registrar Terceiro -->
-    <div class="modal" id="thirdPartyModal" role="dialog" aria-modal="true" aria-labelledby="tpTitle">
+    <div class="modal" id="thirdPartyModal" role="dialog" aria-modal="true" aria-labelledby="tpTitle" style="display: flex;">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title" id="tpTitle">
@@ -165,7 +165,8 @@
                             <i class="bi bi-key"></i> Uma chave específica
                         </button>
                         <button type="button" class="btn btn-outline-success" onclick="selectKeyMode('multiple')">
-                            <i class="bi bi-keys"></i> Múltiplas chaves
+                            <img id="green-key-img" src="public/green-keys.svg" alt="Chaves" style="width: 30px;">
+                            Múltiplas chaves
                         </button>
                     </div>
                 </div>
@@ -249,12 +250,17 @@
                 </div>
             </div>
 
-            <label class="text-sm font-medium" >Notas Adicionais
+            <!-- <button class="btn mb-3 align-self-start" style="color: #0b5ed7;">
+                <i class="bi bi-plus"></i>
+                Notas Adicionais
+            </button>
+
+            <label class="text-sm font-medium" >
                 <textarea 
                     id="tpNotes" 
                     rows="3">
                 </textarea>
-            </label>
+            </label> -->
 
             <div class="modal-actions">
                 <button id="cancel-btn" class="btn btn-outline" onclick="closeThirdPartyForm()">

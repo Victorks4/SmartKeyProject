@@ -1,5 +1,20 @@
 // Variáveis globais
-let activeShift = 'manhã';
+let activeShift = getCurrentShiftByTime();
+
+// Função para determinar o turno atual com base no horário
+function getCurrentShiftByTime() {
+    const now = new Date();
+    const hour = now.getHours();
+
+    if(hour >= 6 && hour < 12) {
+        return 'manhã';
+    } else if(hour >= 12 && hour < 18) {
+        return 'tarde';
+    } else {
+        return 'noite';
+    }
+}
+
 let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 
@@ -1433,9 +1448,6 @@ function saveNewTeacher() {
     // Atualiza tabela
     renderTable();
 
-    // Fecha modal
-    document.getElementById('registerTeacherModal').style.display = 'none';
-
     // Limpar campos
     closeRegisterTeacherModal();
 }
@@ -1536,7 +1548,6 @@ document.addEventListener("click", function(e) {
     const row = button.closest("tr");
     const cells = row.querySelectorAll("td");
 
-    console.log("row: ################# ", row);
     // Recupera os valores originais de cada célula
     const originalValues = JSON.parse(row.dataset.originalValues);
     

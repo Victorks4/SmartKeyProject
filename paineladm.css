@@ -427,8 +427,9 @@ td {
     font-weight: 500;
     font-size: 0.91rem;
 }
+
 .option:last-child {
-border-bottom: none;
+    border-bottom: none;
 }
 
 /* Scrollbar customization */
@@ -699,7 +700,6 @@ border-bottom: none;
     background-color: rgba(25, 135, 84, 0.272);
 }
 
-/* f25f5c */
 .btn-cancel {
     color: rgba(242, 94, 92, 0.912) !important;
     background-color: rgba(242, 94, 92, 0.072);
@@ -764,6 +764,7 @@ border-bottom: none;
     border-color: #b02a37 !important;
     color: white !important;
 }
+
 .overlay{
     position: fixed;
     top: 0;

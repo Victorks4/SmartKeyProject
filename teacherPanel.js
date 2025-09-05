@@ -2457,6 +2457,8 @@ function populateBlockDropdown() {
             if (currentKeyMode === 'multiple') {
                 // Modo múltiplo: mostrar imediatamente todas as chaves do bloco
                 showMultipleSelectionSection();
+                document.getElementById('room-dropdown').style.display = 'none';
+                document.getElementById('room-number-dropdown').style.display = 'none';
             } else {
                 // Modo single: continuar com o fluxo normal
                 // Exibe o dropdown de Salas
