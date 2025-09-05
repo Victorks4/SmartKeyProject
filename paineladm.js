@@ -1436,14 +1436,51 @@ function handleSaveButton(e) {
     const cells = row.querySelectorAll("td");
     if (!cells.length) return;
 
-    // Faz os valores dos inputs receberem os valores originais de cada célula
+    // Captura os dados editados antes de alterar o DOM
+    const updatedData = {};
+    const rowId = row.dataset.recordId || row.dataset.id;
+    
+    console.log('🔍 Debug edição:', {
+        rowId: rowId,
+        datasetRecordId: row.dataset.recordId,
+        datasetId: row.dataset.id,
+        allDataset: row.dataset
+    });
+    
     cells.forEach((cell, index) => {
         if([5, 6, 7, 8, cells.length - 1].includes(index)) return;
         
         const input = cell.querySelector("input");
-        
-        if(input) cell.textContent = input.value;
+        if (input) {
+            const newValue = input.value.trim();
+            
+            console.log(`📝 Campo ${index} alterado para:`, newValue);
+            
+            // Mapear índices para campos de dados
+            switch(index) {
+                case 0: updatedData.room = newValue; break;
+                case 1: updatedData.course = newValue; break;
+                case 2: updatedData.turmaNumber = newValue; break;
+                case 3: updatedData.professorName = newValue; break;
+                case 4: updatedData.subject = newValue; break;
+                // índices 5-8 são campos não editáveis (horários, status)
+            }
+            
+            // Atualiza o DOM
+            cell.textContent = newValue;
+        }
     });
+
+    console.log('📊 Dados capturados para sincronização:', {
+        rowId: rowId,
+        updatedData: updatedData,
+        hasData: Object.keys(updatedData).length > 0
+    });
+
+    // Atualiza os dados compartilhados se há um ID de registro
+    if (rowId && Object.keys(updatedData).length > 0) {
+        updateSharedDataRecord(rowId, updatedData);
+    }
 
     // Faz a célula de ação voltar ao botão Editar
     const actionCell = cells[cells.length - 1];
@@ -1453,6 +1490,139 @@ function handleSaveButton(e) {
             <i class="bi bi-pencil-square"></i>
         </button>
     `;
+}
+
+// Função para atualizar um registro específico nos dados compartilhados
+function updateSharedDataRecord(recordId, updatedFields) {
+    try {
+        console.log(`🔄 Atualizando registro ${recordId} com:`, updatedFields);
+        
+        // Encontrar e atualizar o registro nos dados por data e turno
+        let recordFound = false;
+        
+        for (const date in dataByDateAndShift) {
+            for (const shift in dataByDateAndShift[date]) {
+                const records = dataByDateAndShift[date][shift];
+                
+                console.log(`🔍 Verificando ${date}/${shift}:`, {
+                    recordsType: typeof records,
+                    isArray: Array.isArray(records),
+                    records: records
+                });
+                
+                // Verificar se records é um array
+                if (!Array.isArray(records)) {
+                    console.warn(`⚠️ records não é um array em ${date}/${shift}:`, records);
+                    continue;
+                }
+                
+                const recordIndex = records.findIndex(record => record && record.id === recordId);
+                
+                if (recordIndex !== -1) {
+                    // Atualizar o registro com os novos dados
+                    Object.assign(records[recordIndex], updatedFields);
+                    
+                    // Adicionar timestamp de última edição
+                    records[recordIndex].lastEdited = new Date().toISOString();
+                    records[recordIndex].editedBy = 'admin';
+                    
+                    console.log(`✅ Registro atualizado:`, records[recordIndex]);
+                    recordFound = true;
+                    
+                    // Sincronizar via localStorage
+                    localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
+                    
+                    // Também atualizar na estrutura allShiftData se existir
+                    const currentDateData = dataByDateAndShift[date];
+                    if (currentDateData) {
+                        localStorage.setItem('allShiftData', JSON.stringify(currentDateData));
+                    }
+                    
+                    // Sincronizar via Firebase se disponível
+                    if (typeof saveDataToFirebase === 'function') {
+                        saveDataToFirebase(date, shift, records)
+                            .then(() => {
+                                console.log(`🔥 Dados sincronizados no Firebase para ${date}/${shift}`);
+                            })
+                            .catch(error => {
+                                console.error('❌ Erro ao sincronizar no Firebase:', error);
+                            });
+                    }
+                    
+                    // Disparar evento customizado para notificar outras páginas
+                    window.dispatchEvent(new CustomEvent('dataUpdated', {
+                        detail: {
+                            type: 'recordUpdated',
+                            recordId: recordId,
+                            updatedFields: updatedFields,
+                            date: date,
+                            shift: shift,
+                            timestamp: new Date().toISOString()
+                        }
+                    }));
+                    
+                    break;
+                }
+            }
+            if (recordFound) break;
+        }
+        
+        // Se não encontrou na estrutura principal, tentar na estrutura legacy
+        if (!recordFound) {
+            console.log('🔍 Tentando encontrar na estrutura legacy allShiftData...');
+            
+            const allShiftDataStr = localStorage.getItem('allShiftData');
+            if (allShiftDataStr) {
+                try {
+                    const allShiftData = JSON.parse(allShiftDataStr);
+                    
+                    for (const shift in allShiftData) {
+                        const shiftRecords = allShiftData[shift];
+                        
+                        if (Array.isArray(shiftRecords)) {
+                            const recordIndex = shiftRecords.findIndex(record => record && record.id === recordId);
+                            
+                            if (recordIndex !== -1) {
+                                Object.assign(shiftRecords[recordIndex], updatedFields);
+                                shiftRecords[recordIndex].lastEdited = new Date().toISOString();
+                                shiftRecords[recordIndex].editedBy = 'admin';
+                                
+                                localStorage.setItem('allShiftData', JSON.stringify(allShiftData));
+                                
+                                console.log(`✅ Registro atualizado na estrutura legacy:`, shiftRecords[recordIndex]);
+                                recordFound = true;
+                                
+                                // Disparar evento customizado
+                                window.dispatchEvent(new CustomEvent('dataUpdated', {
+                                    detail: {
+                                        type: 'recordUpdated',
+                                        recordId: recordId,
+                                        updatedFields: updatedFields,
+                                        shift: shift,
+                                        timestamp: new Date().toISOString()
+                                    }
+                                }));
+                                
+                                break;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Erro ao processar allShiftData:', error);
+                }
+            }
+        }
+        
+        if (!recordFound) {
+            console.warn(`⚠️ Registro com ID ${recordId} não encontrado em nenhuma estrutura`);
+        }
+        
+        return recordFound;
+        
+    } catch (error) {
+        console.error('❌ Erro ao atualizar dados compartilhados:', error);
+        return false;
+    }
 }
 
 // Função para lidar com o botão cancelar
@@ -1779,7 +1949,7 @@ function generateTableRow(record) {
     const returnTime = record.returnTime || record.horaDevolucao || '-';
     
     return `
-        <tr>
+        <tr data-record-id="${record.id}" data-id="${record.id}">
             <td>${room}</td>
             <td>${course}</td>
             <td><span class="badge fw-bold text-dark">${turma}</span></td>

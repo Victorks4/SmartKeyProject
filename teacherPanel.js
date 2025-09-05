@@ -826,11 +826,73 @@ window.exportDocentesCodprof = function() {
 
 // Evento para escutar mudanças no localStorage de outras páginas
 window.addEventListener('storage', function(e) {
+    console.log('📱 Evento storage recebido:', {
+        key: e.key,
+        oldValue: e.oldValue ? 'presente' : 'null',
+        newValue: e.newValue ? 'presente' : 'null'
+    });
+    
     if (e.key === 'docentesCodprof') {
         console.log('🔄 Detectada atualização no mapeamento docentesCodprof de outra página');
         loadDocentesCodprofFromStorage();
     }
+    
+    if (e.key === 'allDateShiftData') {
+        console.log('🔄 Detectada atualização nos dados de turnos de outra página');
+        loadSharedData();
+    }
+    
+    if (e.key === 'allShiftData') {
+        console.log('🔄 Detectada atualização no allShiftData de outra página');
+        loadSharedData();
+    }
 });
+
+// Evento para escutar mudanças específicas de registros do painel administrativo
+window.addEventListener('dataUpdated', function(e) {
+    console.log('📢 Evento dataUpdated recebido:', e.detail);
+    
+    if (e.detail && e.detail.type === 'recordUpdated') {
+        console.log('🔄 Detectada atualização de registro específico:', e.detail);
+        
+        // Recarregar dados e atualizar a tabela
+        loadSharedData().then(() => {
+            console.log('✅ Dados atualizados no painel do professor');
+            
+            // Mostrar notificação visual da atualização
+            showUpdateNotification(e.detail);
+        });
+    }
+});
+
+// Função para mostrar notificação de atualização
+function showUpdateNotification(updateDetail) {
+    const notification = document.createElement('div');
+    notification.className = 'alert alert-info alert-dismissible fade show position-fixed';
+    notification.style.cssText = `
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    `;
+    
+    notification.innerHTML = `
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>Dados Atualizados!</strong><br>
+        <small>Registro atualizado pelo administrador</small>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remover após 5 segundos
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
 
 // Retorna o FAST correspondente ao nome do professor informado
 function getFastForProfessor(professorName) {
