@@ -1434,7 +1434,7 @@ function saveNewTeacher() {
     renderTable();
 
     // Fecha modal
-    document.getElementById('registerTeacherModal').style.display = 'none';;
+    document.getElementById('registerTeacherModal').style.display = 'none';
 
     // Limpar campos
     closeRegisterTeacherModal();
@@ -1464,6 +1464,97 @@ if(document.readyState === 'loading') {
         addButton.addEventListener('click', openRegisterTeacherModal);
     }
 }
+
+// Função para editar dados da tabela
+document.addEventListener("click", function (e) {
+    const button = e.target.closest(".btn-edit");
+
+    const row = button.closest("tr");
+    const cells = row.querySelectorAll("td");
+
+    // Armazena os valores originais (serão usados no botão de "cancelar" para recuperar os dados)
+    row.dataset.originalValues = JSON.stringify(
+        Array.from(cells).map(cell => cell.innerHTML.trim())
+    );
+
+    // Torna as células editáveis
+    cells.forEach((cell, index) => {
+        if([5, 6, 7, 8, cells.length - 1].includes(index)) return;
+
+        const value = cell.innerText.trim();
+
+        cell.innerHTML = `<input 
+                             type="text" 
+                             class="form-control" 
+                             value="${value}"
+                         >`;
+    });
+
+    // Substitui as células de ação pelos botões "salvar" e "cancelar"
+    const actionCell = cells[cells.length - 1];
+
+    actionCell.innerHTML = `
+        <div class="d-flex">
+            <button class="btn btn-save me-2">
+                <i class="bi bi-floppy"></i>
+            </button>
+            <button class="btn btn-cancel">
+                <i class="bi bi-trash3"></i>
+            </button>
+        </div>
+    `;
+});
+
+document.addEventListener("click", function (e) {
+    const button = e.target.closest(".btn-save");
+
+    const row = button.closest("tr");
+    const cells = row.querySelectorAll("td");
+
+    // Faz os valores dos inputs receberem os valores originais de cada célula
+    cells.forEach((cell, index) => {
+        if([5, 6, 7, 8, cells.length - 1].includes(index)) return;
+        
+        const input = cell.querySelector("input");
+        
+        if(input) cell.textContent = input.value;
+    });
+
+    // Faz a célula de ação voltar ao botão Editar
+    const actionCell = cells[cells.length - 1];
+
+    actionCell.innerHTML = `
+        <button class="btn btn-edit">
+            <i class="bi bi-pencil-square"></i>
+        </button>
+    `;
+});
+
+document.addEventListener("click", function(e) {
+    const button = e.target.closest(".btn-cancel");
+
+    const row = button.closest("tr");
+    const cells = row.querySelectorAll("td");
+
+    console.log("row: ################# ", row);
+    // Recupera os valores originais de cada célula
+    const originalValues = JSON.parse(row.dataset.originalValues);
+    
+    cells.forEach((cell, index) => {
+        if([5, 6, 7, 8, cells.length - 1].includes(index)) return;
+        cell.innerHTML  = originalValues[index];
+
+    });
+
+    // Reinicia a célula de ação para o Botão de Edição
+    const actionCell = cells[cells.length - 1];
+
+    actionCell.innerHTML = `
+        <button class="btn btn-edit">
+            <i class="bi bi-pencil-square"></i>
+        </button>
+    `;
+});
 
 function checkLogin() {
     const isLoggedIn = localStorage.getItem('adminLoggedIn');
@@ -1720,6 +1811,7 @@ function generateTableHTML(validData, shiftCapitalized, formattedDate) {
                             <th class="border-0">Hora Final</th>
                             <th class="border-0">Status</th>
                             <th class="border-0 text-center">Devolução</th>
+                            <th class="border-0 text-center">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
@@ -1773,6 +1865,11 @@ function generateTableRow(record) {
             <td>${getStatusBadge(record.status)}</td>
             <td class="text-center">
                 ${getActionButton(record.id, record.status)}
+            </td>
+            <td class="text-center">
+                <button class="btn btn-edit" data-id="${record.id}">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
             </td>
         </tr>
     `;

@@ -679,6 +679,43 @@ border-bottom: none;
     transition: all 0.2s ease;
 }
 
+.btn-edit {
+    color: rgba(13, 109, 253, 0.902) !important;
+    background-color: rgba(13, 109, 253, 0.022);
+    border: 1px solid rgba(13, 109, 253, 0.339) !important;
+}
+
+.btn-edit:hover {
+    background-color: rgba(13, 109, 253, 0.222);
+}
+
+.btn-save {
+    color: rgba(25, 135, 84, 0.902) !important;
+    background-color: rgba(25, 135, 84, 0.072);
+    border: 1px solid rgba(25, 135, 84, 0.339) !important;
+}
+
+.btn-save:hover {
+    background-color: rgba(25, 135, 84, 0.272);
+}
+
+/* f25f5c */
+.btn-cancel {
+    color: rgba(242, 94, 92, 0.912) !important;
+    background-color: rgba(242, 94, 92, 0.072);
+    border: 1px solid rgba(242, 94, 92, 0.339) !important;
+}
+
+.btn-cancel:hover {
+    background-color: rgba(242, 94, 92, 0.272);
+}
+
+.btn-edit, 
+.btn-cancel, 
+.btn-save {
+    transition: background-color .3s ease-in-out;
+}
+
 .tab.active {
     background-color: var(--bs-primary);
     color: white;
