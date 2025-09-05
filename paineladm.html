@@ -32,10 +32,10 @@
             <input type="text" id="username" placeholder="Digite seu login">
             <input type="password" id="senha" placeholder="Digite sua senha">
 
-            <button id="btn-login" onclick="login()">
+            <button id="btn-login" onclick="login()" aria-label="Fazer login como administrador">
                 Entrar
             </button>
-            <button id ="cancel-btn" onclick="cancel()">
+            <button id="cancel-btn" onclick="cancel()" aria-label="Cancelar login">
                 Cancelar
             </button>
 
@@ -65,7 +65,7 @@
                         Administrador
                     </span>
                 </span>
-                <button onclick="logout()" class="btn btn-outline-light btn-sm">
+                <button onclick="logout()" class="btn btn-outline-light btn-sm" aria-label="Sair do sistema">
                     <i class="bi bi-box-arrow-right me-1"></i> Sair
                 </button>
             </div>
@@ -117,7 +117,7 @@
                     <i class="bi bi-file-earmark-spreadsheet me-1"></i>
                     Importar Dados
                 </button>
-                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none" onchange="handleFileImport(this.files[0])">
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none" onchange="handleFileImport(this.files[0])" aria-label="Selecionar arquivo para importação">
             </div>
         </div>
 
@@ -187,10 +187,10 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger text-white" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-danger text-white" data-bs-dismiss="modal" aria-label="Cancelar importação">
                         Cancelar
                     </button>
-                    <button type="button" class="btn btn-primary text-white" id="confirmImportShift">
+                    <button type="button" class="btn btn-primary text-white" id="confirmImportShift" aria-label="Confirmar importação do arquivo">
                         Importar
                     </button>
                 </div>
@@ -238,10 +238,10 @@
             </label>
 
             <div class="teacher-modal-actions">
-                <button id="cancel-btn" class="btn btn-outline" onclick="closeRegisterTeacherModal()">
+                <button id="cancel-btn" class="btn btn-outline" onclick="closeRegisterTeacherModal()" aria-label="Cancelar cadastro de professor">
                     Cancelar
                 </button>
-                <button id="btn-register" class="btn btn-outline" onclick="saveNewTeacher()">
+                <button id="btn-register" class="btn btn-outline" onclick="saveNewTeacher()" aria-label="Salvar dados do novo professor">
                     Cadastrar Professor
                 </button>
             </div>

@@ -77,7 +77,21 @@ let selectedFileForImport = null;
 // Função para mostrar o modal de seleção de turno
 function showShiftSelectionModal(file) {
     selectedFileForImport = file;
-    const modal = new bootstrap.Modal(document.getElementById('shiftSelectionModal'));
+    
+    const modalElement = document.getElementById('shiftSelectionModal');
+    if (!modalElement) {
+        console.error('Modal shiftSelectionModal não encontrado!');
+        return;
+    }
+    
+    // Verificar se já existe uma instância do modal e destruí-la
+    const existingModal = bootstrap.Modal.getInstance(modalElement);
+    if (existingModal) {
+        existingModal.dispose();
+    }
+    
+    // Criar nova instância e mostrar
+    const modal = new bootstrap.Modal(modalElement);
     modal.show();
 }
 
@@ -85,10 +99,29 @@ function showShiftSelectionModal(file) {
 async function handleFileImport(file) {
     if (!file) return;
     
+    console.log('📁 Iniciando importação de arquivo:', file.name);
+    
     // Mostrar modal de seleção de turno
     selectedFileForImport = file;
-    const modal = new bootstrap.Modal(document.getElementById('shiftSelectionModal'));
+    
+    const modalElement = document.getElementById('shiftSelectionModal');
+    if (!modalElement) {
+        console.error('❌ Modal shiftSelectionModal não encontrado!');
+        return;
+    }
+    
+    // Verificar se já existe uma instância do modal e destruí-la
+    const existingModal = bootstrap.Modal.getInstance(modalElement);
+    if (existingModal) {
+        console.log('🔄 Removendo instância anterior do modal');
+        existingModal.dispose();
+    }
+    
+    // Criar nova instância e mostrar
+    console.log('✨ Criando nova instância do modal');
+    const modal = new bootstrap.Modal(modalElement);
     modal.show();
+    console.log('📱 Modal exibido');
 }
 
 // Função para processar o arquivo após seleção do turno
@@ -283,6 +316,15 @@ async function processFileImport(file, selectedShift) {
         // Restaurar botão
         importBtn.innerHTML = originalText;
         importBtn.disabled = false;
+        
+        // Limpar o input de arquivo para permitir importar o mesmo arquivo novamente
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput) {
+            fileInput.value = '';
+        }
+        
+        // Limpar variável global
+        selectedFileForImport = null;
     }
 }
 
@@ -987,7 +1029,7 @@ function renderShiftTabs() {
     }
 
     const tabsHTML = shifts.map(t => `
-        <button class="tab ${(t.id === activeShift) ? 'active' : ''}" onclick="changeShift('${t.id}')">
+        <button class="tab ${(t.id === activeShift) ? 'active' : ''}" onclick="changeShift('${t.id}')" aria-label="Selecionar turno da ${t.label}">
             ${t.label}
         </button>
     `).join('');
@@ -1198,21 +1240,40 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Configurar evento do botão de confirmação de importação
     const confirmImportBtn = document.getElementById('confirmImportShift');
-    if (confirmImportBtn) {
+    if (confirmImportBtn && !confirmImportBtn.hasAttribute('data-listener-added')) {
+        confirmImportBtn.setAttribute('data-listener-added', 'true');
         confirmImportBtn.addEventListener('click', async function() {
+            console.log('🎯 Botão de confirmar importação clicado');
+            
             const checkedInput = document.querySelector('input[name="importShift"]:checked');
-            if (!checkedInput) return;
+            if (!checkedInput) {
+                console.warn('⚠️ Nenhum turno selecionado');
+                return;
+            }
             
             const selectedShift = checkedInput.value;
+            console.log('📅 Turno selecionado:', selectedShift);
+            
             const modalElement = document.getElementById('shiftSelectionModal');
             if (modalElement && typeof bootstrap !== 'undefined') {
                 const modal = bootstrap.Modal.getInstance(modalElement);
-                if (modal) modal.hide();
+                if (modal) {
+                    console.log('🚪 Fechando modal');
+                    modal.hide();
+                }
             }
             
             if (selectedFileForImport) {
+                console.log('📁 Processando arquivo:', selectedFileForImport.name);
                 await processFileImport(selectedFileForImport, selectedShift);
                 selectedFileForImport = null;
+                
+                // Limpar o input de arquivo para permitir nova importação
+                const fileInput = document.getElementById('fileInput');
+                if (fileInput) {
+                    fileInput.value = '';
+                    console.log('🧹 Input de arquivo limpo');
+                }
             }
         });
     }
@@ -1415,10 +1476,10 @@ function handleEditButton(e) {
 
     actionCell.innerHTML = `
         <div class="d-flex">
-            <button class="btn btn-save me-2">
+            <button class="btn btn-save me-2" aria-label="Salvar alterações">
                 <i class="bi bi-floppy"></i>
             </button>
-            <button class="btn btn-cancel">
+            <button class="btn btn-cancel" aria-label="Cancelar edição">
                 <i class="bi bi-trash3"></i>
             </button>
         </div>
@@ -1486,7 +1547,7 @@ function handleSaveButton(e) {
     const actionCell = cells[cells.length - 1];
 
     actionCell.innerHTML = `
-        <button class="btn btn-edit">
+        <button class="btn btn-edit" aria-label="Editar registro">
             <i class="bi bi-pencil-square"></i>
         </button>
     `;
@@ -1651,7 +1712,7 @@ function handleCancelButton(e) {
     const actionCell = cells[cells.length - 1];
 
     actionCell.innerHTML = `
-        <button class="btn btn-edit">
+        <button class="btn btn-edit" aria-label="Editar registro">
             <i class="bi bi-pencil-square"></i>
         </button>
     `;
@@ -1728,6 +1789,7 @@ function getActionButton(recordId, status) {
             <button 
                 class="btn action-btn retirar"
                 onclick="handleKeyAction('${recordId}', '${status}')"
+                aria-label="Retirar chave"
             >
                 <i class="bi bi-box-arrow-right me-1"></i>
                 Retirar
@@ -1739,6 +1801,7 @@ function getActionButton(recordId, status) {
             <button 
                 class="btn action-btn devolver"
                 onclick="handleKeyAction('${recordId}', '${status}')"
+                aria-label="Devolver chave"
             >
                 <i class="bi bi-arrow-return-left me-1"></i>
                 Devolver
@@ -1750,6 +1813,7 @@ function getActionButton(recordId, status) {
             <button 
                 class="btn action-btn retirar"
                 onclick="handleKeyAction('${recordId}', '${status}')"
+                aria-label="Retirar chave"
             >
                 <i class="bi bi-key me-1"></i>
                 Retirar
@@ -1968,7 +2032,7 @@ function generateTableRow(record) {
                 ${getActionButton(record.id, record.status)}
             </td>
             <td class="text-center">
-                <button class="btn btn-edit" data-id="${record.id}">
+                <button class="btn btn-edit" data-id="${record.id}" aria-label="Editar registro">
                     <i class="bi bi-pencil-square"></i>
                 </button>
             </td>
@@ -2051,7 +2115,7 @@ function showNotification(message, type = 'info') {
     notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
     notification.innerHTML = `
         ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar notificação"></button>
     `;
     
     // Adicionar ao body
