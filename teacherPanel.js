@@ -709,6 +709,129 @@ const docentesCodprof = {
     "Zilmaura Santos Daltro": "FATS4775"
 };
 
+// Função para adicionar novo professor ao mapeamento docentesCodprof
+function addProfessorToMapping(professorName, fast) {
+    if (!professorName || !fast) {
+        console.warn('Nome do professor e FAST são obrigatórios para adicionar ao mapeamento');
+        return false;
+    }
+    
+    // Normaliza o FAST para maiúsculas
+    const normalizedFast = fast.toString().trim().toUpperCase();
+    const normalizedName = professorName.trim();
+    
+    // Verifica se o professor já existe
+    if (docentesCodprof[normalizedName]) {
+        console.warn(`Professor ${normalizedName} já existe no mapeamento com FAST: ${docentesCodprof[normalizedName]}`);
+        return false;
+    }
+    
+    // Verifica se o FAST já está sendo usado por outro professor
+    for (const [existingName, existingFast] of Object.entries(docentesCodprof)) {
+        if (existingFast === normalizedFast) {
+            console.warn(`FAST ${normalizedFast} já está sendo usado pelo professor: ${existingName}`);
+            return false;
+        }
+    }
+    
+    // Adiciona o professor ao mapeamento
+    docentesCodprof[normalizedName] = normalizedFast;
+    
+    // Salva no localStorage para persistência
+    saveDocentesCodprofToStorage();
+    
+    console.log(`✅ Professor ${normalizedName} adicionado ao mapeamento com FAST: ${normalizedFast}`);
+    return true;
+}
+
+// Função para salvar o mapeamento docentesCodprof no localStorage
+function saveDocentesCodprofToStorage() {
+    try {
+        localStorage.setItem('docentesCodprof', JSON.stringify(docentesCodprof));
+        console.log('📁 Mapeamento docentesCodprof salvo no localStorage');
+    } catch (error) {
+        console.error('❌ Erro ao salvar mapeamento no localStorage:', error);
+    }
+}
+
+// Função para carregar o mapeamento docentesCodprof do localStorage
+function loadDocentesCodprofFromStorage() {
+    try {
+        const saved = localStorage.getItem('docentesCodprof');
+        if (saved) {
+            const savedMapping = JSON.parse(saved);
+            // Merge com o mapeamento existente (localStorage tem prioridade)
+            Object.assign(docentesCodprof, savedMapping);
+            console.log('📁 Mapeamento docentesCodprof carregado do localStorage');
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar mapeamento do localStorage:', error);
+    }
+}
+
+// Função global para ser chamada de outras páginas
+window.addNewProfessorToTeacherPanel = function(professorName, fast) {
+    return addProfessorToMapping(professorName, fast);
+};
+
+// Função para visualizar todos os professores cadastrados (útil para debug)
+window.viewAllProfessors = function() {
+    console.log('👥 Professores cadastrados no mapeamento:');
+    console.table(docentesCodprof);
+    const total = Object.keys(docentesCodprof).length;
+    console.log(`📊 Total de professores cadastrados: ${total}`);
+    return docentesCodprof;
+};
+
+// Função para contar professores cadastrados
+window.countProfessors = function() {
+    const total = Object.keys(docentesCodprof).length;
+    console.log(`📊 Total de professores cadastrados: ${total}`);
+    return total;
+};
+
+// Função para buscar professor por FAST
+window.findProfessorByFast = function(fast) {
+    for (const [name, professorFast] of Object.entries(docentesCodprof)) {
+        if (professorFast === fast) {
+            return name;
+        }
+    }
+    return null;
+};
+
+// Função para exportar o mapeamento atualizado como código JavaScript
+window.exportDocentesCodprof = function() {
+    const mappingEntries = Object.entries(docentesCodprof)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([name, fast]) => `    "${name}": "${fast}"`)
+        .join(',\n');
+    
+    const exportCode = `const docentesCodprof = {\n${mappingEntries}\n};`;
+    
+    console.log('📋 Código do mapeamento atualizado:');
+    console.log(exportCode);
+    
+    // Copiar para clipboard se disponível
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(exportCode).then(() => {
+            console.log('✅ Código copiado para a área de transferência!');
+        }).catch(err => {
+            console.error('❌ Erro ao copiar para área de transferência:', err);
+        });
+    }
+    
+    return exportCode;
+};
+
+// Evento para escutar mudanças no localStorage de outras páginas
+window.addEventListener('storage', function(e) {
+    if (e.key === 'docentesCodprof') {
+        console.log('🔄 Detectada atualização no mapeamento docentesCodprof de outra página');
+        loadDocentesCodprofFromStorage();
+    }
+});
+
 // Retorna o FAST correspondente ao nome do professor informado
 function getFastForProfessor(professorName) {
     if(!professorName || typeof professorName !== 'string') return '';
@@ -2650,6 +2773,9 @@ function initialize() {
 
     activeShift = (h < 12) ? 'manhã' : ((h < 18) ? 'tarde' : 'noite');
     console.log('Turno inicial:', activeShift);
+
+    // Carregar mapeamento de professores do localStorage
+    loadDocentesCodprofFromStorage();
 
     // Carregar dados e configurar interface
     loadSharedData();
