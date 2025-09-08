@@ -36,12 +36,17 @@
                 <img src="public/chave-unscreen.gif" alt="Chave animada" class="me-2 navbar-key-gif">
                 <h1 class="h2 mb-0 fw-bold text-white text-center">Sistema de Controle de Chaves</h1>
             </div>
-            <button onclick="showAdmLogin()" id="btnAdm" class="btn d-flex align-items-center ms-auto">
-                <span class="navbar-text text-light">
-                    <i class="bi bi-person-circle me-1"></i>
-                    Administrador
-                </span>
-            </button>
+            <div class="d-flex align-items-center gap-2">
+                <button onclick="goToHome()" class="btn btn-outline-light btn-sm" aria-label="Voltar ao início">
+                    <i class="bi bi-house-door me-1"></i> Início
+                </button>
+                <button onclick="showAdmLogin()" id="btnAdm" class="btn d-flex align-items-center">
+                    <span class="navbar-text text-light">
+                        <i class="bi bi-person-circle me-1"></i>
+                        Administrador
+                    </span>
+                </button>
+            </div>
         </div>
     </nav>
 

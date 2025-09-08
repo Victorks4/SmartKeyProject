@@ -1366,6 +1366,10 @@ function showAdmLogin() {
     window.location.href = 'paineladm.html';
 }
 
+function goToHome() {
+    window.location.href = 'index.html';
+}
+
 function hideAdmLogin() {
     document.getElementById('overlay').style.visibility = 'hidden';
 }

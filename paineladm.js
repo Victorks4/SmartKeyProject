@@ -1990,10 +1990,9 @@ function checkLogin() {
 
 function logout() {
     localStorage.removeItem('adminLoggedIn');
-    document.getElementById('overlay').style.display = 'flex';
-    // implementar estilização da classe no css 
-    document.body.classList.add('overlay-open');
-    trapFocusInOverlay();
+    
+    // Redirecionar para a página inicial
+    window.location.href = 'index.html';
 }
 
 function login(){
