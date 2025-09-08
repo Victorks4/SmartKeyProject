@@ -1015,14 +1015,36 @@ function getCurrentShiftData() {
     console.log(`[PROFESSOR] ==> getCurrentShiftData chamada para data: ${selectedDate}, turno: ${activeShift}`);
     console.log(`[PROFESSOR] ==> dataByDateAndShift completo:`, dataByDateAndShift);
     
+    // Validar se selectedDate e activeShift estão definidos
+    if (!selectedDate || !activeShift) {
+        console.error(`[PROFESSOR] ==> ERRO: selectedDate (${selectedDate}) ou activeShift (${activeShift}) não definidos`);
+        return [];
+    }
+    
     const dateData = getDataForDate(selectedDate);
     console.log(`[PROFESSOR] ==> dateData para ${selectedDate}:`, dateData);
     console.log(`[PROFESSOR] ==> dateData[${activeShift}]:`, dateData[activeShift]);
     console.log(`[PROFESSOR] ==> Tipo de dateData[${activeShift}]:`, typeof dateData[activeShift]);
     console.log(`[PROFESSOR] ==> É array?`, Array.isArray(dateData[activeShift]));
     
-    const result = dateData[activeShift] || [];
-    console.log(`[PROFESSOR] ==> Resultado final:`, result);
+    let result = dateData[activeShift] || [];
+    
+    // Garantir que result é sempre um array válido
+    if (!Array.isArray(result)) {
+        console.warn(`[PROFESSOR] ==> AVISO: dateData[${activeShift}] não é um array, convertendo:`, result);
+        result = [];
+    }
+    
+    // Filtrar dados inválidos
+    result = result.filter(item => {
+        if (!item || typeof item !== 'object') {
+            console.warn(`[PROFESSOR] ==> Item inválido removido:`, item);
+            return false;
+        }
+        return true;
+    });
+    
+    console.log(`[PROFESSOR] ==> Resultado final (${result.length} registros):`, result);
     return result;
 }
 
@@ -1696,9 +1718,34 @@ function executeKeyAction(record, action) {
     const hm = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     const currentShiftData = getCurrentShiftData();
+    
+    // DEBUG: Validar dados antes de prosseguir
+    console.log('🔍 [DEBUG] executeKeyAction - Dados iniciais:');
+    console.log('🔍 [DEBUG] - record:', record);
+    console.log('🔍 [DEBUG] - action:', action);
+    console.log('🔍 [DEBUG] - currentShiftData length:', currentShiftData.length);
+    console.log('🔍 [DEBUG] - currentShiftData:', currentShiftData);
+    
+    // Validar se currentShiftData é válido
+    if (!Array.isArray(currentShiftData)) {
+        console.error('❌ [DEBUG] currentShiftData não é um array válido:', currentShiftData);
+        return;
+    }
+    
+    if (currentShiftData.length === 0) {
+        console.warn('⚠️ [DEBUG] currentShiftData está vazio - isso pode causar problemas no Firebase');
+    }
+    
     // Tentar encontrar por ID primeiro, depois por sala
-    const recordIndex = currentShiftData.findIndex(r => r.id === record.id) || 
-                        currentShiftData.findIndex(r => r.sala === record.sala);
+    let recordIndex = currentShiftData.findIndex(r => r.id === record.id);
+    if (recordIndex === -1) {
+        recordIndex = currentShiftData.findIndex(r => r.sala === record.sala);
+    }
+    if (recordIndex === -1) {
+        recordIndex = currentShiftData.findIndex(r => r.curso === record.curso);
+    }
+    
+    console.log('🔍 [DEBUG] recordIndex encontrado:', recordIndex);
     
     if (recordIndex !== -1) {
         if (action === 'remove') {
@@ -1753,22 +1800,32 @@ function executeKeyAction(record, action) {
         
         // Salvar TODA A TABELA no Firebase para persistência e sincronização em tempo real
         if(typeof saveDataToFirebase === 'function') {
+            // DEBUG: Log detalhado dos dados antes de enviar ao Firebase
+            console.log('🔥 [DEBUG] Dados antes de enviar ao Firebase:');
+            console.log('🔥 [DEBUG] - selectedDate:', selectedDate);
+            console.log('🔥 [DEBUG] - activeShift:', activeShift);
+            console.log('🔥 [DEBUG] - currentShiftData length:', currentShiftData.length);
+            console.log('🔥 [DEBUG] - currentShiftData completo:', currentShiftData);
+            console.log('🔥 [DEBUG] - dataByDateAndShift[selectedDate]:', dataByDateAndShift[selectedDate]);
+            
             // Garantir que enviamos a tabela completa, não apenas o registro modificado
             saveDataToFirebase(selectedDate, activeShift, currentShiftData).then(() => {                
+                console.log('✅ [DEBUG] Dados salvos no Firebase com sucesso!');
                 // Notificar admin panel que a tabela completa foi atualizada
                 if(typeof notifyAdminPanelUpdate === 'function') {
                     notifyAdminPanelUpdate(completeTableData);
                 }
             }).catch(error => {
-                console.error('| Erro ao salvar TABELA COMPLETA no Firebase:', error);
-                console.error('| Dados que falharam:', {
+                console.error('❌ [DEBUG] Erro ao salvar TABELA COMPLETA no Firebase:', error);
+                console.error('❌ [DEBUG] Dados que falharam:', {
                     date: selectedDate,
                     shift: activeShift,
-                    recordCount: currentShiftData.length
+                    recordCount: currentShiftData.length,
+                    dataSample: currentShiftData.slice(0, 2) // Mostrar apenas os primeiros 2 registros
                 });
             });
         } else {
-            console.warn('| ERRO: Função saveDataToFirebase não disponível');
+            console.warn('⚠️ [DEBUG] Função saveDataToFirebase não disponível');
         }
         
         // Também salvar no formato antigo para compatibilidade

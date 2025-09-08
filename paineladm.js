@@ -1050,13 +1050,12 @@ function updateTable() {
     // Renderizar apenas os dados do turno atual
     renderTable();
     
-    // Salvar dados no Firebase se estiver disponível
-    if (typeof saveDataToFirebase === 'function') {
-        const currentData = getCurrentShiftData();
-        saveDataToFirebase(selectedDate, activeShift, currentData).catch(error => {
-            console.error('Erro ao salvar no Firebase:', error);
-        });
-    }
+    // NOTA: Removido salvamento automático no Firebase da função updateTable
+    // pois esta função é chamada frequentemente e pode tentar salvar dados vazios
+    // O salvamento no Firebase deve ser feito apenas quando há mudanças reais nos dados
+    // através das funções específicas de ação (retirar chave, editar registro, etc.)
+    
+    console.log('📊 [ADMIN] updateTable executada - tabela renderizada');
 }
 
 // Dados mock (equivalente ao mockData do React)
@@ -1601,13 +1600,25 @@ function updateSharedDataRecord(recordId, updatedFields) {
                     
                     // Sincronizar via Firebase se disponível
                     if (typeof saveDataToFirebase === 'function') {
-                        saveDataToFirebase(date, shift, records)
-                            .then(() => {
-                                console.log(`🔥 Dados sincronizados no Firebase para ${date}/${shift}`);
-                            })
-                            .catch(error => {
-                                console.error('❌ Erro ao sincronizar no Firebase:', error);
-                            });
+                        // DEBUG: Verificar dados antes de enviar ao Firebase
+                        console.log('🔍 [ADMIN] Edição de registro - Dados antes de enviar ao Firebase:');
+                        console.log('🔍 [ADMIN] - date:', date);
+                        console.log('🔍 [ADMIN] - shift:', shift);
+                        console.log('🔍 [ADMIN] - records length:', records.length);
+                        
+                        // Validar se há dados para salvar
+                        if (records && Array.isArray(records) && records.length > 0) {
+                            saveDataToFirebase(date, shift, records)
+                                .then(() => {
+                                    console.log(`✅ [ADMIN] Dados sincronizados no Firebase para ${date}/${shift}`);
+                                })
+                                .catch(error => {
+                                    console.error('❌ [ADMIN] Erro ao sincronizar no Firebase:', error);
+                                });
+                        } else {
+                            console.warn('⚠️ [ADMIN] Dados vazios ou inválidos - não sincronizando no Firebase');
+                            console.warn('⚠️ [ADMIN] - records:', records);
+                        }
                     }
                     
                     // Disparar evento customizado para notificar outras páginas
@@ -1862,7 +1873,21 @@ function deleteSharedDataRecord(recordId) {
                 
                 // Sincroniza com o Firebase 
                 if(typeof saveDataToFirebase === 'function') {
-                    saveDataToFirebase(date, shift, records).catch(console.error);
+                    // DEBUG: Verificar dados antes de enviar ao Firebase
+                    console.log('🔍 [ADMIN] Exclusão de registro - Dados antes de enviar ao Firebase:');
+                    console.log('🔍 [ADMIN] - date:', date);
+                    console.log('🔍 [ADMIN] - shift:', shift);
+                    console.log('🔍 [ADMIN] - records length:', records.length);
+                    
+                    // Validar se há dados para salvar
+                    if (records && Array.isArray(records) && records.length > 0) {
+                        saveDataToFirebase(date, shift, records).catch(error => {
+                            console.error('❌ [ADMIN] Erro ao sincronizar exclusão no Firebase:', error);
+                        });
+                    } else {
+                        console.warn('⚠️ [ADMIN] Dados vazios ou inválidos - não sincronizando exclusão no Firebase');
+                        console.warn('⚠️ [ADMIN] - records:', records);
+                    }
                 }
                 
                 // Notificar outras telas
@@ -2317,11 +2342,23 @@ function handleKeyAction(recordId, currentStatus) {
 
     // Salvar no Firebase para sincronização em tempo real
     if (typeof saveDataToFirebase === 'function') {
-        saveDataToFirebase(selectedDate, activeShift, currentData).then(() => {
-            console.log('Dados salvos no Firebase após ação de chave no painel administrativo');
-        }).catch(error => {
-            console.error('Erro ao salvar no Firebase:', error);
-        });
+        // DEBUG: Verificar dados antes de enviar ao Firebase
+        console.log('🔍 [ADMIN] Ação de chave - Dados antes de enviar ao Firebase:');
+        console.log('🔍 [ADMIN] - selectedDate:', selectedDate);
+        console.log('🔍 [ADMIN] - activeShift:', activeShift);
+        console.log('🔍 [ADMIN] - currentData length:', currentData.length);
+        
+        // Validar se há dados para salvar
+        if (currentData && Array.isArray(currentData) && currentData.length > 0) {
+            saveDataToFirebase(selectedDate, activeShift, currentData).then(() => {
+                console.log('✅ [ADMIN] Dados salvos no Firebase após ação de chave no painel administrativo');
+            }).catch(error => {
+                console.error('❌ [ADMIN] Erro ao salvar no Firebase:', error);
+            });
+        } else {
+            console.warn('⚠️ [ADMIN] Dados vazios ou inválidos - não salvando no Firebase após ação de chave');
+            console.warn('⚠️ [ADMIN] - currentData:', currentData);
+        }
     }
 
     // Atualizar os dados no localStorage

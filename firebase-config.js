@@ -17,7 +17,7 @@ const database = firebase.database();
 
 // Função para salvar dados no Firebase
 function saveDataToFirebase(date, shift, data) {
-    console.log('🔥 FIREBASE: Tentando salvar dados', {date, shift, dataLength: data.length});
+    console.log('🔥 FIREBASE: Tentando salvar dados', {date, shift, dataLength: data ? data.length : 'undefined'});
     
     // Verificar se Firebase está inicializado
     if (!database) {
@@ -25,8 +25,26 @@ function saveDataToFirebase(date, shift, data) {
         return Promise.reject('Database não inicializado');
     }
     
+    // Verificar se data é válido
+    if (!data || !Array.isArray(data)) {
+        console.error('❌ FIREBASE: Dados inválidos recebidos:', data);
+        return Promise.reject('Dados inválidos');
+    }
+    
+    // Verificar se data não está vazio
+    if (data.length === 0) {
+        console.warn('⚠️ FIREBASE: Array vazio recebido - isso pode causar exclusão de dados!');
+        console.warn('⚠️ FIREBASE: Abortando salvamento para evitar exclusão acidental');
+        return Promise.reject('Array vazio - abortando para evitar exclusão');
+    }
+    
     // Limpar dados removendo valores undefined antes de salvar
     const cleanData = data.map(item => {
+        if (!item || typeof item !== 'object') {
+            console.warn('⚠️ FIREBASE: Item inválido encontrado:', item);
+            return null;
+        }
+        
         const cleanItem = {};
         
         // Copiar todas as propriedades, substituindo undefined por string vazia
@@ -39,15 +57,23 @@ function saveDataToFirebase(date, shift, data) {
         });
         
         return cleanItem;
-    });
+    }).filter(item => item !== null); // Remover itens nulos
     
     console.log('✅ FIREBASE: Dados limpos para salvar:', cleanData);
+    console.log('✅ FIREBASE: Quantidade de registros válidos:', cleanData.length);
+    
+    // Verificar novamente se ainda temos dados válidos após limpeza
+    if (cleanData.length === 0) {
+        console.error('❌ FIREBASE: Nenhum dado válido após limpeza - abortando');
+        return Promise.reject('Nenhum dado válido após limpeza');
+    }
     
     const ref = database.ref(`chaves/${date}/${shift}`);
     console.log('🔥 FIREBASE: Referência criada:', ref.toString());
     
     return ref.set(cleanData).then(() => {
         console.log('✅ FIREBASE: Dados salvos com sucesso!');
+        console.log('✅ FIREBASE: Registros salvos:', cleanData.length);
     }).catch(error => {
         console.error('❌ FIREBASE: Erro ao salvar:', error);
         throw error;
