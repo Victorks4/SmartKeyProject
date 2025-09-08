@@ -1718,9 +1718,242 @@ function handleCancelButton(e) {
     `;
 }
 
+// Função para deletar row da tabela com sincronização de dados
+document.addEventListener("click", function(e) {
+    const button = e.target.closest("#btn-delete-row, .btn-delete-row");
+
+    if(!button) return;
+
+    const recordId = button.getAttribute("data-id");
+    const row = button.closest("tr");
+    
+    if(!recordId || !row) return;
+
+    showDeleteConfirmationModal(recordId, row);
+});
+
+// Função para criar e mostrar modal de confirmação de exclusão
+function showDeleteConfirmationModal(recordId, row) {
+    // Remover modal existente
+    document.getElementById('deleteConfirmationModal')?.remove();
+    
+    // Obter informações do registro
+    const cells = row.querySelectorAll('td');
+
+    const recordInfo = {
+        room:      cells[0]?.textContent.trim() || '-',
+        course:    cells[1]?.textContent.trim() || '-',
+        turma:     cells[2]?.textContent.trim() || '-',
+        professor: cells[3]?.textContent.trim() || '-',
+        subject:   cells[4]?.textContent.trim() || '-'
+    };
+    
+    // Criar o modal
+    const modal = document.createElement('div');
+
+    modal.id = 'deleteConfirmationModal';
+    modal.className = 'modal fade';
+    modal.setAttribute('tabindex', '-1');
+
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg d-flex gap-0">
+                <div class="d-flex justify-content-center modal-header bg-danger text-white border-0" style="position: relative;">
+                    <div class="d-flex align-self-center justify-content-center align-items-center position-absolute" style="width: 100px; height: 100px; border-radius: 50%; background-color: #dc3545;">
+                        <i class="bi bi-trash3-fill text-white" style="font-size: 3.5rem;"></i>
+                    </div>
+                    
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 d-flex flex-column">
+                    <div class="text-center mb-3"></div>
+
+                    <h3 class="text-center mb-2 mt-3" style="color: #323232">
+                        Deletar Registro?
+                    </h3>
+
+                    <p class="text-center align-self-center mb-4" style="color: #4D4D4D; width: 378px">
+                        Tem certeza que deseja excluir permanentemente este registro? Esta ação não pode ser desfeita!
+                    </p>
+
+                    <div class="card bg-light border-0 ">
+                        <div class="card-body p-3">
+                            <h6 class="card-subtitle mb-2 pb-2 text-muted border-1 border-bottom">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Detalhes do Registro
+                            </h6>
+                            <div class="small d-flex flex-column register-details">
+                                <p><strong>Professor:</strong> ${recordInfo.professor}</p>
+                                <p><strong>Sala:</strong> ${recordInfo.room}</p>
+                                <p><strong>Curso:</strong> ${recordInfo.course}</p>
+                                <p><strong>Turma:</strong> ${recordInfo.turma}</p>
+                                <p><strong>Disciplina:</strong> ${recordInfo.subject}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-body modal-actions border-0 d-flex gap-2">
+                    <button type="button" id="cancel-btn" class="btn" data-bs-dismiss="modal" style="width: 100%;">
+                        Cancelar
+                    </button>
+
+                    <button type="button" class="btn" id="confirmDeleteBtn" style="width: 100%;">
+                        Deletar Registro
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;    
+    document.body.appendChild(modal);
+
+    const bootstrapModal = new bootstrap.Modal(modal);
+    
+    // Event listener para confirmação
+    modal.querySelector('#confirmDeleteBtn').addEventListener('click', function() {
+        this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Excluindo...';
+        this.disabled = true;
+        
+        const deletionResult = deleteSharedDataRecord(recordId);
+        
+        if(deletionResult.success) {
+            // Animar exclusão
+            row.style.cssText = 'transition: all 0.3s ease; transform: translateX(-100%); opacity: 0;';
+
+            setTimeout(() => row.remove(), 300);
+            
+            bootstrapModal.hide();
+        } else {
+            showNotification('Erro ao deletar registro!', 'danger');
+            this.innerHTML = '<i class="bi bi-trash3-fill me-1"></i> Deletar Registro';
+            this.disabled = false;
+        }
+    });
+    
+    // Auto-cleanup
+    modal.addEventListener('hidden.bs.modal', () => modal.remove());
+    bootstrapModal.show();
+}
+
+// Função para deletar registro dos dados compartilhados
+function deleteSharedDataRecord(recordId) {
+    try {
+        let recordFound = false;
+        let deletionDetails = {};
+        
+        // Buscar em dataByDateAndShift
+        for(const date in dataByDateAndShift) {
+            for(const shift in dataByDateAndShift[date]) {
+                const records = dataByDateAndShift[date][shift];
+
+                if(!Array.isArray(records)) continue;
+                
+                const recordIndex = records.findIndex(r => r?.id === recordId);
+
+                if(recordIndex === -1) continue;
+                
+                deletionDetails = { date, shift, deletedRecord: { ...records[recordIndex] } };
+                records.splice(recordIndex, 1);
+                recordFound = true;
+                
+                // Sincronizar dados
+                localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
+                localStorage.setItem('allShiftData', JSON.stringify(dataByDateAndShift[date]));
+                
+                // Sincroniza com o Firebase 
+                if(typeof saveDataToFirebase === 'function') {
+                    saveDataToFirebase(date, shift, records).catch(console.error);
+                }
+                
+                // Notificar outras telas
+                window.dispatchEvent(new CustomEvent('dataUpdated', {
+                    detail: {
+                        type: 'recordDeleted',
+                        recordId,
+                        ...deletionDetails,
+                        timestamp: new Date().toISOString(),
+                        deletedBy: 'admin'
+                    }
+                }));
+                
+                break;
+            }
+
+            if(recordFound) break;
+        }
+        
+        // Fallback: buscar em allShiftData legacy
+        if(!recordFound) {
+            const allShiftDataStr = localStorage.getItem('allShiftData');
+
+            if(allShiftDataStr) {
+                const allShiftData = JSON.parse(allShiftDataStr);
+                
+                for(const shift in allShiftData) {
+                    const shiftRecords = allShiftData[shift];
+                    
+                    if(!Array.isArray(shiftRecords)) continue;
+                    
+                    const recordIndex = shiftRecords.findIndex(r => r?.id === recordId);
+                    
+                    if(recordIndex === -1) continue;
+                    
+                    deletionDetails = { shift, deletedRecord: { ...shiftRecords[recordIndex] }, source: 'legacy' };
+                    shiftRecords.splice(recordIndex, 1);
+                    recordFound = true;
+                    
+                    localStorage.setItem('allShiftData', JSON.stringify(allShiftData));
+                    
+                    window.dispatchEvent(new CustomEvent('dataUpdated', {
+                        detail: {
+                            type: 'recordDeleted',
+                            recordId,
+                            ...deletionDetails,
+                            timestamp: new Date().toISOString(),
+                            deletedBy: 'admin'
+                        }
+                    }));
+
+                    break;
+                }
+            }
+        }
+        
+        if(!recordFound) return { success: false };
+        return { success: true, details: deletionDetails };       
+    } catch(error) {
+        console.error('❌ Erro ao deletar:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Listener para atualizações de outras telas
+window.addEventListener('dataUpdated', function(event) {
+    if(event.detail.type === 'recordDeleted') {
+        const row = document.querySelector(`tr[data-record-id="${event.detail.recordId}"]`);
+        
+        if(row) {
+            row.style.cssText = 'transition: opacity 0.3s ease; opacity: 0;';
+            setTimeout(() => {
+                row.remove();
+                updateTableCounters();
+            }, 300);
+        }
+    }
+});
+
+// Atualizar contadores da tabela
+function updateTableCounters() {
+    const visibleRows = document.querySelectorAll('#tableBody tr:not([style*="display: none"])').length;
+    const counterBadge = document.querySelector('.record-counter');
+
+    if(counterBadge) counterBadge.textContent = visibleRows;
+}
+
 function checkLogin() {
     const isLoggedIn = localStorage.getItem('adminLoggedIn');
-    if (isLoggedIn === 'true') {
+
+    if(isLoggedIn === 'true') {
         document.getElementById('overlay').style.display = 'none';
         document.body.classList.remove('overlay-open');
         // Aguardar um pouco para garantir que o DOM está pronto
@@ -2032,9 +2265,14 @@ function generateTableRow(record) {
                 ${getActionButton(record.id, record.status)}
             </td>
             <td class="text-center">
-                <button class="btn btn-edit" data-id="${record.id}" aria-label="Editar registro">
-                    <i class="bi bi-pencil-square"></i>
-                </button>
+                <div class="d-flex">
+                    <button class="btn btn-edit me-2" data-id="${record.id}" aria-label="Editar registro">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button id="btn-delete-row" class="btn btn-delete btn-delete-row" data-id="${record.id}" aria-label="Deletar registro">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     `;

@@ -700,13 +700,15 @@ td {
     background-color: rgba(25, 135, 84, 0.272);
 }
 
-.btn-cancel {
+.btn-cancel,
+.btn-delete {
     color: rgba(242, 94, 92, 0.912) !important;
     background-color: rgba(242, 94, 92, 0.072);
     border: 1px solid rgba(242, 94, 92, 0.339) !important;
 }
 
-.btn-cancel:hover {
+.btn-cancel:hover,
+.btn-delete:hover {
     background-color: rgba(242, 94, 92, 0.272);
 }
 
@@ -831,4 +833,46 @@ body.overlay-open .main-content *:focus {
     border: none;
     color: #6c757d;
     font-size: 2.25rem;
+}
+
+/* Delete Register Styles */
+.register-details {
+    gap: 8px;
+}
+.register-details p {
+    margin: 0;
+    color: #575A5E;
+}
+
+.modal-actions button {
+    flex: 1;
+    padding: .8rem 0;
+}
+
+#confirmDeleteBtn {
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    box-shadow: 0 2px 8px -2px rgba(13, 110, 253, 0.08);
+    transition: background 0.2s, transform 0.2s;
+}
+
+#confirmDeleteBtn:hover {
+    background-color: #BF2231;
+    color: #fff;
+    transform: scale(1.01);
+}
+
+#cancel-btn {
+    background-color: transparent;
+    border: 1px solid #ced4da;
+    color: #495057;
+    transition: background 0.2s, transform 0.2s;
+}
+
+#cancel-btn:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    color: #495057;
+    transform: scale(1.01);
 }

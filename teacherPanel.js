@@ -1971,7 +1971,6 @@ function closeThirdPartyForm() {
     document.getElementById('thirdPartyModal').classList.remove('active'); 
     document.getElementById('tpFullName').value = '';
     document.getElementById('tpPurpose').value = '';
-    document.getElementById('tpNotes').value = '';
     
     // Resetar seleção múltipla e modo
     selectedKeys = [];
@@ -2048,8 +2047,20 @@ function selectKeyMode(mode) {
     currentKeyMode = mode;
     
     // Esconder a seção de quantidade de chaves
-    document.getElementById('key-quantity-section').classList.remove('visible');
-    document.getElementById('key-quantity-section').classList.add('hidden');
+    // document.getElementById('key-quantity-section').classList.remove('visible');
+    // document.getElementById('key-quantity-section').classList.add('hidden');
+
+    if(mode === 'multiple') {
+        document.getElementById('multiple-btn').classList.add('active');
+        document.getElementById('single-btn').classList.add('hidden');
+        document.getElementById('single-btn').classList.remove('visible');
+        document.querySelector('#multiple-btn .cancel-selection').classList.remove('invisible') ;
+    } else {
+        document.getElementById('single-btn').classList.add('active');        
+        document.getElementById('multiple-btn').classList.add('hidden');
+        document.getElementById('multiple-btn').classList.remove('visible');
+        document.querySelector('#single-btn .cancel-selection').classList.remove('invisible');
+    }
     
     // Mostrar seleção de bloco
     document.getElementById('block-dropdown').classList.remove('hidden');
@@ -2300,9 +2311,11 @@ function selectAllAvailableKeys() {
 
 function clearAllSelectedKeys() {
     const checkboxes = document.querySelectorAll('.key-selection-item input[type="checkbox"]');
+    
     checkboxes.forEach(checkbox => {
         checkbox.checked = false;
     });
+
     selectedKeys = [];
     updateSelectedKeysCount();
     updateKeyItemAppearance();
@@ -2312,33 +2325,32 @@ function clearAllSelectedKeys() {
 function saveThirdParty() {
     const name = document.getElementById('tpFullName').value.trim();
     const purpose = document.getElementById('tpPurpose').value.trim();
-    const notes = document.getElementById('tpNotes').value.trim();
-    
+
     // Valida se os campos obrigatórios estão vazios
-    if(!name || !purpose) { 
-        alert('Preencha corretamente os campos obrigatórios.'); 
+    if(!name || !purpose) {
+        showNotification('Preencha corretamente os campos obrigatórios.', 'warning');
         return; 
     }
 
     // Verificar se estamos em modo de seleção múltipla
-    if (multipleSelectionMode && selectedKeys.length > 0) {
+    if(multipleSelectionMode && selectedKeys.length > 0) {
         // Salvar múltiplas chaves
-        saveMultipleThirdPartyKeys(name, purpose, notes);
+        saveMultipleThirdPartyKeys(name, purpose);
     } else {
         // Salvar chave única (modo tradicional)
-        saveSingleThirdPartyKey(name, purpose, notes);
+        saveSingleThirdPartyKey(name, purpose);
     }
 }
 
-function saveSingleThirdPartyKey(name, purpose, notes) {
+function saveSingleThirdPartyKey(name, purpose) {
     // Recupera as opções do dropdown selecionadas
     const block = currentSelections.block;
     const room = currentSelections.room;
     const roomNumber = currentSelections.roomNumber;
 
     // Valida se os campos obrigatórios estão vazios
-    if(!block || !room) { 
-        alert('Selecione um bloco e sala.'); 
+    if(!block || !room) {
+        showNotification('Selecione um bloco e sala.', 'warning');
         return; 
     }
 
@@ -2348,7 +2360,7 @@ function saveSingleThirdPartyKey(name, purpose, notes) {
 
     // Valida se a sala selecionada há números e, caso tenha, se algum foi selecionado
     if(numbers.length > 0 && !roomNumber) {
-        alert('Selecione uma sala para completar o cadastro!');
+        showNotification('Selecione uma sala para completar o cadastro!', 'warning');
         return;
     }
 
@@ -2364,7 +2376,7 @@ function saveSingleThirdPartyKey(name, purpose, notes) {
     }
     
     // Dados do terceiro
-    const newRecord = createThirdPartyRecord(name, purpose, notes, salaIdentifier, {
+    const newRecord = createThirdPartyRecord(name, purpose, salaIdentifier, {
         block: block,
         room: room,
         roomNumber: roomNumber
@@ -2377,9 +2389,9 @@ function saveSingleThirdPartyKey(name, purpose, notes) {
     clearFormAndClose();
 }
 
-function saveMultipleThirdPartyKeys(name, purpose, notes) {
-    if (selectedKeys.length === 0) {
-        alert('Selecione pelo menos uma chave.');
+function saveMultipleThirdPartyKeys(name, purpose) {
+    if(selectedKeys.length === 0) {
+        showNotification('Selecione pelo menos uma chave.', 'warning');
         return;
     }
 
@@ -2389,7 +2401,7 @@ function saveMultipleThirdPartyKeys(name, purpose, notes) {
 
     // Criar registros para cada chave selecionada
     const newRecords = selectedKeys.map(keyData => {
-        return createThirdPartyRecord(name, purpose, notes, keyData.identifier, keyData.roomDetails, timeString);
+        return createThirdPartyRecord(name, purpose, keyData.identifier, keyData.roomDetails, timeString);
     });
 
     // Adicionar todos os registros ao turno atual
@@ -2402,7 +2414,7 @@ function saveMultipleThirdPartyKeys(name, purpose, notes) {
     showNotification(`${selectedKeys.length} chave(s) registrada(s) com sucesso para ${name}!`, 'success');
 }
 
-function createThirdPartyRecord(name, purpose, notes, salaIdentifier, roomDetails, timeString) {
+function createThirdPartyRecord(name, purpose, salaIdentifier, roomDetails, timeString) {
     return {
         id: `terceiro_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         sala: salaIdentifier,
@@ -2412,7 +2424,7 @@ function createThirdPartyRecord(name, purpose, notes, salaIdentifier, roomDetail
         turma: "-",
         horaRetirada: timeString,
         horaDevolucao: null,
-        notas: notes,
+        notas: '-',
         
         roomDetails: roomDetails,
         
@@ -2469,7 +2481,6 @@ function clearFormAndClose() {
     // Limpar formulário
     document.getElementById('tpFullName').value = '';
     document.getElementById('tpPurpose').value = '';
-    document.getElementById('tpNotes').value = '';
     
     // Resetar seleções
     selectedKeys = [];
