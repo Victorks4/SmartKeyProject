@@ -996,7 +996,7 @@ function convertAdminDataToTeacherFormat(data) {
                             withdrawalTime: item.horaRetirada || item.withdrawalTime,
                             returnTime: item.horaDevolucao || item.returnTime,
                             status: (item.horaRetirada || item.withdrawalTime) && !(item.horaDevolucao || item.returnTime) ? 'em_uso' : 
-                                   (item.horaRetirada || item.withdrawalTime) && (item.horaDevolucao || item.returnTime) ? 'devolvida' : 'disponivel',
+                                    (item.horaRetirada || item.withdrawalTime) && (item.horaDevolucao || item.returnTime) ? 'devolvida' : 'disponivel',
                             id: item.id || item.sala || item.room
                         };
                     }
@@ -2047,20 +2047,8 @@ function selectKeyMode(mode) {
     currentKeyMode = mode;
     
     // Esconder a seção de quantidade de chaves
-    // document.getElementById('key-quantity-section').classList.remove('visible');
-    // document.getElementById('key-quantity-section').classList.add('hidden');
-
-    if(mode === 'multiple') {
-        document.getElementById('multiple-btn').classList.add('active');
-        document.getElementById('single-btn').classList.add('hidden');
-        document.getElementById('single-btn').classList.remove('visible');
-        document.querySelector('#multiple-btn .cancel-selection').classList.remove('invisible') ;
-    } else {
-        document.getElementById('single-btn').classList.add('active');        
-        document.getElementById('multiple-btn').classList.add('hidden');
-        document.getElementById('multiple-btn').classList.remove('visible');
-        document.querySelector('#single-btn .cancel-selection').classList.remove('invisible');
-    }
+    document.getElementById('key-quantity-section').classList.remove('visible');
+    document.getElementById('key-quantity-section').classList.add('hidden');
     
     // Mostrar seleção de bloco
     document.getElementById('block-dropdown').classList.remove('hidden');
@@ -2311,11 +2299,9 @@ function selectAllAvailableKeys() {
 
 function clearAllSelectedKeys() {
     const checkboxes = document.querySelectorAll('.key-selection-item input[type="checkbox"]');
-    
     checkboxes.forEach(checkbox => {
         checkbox.checked = false;
     });
-
     selectedKeys = [];
     updateSelectedKeysCount();
     updateKeyItemAppearance();

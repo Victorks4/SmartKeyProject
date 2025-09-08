@@ -160,17 +160,11 @@
                     <label class="text-sm font-medium mb-3">
                         Quantas chaves você deseja pegar?
                     </label>
-
                     <div class="d-flex gap-3">
-                        <button type="button" id="single-btn" class="btn key-mode-btn btn-outline-primary" onclick="selectKeyMode('single')" style="position: relative;">
-                            <i onclick="goBackToKeyQuantity()" class="cancel-selection invisible d-flex justify-content-center align-items-center bi bi-x"></i>
+                        <button type="button" class="btn btn-outline-primary" onclick="selectKeyMode('single')">
                             <i class="bi bi-key"></i> Uma chave específica
                         </button>
-
-                        <button type="button" id="multiple-btn" class="btn key-mode-btn btn-outline-success" onclick="selectKeyMode('multiple')" style="position: relative;">
-                            
-                            <i onclick="goBackToKeyQuantity()" class="cancel-selection invisible d-flex justify-content-center align-items-center bi bi-x"></i>
-                            
+                        <button type="button" class="btn btn-outline-success" onclick="selectKeyMode('multiple')">
                             <img id="green-key-img" src="public/green-keys.svg" alt="Chaves" style="width: 30px;">
                             Múltiplas chaves
                         </button>
@@ -259,8 +253,8 @@
             <!-- <button class="btn mb-3 align-self-start" style="color: #0b5ed7;">
                 <i class="bi bi-plus"></i>
                 Notas Adicionais
-            </button> -->
-<!-- 
+            </button>
+
             <label class="text-sm font-medium" >
                 <textarea 
                     id="tpNotes" 
