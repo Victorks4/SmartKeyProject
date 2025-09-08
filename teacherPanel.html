@@ -173,9 +173,19 @@
                 
                 <!-- Seleção de bloco -->
                 <div id="block-dropdown" class="drop-down-item hidden">
-                    <label class="text-sm font-medium">
-                        Selecione o Bloco *
-                    </label>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="text-sm font-medium">
+                                Selecione o Bloco *
+                            </label>
+                            <span id="mode-indicator" class="badge bg-primary" style="font-size: 0.75rem;">
+                                <i class="bi bi-key"></i> Modo Ativo
+                            </span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="goBackToKeyQuantity()" title="Alterar tipo de seleção">
+                            <i class="bi bi-arrow-left"></i> Alterar Tipo
+                        </button>
+                    </div>
                     
                     <div class="dropdown">
                         <div class="selected d-flex justify-content-between align-items-center">

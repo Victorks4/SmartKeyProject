@@ -1725,6 +1725,9 @@ function executeKeyAction(record, action) {
             showNotification(`Chave devolvida por ${record.professor} às ${hm}`, 'info');
         }
 
+        // IMPORTANTE: Atualizar a estrutura dataByDateAndShift com os dados modificados
+        dataByDateAndShift[selectedDate][activeShift] = currentShiftData;
+        
         // Adicionar metadados de sincronização
         const completeTableData = {
             timestamp: Date.now(),
@@ -1983,8 +1986,21 @@ function closeThirdPartyForm() {
     document.getElementById('key-quantity-section').classList.add('visible');
     document.getElementById('block-dropdown').classList.remove('visible');
     document.getElementById('block-dropdown').classList.add('hidden');
+    document.getElementById('room-dropdown').classList.remove('visible');
+    document.getElementById('room-dropdown').classList.add('hidden');
+    document.getElementById('room-number-dropdown').classList.remove('visible');
+    document.getElementById('room-number-dropdown').classList.add('invisible');
     
     resetAllDropdowns();
+    
+    // Limpar indicador visual
+    const indicator = document.getElementById('mode-indicator');
+    if (indicator) {
+        indicator.innerHTML = '<i class="bi bi-key"></i> Modo Ativo';
+        indicator.className = 'badge bg-primary';
+    }
+    
+    updateSelectedKeysCount();
 }
 
 // ----------- Dropdowns -----------
@@ -2054,10 +2070,26 @@ function selectKeyMode(mode) {
     document.getElementById('block-dropdown').classList.remove('hidden');
     document.getElementById('block-dropdown').classList.add('visible');
     
+    // Atualizar indicador visual do modo
+    updateModeIndicator(mode);
+    
     if (mode === 'multiple') {
         multipleSelectionMode = true;
     } else {
         multipleSelectionMode = false;
+    }
+}
+
+function updateModeIndicator(mode) {
+    const indicator = document.getElementById('mode-indicator');
+    if (indicator) {
+        if (mode === 'single') {
+            indicator.innerHTML = '<i class="bi bi-key"></i> Chave Específica';
+            indicator.className = 'badge bg-primary';
+        } else if (mode === 'multiple') {
+            indicator.innerHTML = '<i class="bi bi-key-fill"></i> Múltiplas Chaves';
+            indicator.className = 'badge bg-success';
+        }
     }
 }
 
@@ -2082,6 +2114,16 @@ function goBackToKeyQuantity() {
     
     // Resetar dropdowns
     resetAllDropdowns();
+    
+    // Limpar indicador visual
+    const indicator = document.getElementById('mode-indicator');
+    if (indicator) {
+        indicator.innerHTML = '<i class="bi bi-key"></i> Modo Ativo';
+        indicator.className = 'badge bg-primary';
+    }
+    
+    // Atualizar contador de chaves selecionadas
+    updateSelectedKeysCount();
 }
 
 // Funções para seleção múltipla de chaves
@@ -2373,6 +2415,9 @@ function saveSingleThirdPartyKey(name, purpose) {
     
     // Limpar formulário e fechar modal
     clearFormAndClose();
+    
+    // Mostrar notificação de sucesso
+    showNotification(`Chave registrada com sucesso para ${name}!`, 'success');
 }
 
 function saveMultipleThirdPartyKeys(name, purpose) {
@@ -2471,6 +2516,34 @@ function clearFormAndClose() {
     // Resetar seleções
     selectedKeys = [];
     multipleSelectionMode = false;
+    currentKeyMode = null;
+    
+    // Resetar dropdowns
+    resetAllDropdowns();
+    
+    // Voltar para a pergunta inicial
+    document.getElementById('key-quantity-section').classList.remove('hidden');
+    document.getElementById('key-quantity-section').classList.add('visible');
+    
+    // Esconder todas as outras seções
+    document.getElementById('block-dropdown').classList.remove('visible');
+    document.getElementById('block-dropdown').classList.add('hidden');
+    document.getElementById('room-dropdown').classList.remove('visible');
+    document.getElementById('room-dropdown').classList.add('hidden');
+    document.getElementById('room-number-dropdown').classList.remove('visible');
+    document.getElementById('room-number-dropdown').classList.add('invisible');
+    document.getElementById('multiple-selection-section').classList.remove('visible');
+    document.getElementById('multiple-selection-section').classList.add('invisible');
+    
+    // Limpar indicador visual
+    const indicator = document.getElementById('mode-indicator');
+    if (indicator) {
+        indicator.innerHTML = '<i class="bi bi-key"></i> Modo Ativo';
+        indicator.className = 'badge bg-primary';
+    }
+    
+    // Atualizar contador
+    updateSelectedKeysCount();
     
     closeThirdPartyForm();
     renderTableForShift(activeShift);
