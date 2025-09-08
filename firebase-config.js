@@ -10,10 +10,17 @@ const firebaseConfig = {
 };
 
 // Inicializar Firebase
-firebase.initializeApp(firebaseConfig);
-
-// Referência ao banco de dados
-const database = firebase.database();
+let database;
+try {
+    // Verificar se Firebase já foi inicializado
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    database = firebase.database();
+} catch (error) {
+    console.error('❌ Erro ao inicializar Firebase:', error);
+    database = null;
+}
 
 // Função para salvar dados no Firebase
 function saveDataToFirebase(date, shift, data) {

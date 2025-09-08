@@ -10,7 +10,7 @@ let multipleSelectionMode = false;
 let currentKeyMode = null; // 'single' ou 'multiple'
 
 // Mapa de docentes para CODPROF (DOCENTE -> CODPROF) | "*No próximo commit vou deixar em outra página
-const docentesCodprof = {
+let docentesCodprof = {
     "Adalberto da Silva Correia": "FATS1578",
     "Adeildo Apolonio da Silva Junior": "FATS4451",
     "Aderlan dos Santos": "NORTE233",
@@ -1774,7 +1774,7 @@ function executeKeyAction(record, action) {
 
         // IMPORTANTE: Atualizar a estrutura dataByDateAndShift com os dados modificados
         dataByDateAndShift[selectedDate][activeShift] = currentShiftData;
-        
+
         // Adicionar metadados de sincronização
         const completeTableData = {
             timestamp: Date.now(),
