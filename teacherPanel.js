@@ -2040,6 +2040,14 @@ function closeThirdPartyForm() {
     selectedKeys = [];
     multipleSelectionMode = false;
     currentKeyMode = null;
+    
+    // Limpar seleções atuais
+    currentSelections = {
+        block: null,
+        room: null,
+        roomNumber: null
+    };
+    
     hideMultipleSelectionSection();
     
     // Voltar para a pergunta inicial
@@ -2051,6 +2059,10 @@ function closeThirdPartyForm() {
     document.getElementById('room-dropdown').classList.add('hidden');
     document.getElementById('room-number-dropdown').classList.remove('visible');
     document.getElementById('room-number-dropdown').classList.add('invisible');
+    
+    // Resetar estilos inline que podem ter sido aplicados
+    document.getElementById('room-dropdown').style.display = '';
+    document.getElementById('room-number-dropdown').style.display = '';
     
     resetAllDropdowns();
     
@@ -2123,9 +2135,20 @@ let currentSelections = {
 function selectKeyMode(mode) {
     currentKeyMode = mode;
     
+    // Limpar seleções anteriores
+    selectedKeys = [];
+    currentSelections = {
+        block: null,
+        room: null,
+        roomNumber: null
+    };
+    
     // Esconder a seção de quantidade de chaves
     document.getElementById('key-quantity-section').classList.remove('visible');
     document.getElementById('key-quantity-section').classList.add('hidden');
+    
+    // Esconder seção de seleção múltipla (será mostrada depois se necessário)
+    hideMultipleSelectionSection();
     
     // Mostrar seleção de bloco
     document.getElementById('block-dropdown').classList.remove('hidden');
@@ -2134,11 +2157,26 @@ function selectKeyMode(mode) {
     // Atualizar indicador visual do modo
     updateModeIndicator(mode);
     
+    // Configurar modo
     if (mode === 'multiple') {
         multipleSelectionMode = true;
+        // No modo múltiplo, esconder dropdowns de sala e número da sala
+        document.getElementById('room-dropdown').style.display = 'none';
+        document.getElementById('room-number-dropdown').style.display = 'none';
     } else {
         multipleSelectionMode = false;
+        // No modo single, garantir que dropdowns estejam disponíveis
+        document.getElementById('room-dropdown').style.display = '';
+        document.getElementById('room-number-dropdown').style.display = '';
+        // Esconder esses dropdowns inicialmente
+        document.getElementById('room-dropdown').classList.remove('visible');
+        document.getElementById('room-dropdown').classList.add('hidden');
+        document.getElementById('room-number-dropdown').classList.remove('visible');
+        document.getElementById('room-number-dropdown').classList.add('invisible');
     }
+    
+    // Resetar e popular o primeiro dropdown
+    resetAllDropdowns();
 }
 
 function updateModeIndicator(mode) {
@@ -2160,6 +2198,13 @@ function goBackToKeyQuantity() {
     multipleSelectionMode = false;
     selectedKeys = [];
     
+    // Limpar seleções atuais
+    currentSelections = {
+        block: null,
+        room: null,
+        roomNumber: null
+    };
+    
     // Mostrar novamente a pergunta inicial
     document.getElementById('key-quantity-section').classList.remove('hidden');
     document.getElementById('key-quantity-section').classList.add('visible');
@@ -2172,6 +2217,10 @@ function goBackToKeyQuantity() {
     document.getElementById('room-dropdown').classList.add('hidden');
     document.getElementById('room-number-dropdown').classList.remove('visible');
     document.getElementById('room-number-dropdown').classList.add('invisible');
+    
+    // Resetar estilos inline que podem ter sido aplicados
+    document.getElementById('room-dropdown').style.display = '';
+    document.getElementById('room-number-dropdown').style.display = '';
     
     // Resetar dropdowns
     resetAllDropdowns();
@@ -2421,8 +2470,18 @@ function saveThirdParty() {
         return; 
     }
 
+    // Verificar se um modo foi selecionado
+    if(!currentKeyMode) {
+        showNotification('Selecione o tipo de chave (específica ou múltipla).', 'warning');
+        return;
+    }
+
     // Verificar se estamos em modo de seleção múltipla
-    if(multipleSelectionMode && selectedKeys.length > 0) {
+    if(currentKeyMode === 'multiple') {
+        if(selectedKeys.length === 0) {
+            showNotification('Selecione pelo menos uma chave.', 'warning');
+            return;
+        }
         // Salvar múltiplas chaves
         saveMultipleThirdPartyKeys(name, purpose);
     } else {
@@ -2438,8 +2497,13 @@ function saveSingleThirdPartyKey(name, purpose) {
     const roomNumber = currentSelections.roomNumber;
 
     // Valida se os campos obrigatórios estão vazios
-    if(!block || !room) {
-        showNotification('Selecione um bloco e sala.', 'warning');
+    if(!block) {
+        showNotification('Selecione um bloco.', 'warning');
+        return; 
+    }
+    
+    if(!room) {
+        showNotification('Selecione uma sala.', 'warning');
         return; 
     }
 
@@ -2449,7 +2513,7 @@ function saveSingleThirdPartyKey(name, purpose) {
 
     // Valida se a sala selecionada há números e, caso tenha, se algum foi selecionado
     if(numbers.length > 0 && !roomNumber) {
-        showNotification('Selecione uma sala para completar o cadastro!', 'warning');
+        showNotification('Selecione o número da sala para completar o cadastro!', 'warning');
         return;
     }
 
@@ -2579,8 +2643,12 @@ function clearFormAndClose() {
     multipleSelectionMode = false;
     currentKeyMode = null;
     
-    // Resetar dropdowns
-    resetAllDropdowns();
+    // Limpar seleções atuais
+    currentSelections = {
+        block: null,
+        room: null,
+        roomNumber: null
+    };
     
     // Voltar para a pergunta inicial
     document.getElementById('key-quantity-section').classList.remove('hidden');
@@ -2596,12 +2664,19 @@ function clearFormAndClose() {
     document.getElementById('multiple-selection-section').classList.remove('visible');
     document.getElementById('multiple-selection-section').classList.add('invisible');
     
+    // Resetar estilos inline que podem ter sido aplicados
+    document.getElementById('room-dropdown').style.display = '';
+    document.getElementById('room-number-dropdown').style.display = '';
+    
     // Limpar indicador visual
     const indicator = document.getElementById('mode-indicator');
     if (indicator) {
         indicator.innerHTML = '<i class="bi bi-key"></i> Modo Ativo';
         indicator.className = 'badge bg-primary';
     }
+    
+    // Resetar dropdowns
+    resetAllDropdowns();
     
     // Atualizar contador
     updateSelectedKeysCount();
@@ -2775,11 +2850,16 @@ function populateBlockDropdown() {
                 showMultipleSelectionSection();
                 document.getElementById('room-dropdown').style.display = 'none';
                 document.getElementById('room-number-dropdown').style.display = 'none';
+                // Não chamar populateRoomDropdown no modo múltiplo
+                return;
             } else {
                 // Modo single: continuar com o fluxo normal
+                // Garantir que room e room-number dropdowns estejam visíveis
+                document.getElementById('room-dropdown').style.display = '';
+                document.getElementById('room-number-dropdown').style.display = '';
+                
                 // Exibe o dropdown de Salas
                 const roomDropdown = document.querySelector('#room-dropdown');
-
                 if(roomDropdown) {
                     roomDropdown.classList.remove('hidden');
                     roomDropdown.classList.add('visible');
@@ -2788,7 +2868,6 @@ function populateBlockDropdown() {
                 // Preenche o próximo dropdown e reinicia os seguintes
                 populateRoomDropdown(selectedBlock);
             }
-            populateRoomDropdown(selectedBlock);
             resetDropdown('room-number-dropdown', 'Selecione o número da sala', true);
         });
     });
@@ -2851,13 +2930,19 @@ function populateRoomDropdown(selectedBlock) {
                 roomNumberDropdown.classList.remove('selectedOption');
                 roomNumberDropdown.classList.remove('gradient');
                 roomNumberDropdown.classList.add('visible');
+                // Preenche o próximo dropdown e reinicia os seguintes
+                populateRoomNumberDropdown(selectedBlock, selectedRoom);
             } else {
-                // Se não há números de sala, mostrar a seção de seleção múltipla
-                showMultipleSelectionSection();
+                // Se não há números de sala, considerar completo para modo single
+                if (currentKeyMode === 'single') {
+                    // Sala sem numeração - não precisamos mostrar seleção múltipla
+                    roomNumberDropdown.classList.remove('visible');
+                    roomNumberDropdown.classList.add('hidden');
+                } else {
+                    // Modo múltiplo: mostrar a seção de seleção múltipla
+                    showMultipleSelectionSection();
+                }
             }
-            
-            // Preenche o próximo dropdown e reinicia os seguintes
-            populateRoomNumberDropdown(selectedBlock, selectedRoom);
         });
     });
 }
@@ -2918,8 +3003,11 @@ function populateRoomNumberDropdown(selectedBlock, selectedRoom) {
             // Remove dropdown-active from room number dropdown
             document.getElementById('room-number-dropdown').closest('.drop-down-item').classList.remove('dropdown-active');
             
-            // Mostrar seção de seleção múltipla
-            showMultipleSelectionSection();
+            // No modo single, a seleção está completa - não mostrar seleção múltipla
+            if (currentKeyMode === 'multiple') {
+                // Mostrar seção de seleção múltipla apenas no modo múltiplo
+                showMultipleSelectionSection();
+            }
         });
     });
 }
@@ -2939,9 +3027,13 @@ function resetAllDropdowns() {
     resetDropdown('room-number-dropdown', 'Selecione o número da sala', true);
 
     // Reseta o gradiente do dropdown selecionado
-    document.querySelector('#block-dropdown .selected').classList.remove('gradient');
-    document.querySelector('#room-dropdown .selected').classList.remove('gradient');
-    document.querySelector('#room-number-dropdown .selected').classList.remove('gradient');
+    const blockSelected = document.querySelector('#block-dropdown .selected');
+    const roomSelected = document.querySelector('#room-dropdown .selected');
+    const roomNumberSelected = document.querySelector('#room-number-dropdown .selected');
+    
+    if(blockSelected) blockSelected.classList.remove('gradient');
+    if(roomSelected) roomSelected.classList.remove('gradient');
+    if(roomNumberSelected) roomNumberSelected.classList.remove('gradient');
 
     // Remove all dropdown-active classes
     document.querySelectorAll('.drop-down-item').forEach(item => {
@@ -2953,6 +3045,15 @@ function resetAllDropdowns() {
     roomNumberDropdown.classList.remove('hidden');
     roomNumberDropdown.classList.remove('noOptions');
     roomNumberDropdown.classList.add('invisible');
+
+    // Limpar conteúdo das opções
+    const blockOptions = document.querySelector('#block-dropdown .options');
+    const roomOptions = document.querySelector('#room-dropdown .options');
+    const roomNumberOptions = document.querySelector('#room-number-dropdown .options');
+    
+    if(blockOptions) blockOptions.innerHTML = '';
+    if(roomOptions) roomOptions.innerHTML = '';
+    if(roomNumberOptions) roomNumberOptions.innerHTML = '';
 
     // Preenche novamente o primeiro dropdown
     populateBlockDropdown();
