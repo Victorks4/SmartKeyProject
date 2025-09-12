@@ -1,7 +1,9 @@
 let activeAction = null;
 let activeShift = 'manhã';
 let sortAlphabetically = false;
-let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
+// let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
+let selectedDate = "2025-08-31";
+// 2025-08-31
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 
 // Variáveis para seleção múltipla de chaves
@@ -9,7 +11,7 @@ let selectedKeys = [];
 let multipleSelectionMode = false;
 let currentKeyMode = null; // 'single' ou 'multiple'
 
-// Mapa de docentes para CODPROF (DOCENTE -> CODPROF) | "*No próximo commit vou deixar em outra página
+// Mapa de docentes para CODPROF (DOCENTE -> CODPROF)
 let docentesCodprof = {
     "Adalberto da Silva Correia": "FATS1578",
     "Adeildo Apolonio da Silva Junior": "FATS4451",
@@ -708,6 +710,9 @@ let docentesCodprof = {
     "Yanna Carvalho de Assis": "FATS3634",
     "Zilmaura Santos Daltro": "FATS4775"
 };
+
+// Salva os dados no localStorage
+localStorage.setItem("docentesCodprof", JSON.stringify(docentesCodprof));
 
 // Função para adicionar novo professor ao mapeamento docentesCodprof
 function addProfessorToMapping(professorName, fast) {
@@ -1699,14 +1704,22 @@ function handleKey(recordId, action) {
     // Tentar encontrar por ID primeiro, depois por sala
     const record = currentData.find(r => r.id === recordId) || 
                    currentData.find(r => r.sala === recordId) ||
-                   currentData.find(r => r.curso === recordId);
+                   currentData.find(r => r.curso === recordId) ||
+                   currentData.find(r => r.horaDevolucao === recordId);
     
     if(!record) {
         console.error('Registro não encontrado:', recordId);
         return;
     }
 
-    // Para ações de remoção por professores, abrir modal de login para validação
+    if(action === 'remove' && record.horaDevolucao) {
+        showMensageConfirmationModal();
+        return;
+    }
+
+    document.getElementById('btn-retirar-chave').innerText = (action === 'remove') ? 'Retirar a chave' : 'Devolver a chave';
+
+    // Para ações de remoção por professores, abrir modal de login para validação FATS4796
     if((action === 'remove' || action === 'return') && record.curso != "Terceiros") {
         activeAction = { record, action };
         openLogin();
@@ -1716,6 +1729,65 @@ function handleKey(recordId, action) {
     // Para outras ações (ex.: devolução) e para remoção de chaves por terceiros, executar diretamente
     executeKeyAction(record, action);
 }
+
+// Função para criar e mostrar modal de mensagem
+//titleMessage, message, recordId, row
+function showMensageConfirmationModal() {
+    // Remove modal existente
+    document.getElementById('messageConfirmationModal')?.remove();
+    
+    // Cria o modal
+    const modal = document.createElement('div');
+    modal.id = 'messageConfirmationModal';
+    modal.className = 'modal fade';
+    modal.setAttribute('tabindex', '-1');
+    modal.setAttribute('aria-hidden', 'true');
+
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered" style="z-index: 2000 !important;">
+            <div class="modal-content border-0 shadow-lg">
+                
+                <!-- Cabeçalho -->
+                <div class="modal-header bg-primary text-white border-0 justify-content-center position-relative">
+                    <div class="d-flex justify-content-center align-items-center position-absolute" style="width: 100px; height: 100px; border-radius: 50%; background-color: #0d6efd; top: -28px;">
+                        <i class="bi bi-exclamation-triangle-fill text-white" style="font-size: 3.2rem;"></i>                        
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <!-- Corpo -->
+                <div class="modal-body p-4 text-center">
+                    <h3 class="mb-3 mt-4" style="color: #323232;">
+                        Retirada não permitida!
+                    </h3>
+                    <p class="text-center mb-1 mx-auto" style="color: #4D4D4D; max-width: 380px;">
+                        Não é possível retirar a chave novamente após a devolução!
+                    </p>
+                </div>
+                
+                <!-- Rodapé (ações) -->
+                <div class="modal-footer border-0 mb-1 d-flex">
+                    <button type="button" class="btn" id="confirmMessageBtn" style="margin: 0 28px;">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;    
+    document.body.appendChild(modal);
+
+    const bootstrapModal = new bootstrap.Modal(modal);
+
+    // Event listener para confirmação
+    modal.querySelector('#confirmMessageBtn').addEventListener('click', function() {
+        bootstrapModal.hide();
+    });
+    
+    // Limpa tudo ao fechar
+    modal.addEventListener('hidden.bs.modal', () => modal.remove());
+    bootstrapModal.show();
+}
+
 
 function executeKeyAction(record, action) {
     const now = new Date();
@@ -1753,6 +1825,11 @@ function executeKeyAction(record, action) {
     
     if (recordIndex !== -1) {
         if (action === 'remove') {
+
+            // if(currentShiftData[recordIndex].horaDevolucao != '-') {
+            //     showMensageConfirmationModal();
+            //     return;
+            // } 
             // Atualizar campos do professor
             currentShiftData[recordIndex].horaRetirada = hm;
             currentShiftData[recordIndex].horaDevolucao = undefined;

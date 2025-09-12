@@ -106,14 +106,20 @@
                     <i class="bi bi-plus-lg me-1"></i>
                     Cadastrar Professor
                 </button>
-                <!-- <button onclick="editTeacherInfo()" type="button" class="btn btn-outline" title="Editar Configurações">
-                    <i class="bi bi-pencil me-1"></i>
-                    Editar
-                </button> -->
+
+                <button onclick="showTeacherTable()" id="showTeacherBtn" type="button" class="btn btn-outline" title="Visualizar Professores">
+                    <i class="bi bi-eye me-1"></i>
+                    Ver Professores
+                </button>
+
+                <button onclick="hideTeacherTable()" type="button" id="goBackToKeysTable" class="btn btn-outline" title="Visualizar Professores" style="display: none;">
+                    <i class="bi bi-arrow-return-left me-2"></i>
+                    Voltar para Chaves
+                </button>
                 
                 <span class="divider"></span>
                 
-                <button type="button" class="btn btn-outline" onclick="document.getElementById('fileInput').click()" title="Importar Arquivo">
+                <button type="button" id="import-files-btn" class="btn btn-outline" onclick="document.getElementById('fileInput').click()" title="Importar Arquivo">
                     <i class="bi bi-file-earmark-spreadsheet me-1"></i>
                     Importar Dados
                 </button>
@@ -146,6 +152,31 @@
                             </tr>
                         </thead>
                         <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela dos Professores -->
+        <div class="card shadow-sm border-0 p-4" id="teachersTable" style="display: none;">
+            <div class="card-header d-flex align-items-center">
+                <h2 class="card-title">
+                    <i class="bi bi-person-fill-check"></i>
+                    Professores Cadastrados
+                </h2>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="border-0" style="width: 20%;">Nome</th>
+                                <th class="border-0" style="width: 20%;">FATS</th>
+                                <th class="border-0" style="width: 20%;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacherTableBody">
                         </tbody>
                     </table>
                 </div>
@@ -225,9 +256,9 @@
                 </div>
             </label>
 
-            <label class="text-sm font-medium mb-2">Fast *
+            <label class="text-sm font-medium mb-2">Fats *
                 <div class="input-item">
-                    <i class="bi bi-person"></i>
+                    <i class="bi bi-card-list"></i>
                     <input 
                         type="text" 
                         id="tpFast" 

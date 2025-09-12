@@ -116,7 +116,8 @@ td {
 }
 
 .status-badge.disponivel {
-    background-color: var(--bs-info);
+    /* background-color: var(--bs-info); */
+    background-color: rgba(240, 69, 66, 0.75);
     color: white;
 }
 
@@ -241,7 +242,7 @@ td {
 }
 
 /* Modal */
-.modal {
+.form-modal {
     position: fixed;
     inset: 0;
     display: none;
@@ -251,11 +252,11 @@ td {
     z-index: 999;
 }
 
-.modal.active {
+.form-modal.active {
     display: flex !important;
 }
 
-.modal-content {
+.form-modal-content {
     background: #fff;
     border-radius: 0.75rem;
     width: 506px;
@@ -263,15 +264,16 @@ td {
     box-shadow: 0 4px 12px -2px hsl(210 85% 9% 0.08);
 }
 
-.modal-header {
+.form-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 8px 4px;
     margin-bottom: 1.3rem;
+    border-bottom: 1px solid #dee2e6;
 }
 
-.modal-header .btn {
+.form-modal-header .btn {
     color: rgb(116, 116, 116);
 }
 
@@ -287,18 +289,18 @@ td {
     transform: rotate(-45deg);
 }
 
-.modal-title {
+.form-modal-title {
     display: flex;
     align-items: center;
     gap: 0.6rem;
 }
 
-.modal-title h2,
-.modal-title i {
+.form-modal-title h2,
+.form-modal-title i {
     color: #024AB6;
 }
 
-.modal-title i {
+.form-modal-title i {
     font-size: 2.1rem;
     display: inline-flex;
     align-items: center;
@@ -306,15 +308,15 @@ td {
     margin-bottom: 4px;
 }
 
-.modal label {
+.form-modal label {
     display: block;
     font-size: 0.97rem;
     font-weight: 500;
     color: #495057;
 }
 
-.modal input,
-.modal textarea {
+.form-modal input,
+.form-modal textarea {
     width: 100%;
     padding: .98rem .98rem 12px;
     margin: .25rem 0 1.12rem;
@@ -326,13 +328,13 @@ td {
     color: hsl(210 85% 9%);
 }
 
-.modal input:focus,
-.modal textarea:focus {
+.form-modal input:focus,
+.form-modal textarea:focus {
     outline: none;
     border-bottom: 1px solid var(--bs-primary);
 }
 
-.modal textarea {
+.form-modal textarea {
     min-height: 100px;
     resize: vertical;
 }
@@ -635,13 +637,15 @@ td {
     justify-content: space-between;
 }
 
-.modal-actions button {
+.modal-actions button,
+#confirmMessageBtn {
     flex: 1;
     padding: .8rem 0;
 }
 
 #btn-register,
-#btn-retirar-chave {
+#btn-retirar-chave,
+#confirmMessageBtn {
     background-color: var(--bs-primary);
     color: #fff;
     border: none;
@@ -650,7 +654,8 @@ td {
 }
 
 #btn-register:hover,
-#btn-retirar-chave:hover {
+#btn-retirar-chave:hover,
+#confirmMessageBtn:hover {
     background-color: #0b5ed7;
     color: #fff;
     transform: scale(1.01);

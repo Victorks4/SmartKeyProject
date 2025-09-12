@@ -15,7 +15,9 @@ function getCurrentShiftByTime() {
     }
 }
 
-let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
+// let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
+let teacherModalActive = false;
+let selectedDate = "2025-08-31";
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 
 // Função para obter ou criar estrutura de dados para uma data
@@ -1367,9 +1369,9 @@ function saveNewTeacher() {
 
     // Adiciona o professor APENAS ao mapeamento docentesCodprof (não na tabela)
     try {
-        if (typeof window.addNewProfessorToTeacherPanel === 'function') {
+        if(typeof window.addNewProfessorToTeacherPanel === 'function') {
             const success = window.addNewProfessorToTeacherPanel(name, fast.toUpperCase());
-            if (success) {
+            if(success) {
                 alert(`✅ Professor "${name}" cadastrado com sucesso!\nFAST: ${fast.toUpperCase()}\n\nO professor já pode usar seu FAST para retirar chaves.`);
             } else {
                 alert('❌ Erro ao cadastrar professor. Verifique se os dados estão corretos.');
@@ -1423,19 +1425,19 @@ if(document.readyState === 'loading') {
 // Event listener unificado para todos os botões da tabela
 document.addEventListener("click", function (e) {
     // Botão editar
-    if (e.target.closest(".btn-edit")) {
+    if(e.target.closest(".btn-edit")) {
         handleEditButton(e);
         return;
     }
     
     // Botão salvar
-    if (e.target.closest(".btn-save")) {
+    if(e.target.closest(".btn-save")) {
         handleSaveButton(e);
         return;
     }
     
     // Botão cancelar
-    if (e.target.closest(".btn-cancel")) {
+    if(e.target.closest(".btn-cancel")) {
         handleCancelButton(e);
         return;
     }
@@ -1444,13 +1446,13 @@ document.addEventListener("click", function (e) {
 // Função para lidar com o botão editar
 function handleEditButton(e) {
     const button = e.target.closest(".btn-edit");
-    if (!button) return;
+    if(!button) return;
 
     const row = button.closest("tr");
-    if (!row) return;
+    if(!row) return;
     
     const cells = row.querySelectorAll("td");
-    if (!cells.length) return;
+    if(!cells.length) return;
 
     // Armazena os valores originais
     row.dataset.originalValues = JSON.stringify(
@@ -1479,7 +1481,7 @@ function handleEditButton(e) {
                 <i class="bi bi-floppy"></i>
             </button>
             <button class="btn btn-cancel" aria-label="Cancelar edição">
-                <i class="bi bi-trash3"></i>
+                <i class="bi bi-x-lg"></i>
             </button>
         </div>
     `;
@@ -1488,33 +1490,25 @@ function handleEditButton(e) {
 // Função para lidar com o botão salvar
 function handleSaveButton(e) {
     const button = e.target.closest(".btn-save");
-    if (!button) return;
+    if(!button) return;
 
-    const row = button.closest("tr");
-    if (!row) return;
+    const row = button.closest("tr");   
+    if(!row) return;
     
     const cells = row.querySelectorAll("td");
-    if (!cells.length) return;
+    if(!cells.length) return;
 
-    // Captura os dados editados antes de alterar o DOM
+    // Captura os dados editados antes de alterar o dom
     const updatedData = {};
     const rowId = row.dataset.recordId || row.dataset.id;
-    
-    console.log('🔍 Debug edição:', {
-        rowId: rowId,
-        datasetRecordId: row.dataset.recordId,
-        datasetId: row.dataset.id,
-        allDataset: row.dataset
-    });
-    
+
     cells.forEach((cell, index) => {
         if([5, 6, 7, 8, cells.length - 1].includes(index)) return;
         
         const input = cell.querySelector("input");
-        if (input) {
+
+        if(input) {
             const newValue = input.value.trim();
-            
-            console.log(`📝 Campo ${index} alterado para:`, newValue);
             
             // Mapear índices para campos de dados
             switch(index) {
@@ -1538,7 +1532,7 @@ function handleSaveButton(e) {
     });
 
     // Atualiza os dados compartilhados se há um ID de registro
-    if (rowId && Object.keys(updatedData).length > 0) {
+    if(rowId && Object.keys(updatedData).length > 0) {
         updateSharedDataRecord(rowId, updatedData);
     }
 
@@ -1546,10 +1540,16 @@ function handleSaveButton(e) {
     const actionCell = cells[cells.length - 1];
 
     actionCell.innerHTML = `
-        <button class="btn btn-edit" aria-label="Editar registro">
-            <i class="bi bi-pencil-square"></i>
-        </button>
+        <div class="d-flex">
+            <button class="btn btn-edit me-1" aria-label="Editar registro">
+                <i class="bi bi-pencil-square"></i>
+            </button>
+            <button class="btn btn-delete" aria-label="Cancelar edição">
+                <i class="bi bi-trash3"></i>
+            </button>
+        </div>
     `;
+    renderTable();
 }
 
 // Função para atualizar um registro específico nos dados compartilhados
@@ -1560,8 +1560,8 @@ function updateSharedDataRecord(recordId, updatedFields) {
         // Encontrar e atualizar o registro nos dados por data e turno
         let recordFound = false;
         
-        for (const date in dataByDateAndShift) {
-            for (const shift in dataByDateAndShift[date]) {
+        for(const date in dataByDateAndShift) {
+            for(const shift in dataByDateAndShift[date]) {
                 const records = dataByDateAndShift[date][shift];
                 
                 console.log(`🔍 Verificando ${date}/${shift}:`, {
@@ -1700,16 +1700,16 @@ function updateSharedDataRecord(recordId, updatedFields) {
 // Função para lidar com o botão cancelar
 function handleCancelButton(e) {
     const button = e.target.closest(".btn-cancel");
-    if (!button) return;
+    if(!button) return;
 
     const row = button.closest("tr");
-    if (!row) return;
+    if(!row) return;
     
     const cells = row.querySelectorAll("td");
-    if (!cells.length) return;
+    if(!cells.length) return;
 
     // Verifica se há dados originais salvos
-    if (!row.dataset.originalValues) return;
+    if(!row.dataset.originalValues) return;
 
     // Recupera os valores originais de cada célula
     const originalValues = JSON.parse(row.dataset.originalValues);
@@ -1723,9 +1723,14 @@ function handleCancelButton(e) {
     const actionCell = cells[cells.length - 1];
 
     actionCell.innerHTML = `
-        <button class="btn btn-edit" aria-label="Editar registro">
-            <i class="bi bi-pencil-square"></i>
-        </button>
+        <div class="d-flex">
+            <button class="btn btn-edit me-2" aria-label="Editar registro">
+                <i class="bi bi-pencil-square"></i>
+            </button>
+            <button class="btn btn-delete" aria-label="Cancelar edição">
+                <i class="bi bi-trash3"></i>
+            </button>
+        </div>
     `;
 }
 
@@ -1907,7 +1912,7 @@ function deleteSharedDataRecord(recordId) {
             if(recordFound) break;
         }
         
-        // Fallback: buscar em allShiftData legacy
+        // Fallback: buscar em allShiftData legacy 
         if(!recordFound) {
             const allShiftDataStr = localStorage.getItem('allShiftData');
 
@@ -2028,9 +2033,9 @@ let mockData = [];
 // Função para obter o badge de status
 function getStatusBadge(status) {
     const variants = {
-        'em_uso': { variant: 'em-uso', label: 'Em Uso' },
-        'devolvida': { variant: 'devolvida', label: 'Devolvida' },
-        'retirada': { variant: 'retirada', label: 'Retirada' },
+        'em_uso':     { variant: 'em-uso',     label: 'Em Uso' },
+        'devolvida':  { variant: 'devolvida',  label: 'Devolvida' },
+        'retirada':   { variant: 'retirada',   label: 'Retirada' },
         'disponivel': { variant: 'disponivel', label: 'Disponível' }
     };
     
@@ -2202,11 +2207,55 @@ function formatDate(dateStr) {
     return `${day}/${month}/${year}`;
 }
 
-// Geração do HTML da tabela
+// Constants and Configuration
+const STORAGE_KEYS = {
+    TEACHERS: "docentesCodprof"
+};
+
+const TABLE_CONFIG = {
+    MAIN_TABLE_COLUMNS: 10, // Updated column count
+    TEACHER_TABLE_COLUMNS: 3
+};
+
+// Utility Functions
+function sanitizeId(str) {
+    return str.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+}
+
+function escapeHtml(unsafe) {
+    const div = document.createElement('div');
+    div.textContent = unsafe;
+    return div.innerHTML;
+}
+
+function getStoredTeachers() {
+    try {
+        const stored = localStorage.getItem(STORAGE_KEYS.TEACHERS);
+        return stored ? JSON.parse(stored) : {};
+    } catch (error) {
+        console.error('Error loading teachers from localStorage:', error);
+        return {};
+    }
+}
+
+function saveTeachers(teachers) {
+    try {
+        localStorage.setItem(STORAGE_KEYS.TEACHERS, JSON.stringify(teachers));
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+// Main Table Generation Functions
 function generateTableHTML(validData, shiftCapitalized, formattedDate) {
+    if(!Array.isArray(validData) || typeof shiftCapitalized !== 'string' || typeof formattedDate !== 'string') {
+        return generateErrorHTML('Erro ao gerar tabela: parâmetros inválidos');
+    }
+
     const rows = validData.length === 0 
         ? generateEmptyRow(shiftCapitalized, formattedDate)
-        : validData.map(generateTableRow).join('');
+        : validData.map(record => generateTableRow(record)).join('');
     
     return `
         <div class="card-header d-flex align-items-center justify-content-between">
@@ -2289,7 +2338,7 @@ function generateTableRow(record) {
                 ${getActionButton(record.id, record.status)}
             </td>
             <td class="text-center">
-                <div class="d-flex">
+                <div id="btns-edit-delete" class="edit-delete-group d-flex">
                     <button class="btn btn-edit me-2" data-id="${record.id}" aria-label="Editar registro">
                         <i class="bi bi-pencil-square"></i>
                     </button>
@@ -2297,10 +2346,416 @@ function generateTableRow(record) {
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
+
+                <div id="btns-save-back" class="d-flex justify-content-center disabled save-cancel-group d-none">
+                    <button class="btn btn-save me-2" aria-label="Salvar alterações">
+                        <i class="bi bi-floppy"></i>
+                    </button>
+                    <button class="btn btn-cancel" aria-label="Cancelar edição">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     `;
 }
+
+// Funções relacionadas à gestão dos professores no sistema
+function generateErrorRow(message) {
+    return `
+        <tr role="row" class="table-danger">
+            <td colspan="${TABLE_CONFIG.MAIN_TABLE_COLUMNS}" class="text-center py-3">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                ${escapeHtml(message)}
+            </td>
+        </tr>
+    `;
+}
+
+function generateErrorHTML(message) {
+    return `
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            ${escapeHtml(message)}
+        </div>
+    `;
+}
+
+// Funções de geração de tabela do professor
+function generateTeacherTableHTML(teachersData = null) {
+    const teachers = teachersData || getStoredTeachers();
+    const hasTeachers = Object.keys(teachers).length > 0;
+    
+    const rows = hasTeachers 
+        ? Object.entries(teachers)
+            .sort(([nameA], [nameB]) => nameA.localeCompare(nameB)) // remover se necessário
+            .map(([nome, fats]) => generateTeacherRow(nome, fats))
+            .join('')
+        : generateEmptyTeacherRow();
+    
+    return `
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <h2 class="card-title mb-0">
+                <i class="bi bi-person-fill-check "></i>
+                Professores Cadastrados
+            </h2>
+            <span class="badge bg-secondary">Total Cadastrados: ${Object.keys(teachers).length}</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0" style="width: 65%;">Nome</th>
+                            <th class="border-0" style="width: 5%;">FATS</th>
+                            <th class="border-0 text-center" style="width: 5%;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacherTableBody">
+                        ${rows}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+function generateEmptyTeacherRow() {
+    return `
+        <tr>
+            <td class="text-center text-muted py-4">
+                <div class="d-flex flex-column align-items-center">
+                    <i class="bi bi-person-x fs-3 mb-2" aria-hidden="true"></i>
+                    <p class="mb-1">Nenhum professor cadastrado</p>
+                    <small class="text-muted">
+                        Adicione professores para começar
+                    </small>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+function generateTeacherRow(nome, fats) {
+    if(!nome || nome.trim() === '') return generateErrorRow('Nome do professor inválido');
+
+    const teacherId = sanitizeId(nome);
+    const escapedName = escapeHtml(nome);
+    const escapedFats = escapeHtml(String(fats || ''));
+    
+    return `
+        <tr data-teacher-name="${escapedName}" data-teacher-id="${teacherId}">
+            <td class="fw-medium teacher-name teacher-name-cell">
+                <i class="bi bi-person-circle table-icon"></i>
+                <span class="teacher-name-text">${escapedName}</span>
+            </td>
+            <td class="fats-badge-cell">
+                <span class="fats-badge">${escapedFats}</span>
+            </td>
+            <td>
+                <div class="action-buttons">
+                    <div class="edit-delete-group d-flex justify-content-center">
+                        <button type="button" class="btn me-2 btn-edit-teacher" 
+                                data-teacher-name="${escapedName}" 
+                                aria-label="Editar professor ${escapedName}"
+                            >
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button type="button" class="btn btn-delete-teacher" 
+                                data-teacher-name="${escapedName}" 
+                                aria-label="Excluir professor ${escapedName}"
+                            >
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+
+                    <div class="save-cancel-group d-none justify-content-center align-items-center">
+                        <button type="button" class="btn me-2 btn-save-teacher" 
+                                data-teacher-name="${escapedName}"
+                                aria-label="Salvar alterações do professor"
+                            >
+                            <i class="bi bi-floppy"></i>
+                        </button>
+                        <button type="button" class="btn btn-cancel-teacher" 
+                                data-teacher-name="${escapedName}"
+                                aria-label="Cancelar edição do professor"
+                            >
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+// Estado global para a gestão dos professores
+let teacherManagerState = {
+    teachers: {},
+    isActive: false
+};
+
+function updateTeacherTable(teachersData = null) {
+    const tableContainer = document.getElementById('teachersTable');
+
+    if(!tableContainer) {
+        console.warn('teachersTable element not found');
+        return false;
+    }
+
+    try {
+        teacherManagerState.teachers = teachersData || getStoredTeachers();
+        tableContainer.innerHTML = generateTeacherTableHTML(teacherManagerState.teachers);
+        addTeacherEventListeners();
+        return true;
+    } catch(error) {
+        console.error('Error updating teacher table:', error);
+        tableContainer.innerHTML = generateErrorHTML('Erro ao carregar tabela de professores');
+        return false;
+    }
+}
+
+function updateTeacherTableBody(teachersData = null) {
+    const tbody = document.getElementById('teacherTableBody');
+
+    if(!tbody) {
+        console.warn('teacherTableBody element not found');
+        return false;
+    }
+
+    try {
+        teacherManagerState.teachers = teachersData || getStoredTeachers();
+
+        const hasTeachers = Object.keys(teacherManagerState.teachers).length > 0;
+        
+        const rows = hasTeachers 
+            ? Object.entries(teacherManagerState.teachers)
+                .sort(([nameA], [nameB]) => nameA.localeCompare(nameB))
+                .map(([nome, fats]) => generateTeacherRow(nome, fats))
+                .join('')
+            : generateEmptyTeacherRow();
+        
+        tbody.innerHTML = rows;
+        addTeacherEventListeners();
+        return true;
+    } catch(error) {
+        console.error('Erro:', error);
+        tbody.innerHTML = generateErrorRow('Erro ao carregar professores.');
+        return false;
+    }
+}
+
+function addTeacherEventListeners() {
+    // Para botões de Editar
+    document.querySelectorAll('.btn-edit-teacher').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const teacherName = btn.getAttribute('data-teacher-name');
+            startEditTeacher(teacherName);
+        });
+    });
+
+    // Para botões de Remover
+    document.querySelectorAll('.btn-delete-teacher').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const teacherName = btn.getAttribute('data-teacher-name');
+            deleteTeacher(teacherName);
+        });
+    });
+
+    // Para botões de Salvar
+    document.querySelectorAll('.btn-save-teacher').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const teacherName = btn.getAttribute('data-teacher-name');
+            saveEditTeacher(teacherName);
+        });
+    });
+
+    // Para botões de Cancelar
+    document.querySelectorAll('.btn-cancel-teacher').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const teacherName = btn.getAttribute('data-teacher-name');
+            cancelEditTeacher(teacherName);
+        });
+    });
+}
+
+function startEditTeacher(teacherName) {
+    const row = document.querySelector(`tr[data-teacher-name="${teacherName}"]`);
+    if(!row) return false;
+    
+    const fatsText = row.querySelector('.fats-badge');
+    const nameText = row.querySelector('.teacher-name');
+    const fatsCell = row.querySelector('.fats-badge-cell');
+    const nameCell = row.querySelector('.teacher-name-cell');
+    const editDeleteGroup = row.querySelector('.edit-delete-group');
+    const saveCancelGroup = row.querySelector('.save-cancel-group');
+
+    if(!nameCell || !fatsCell || !editDeleteGroup || !saveCancelGroup) return false;
+
+    // Armazena os valores originais
+    const originalName = nameText.textContent.trim();
+    const originalFats = fatsText.textContent.trim();
+
+    // Substitui por inputs
+    nameCell.innerHTML = `
+        <input 
+            type="text" 
+            class="form-control" 
+            value="${escapeHtml(originalName)}" 
+            data-original="${escapeHtml(originalName)}"
+        >
+    `;
+    fatsCell.innerHTML = `
+        <input 
+            type="text" 
+            class="form-control" 
+            value="${escapeHtml(originalFats)}" 
+            data-original="${escapeHtml(originalFats)}"
+        >
+    `;
+
+    // Alterna os grupos de botões
+    editDeleteGroup.classList.add('d-none');
+    editDeleteGroup.classList.remove('d-flex');
+    saveCancelGroup.classList.remove('d-none');
+    saveCancelGroup.classList.add('d-flex');
+
+    return true;
+}
+
+// Função para salvar alterações feitas na linha
+function saveEditTeacher(teacherName) {
+    const row = document.querySelector(`tr[data-teacher-name="${teacherName}"]`);
+    if(!row) return false;
+
+    const nameInput = row.querySelector('.teacher-name-cell input');
+    const fatsInput = row.querySelector('.fats-badge-cell input');
+
+    if(!nameInput || !fatsInput) return false;
+
+    const newName = nameInput.value.trim();
+    const newFats = fatsInput.value.trim();
+    const originalName = nameInput.getAttribute('data-original');
+
+    // Valida as entradas
+    if(!newName) {
+        alert('Nome do professor não pode estar vazio.');
+        nameInput.focus();
+        return false;
+    }
+
+    if(!newFats) {
+        alert('FATS não pode estar vazio.');
+        fatsInput.focus();
+        return false;
+    }
+
+    // Valida se o nome inserido já existe
+    if(newName !== originalName && teacherManagerState.teachers[newName]) {
+        alert('Já existe um professor com este nome.');
+        nameInput.focus();
+        return false;
+    }
+
+    try {
+        // Atualiza os dados dos professores
+        if(newName !== originalName) {
+            delete teacherManagerState.teachers[originalName];
+        }
+        
+        teacherManagerState.teachers[newName] = newFats;
+
+        // Salva os dados no localStorage
+        if(!saveTeachers(teacherManagerState.teachers)) {
+            throw new Error('Erro ao salvar no localStorage!');
+        }
+
+        // Atualiza a tabela
+        updateTeacherTableBody();
+        
+        console.log('Professor atualizado com sucesso:', { originalName, newName, newFats });
+        return true;
+    } catch(error) {
+        console.error('Erro ao salvar professor:', error);
+        alert('Erro ao salvar professor. Tente novamente!');
+        return false;
+    }
+}
+
+function cancelEditTeacher() {
+    updateTeacherTableBody();
+}
+
+function deleteTeacher(teacherName) {
+    if(!confirm(`Tem certeza que deseja excluir o professor "${teacherName}"?`)) {
+        return false;
+    }
+
+    try {
+        delete teacherManagerState.teachers[teacherName];
+        
+        if(!saveTeachers(teacherManagerState.teachers)) {
+            throw new Error('Erro ao salvar no localStorage!');
+        }
+
+        updateTeacherTableBody();
+        console.log(`Professor "${teacherName}" removido(a) com sucesso!`);
+
+        return true;
+    } catch(error) {
+        console.error('Erro ao remover professor:', error);
+        alert('Erro ao remover professor. Tente novamente!');
+
+        return false;
+    }
+}
+
+// Função para exibir a tabela de professores
+function showTeacherTable() {
+    const tableContainer = document.getElementById('teachersTable');
+
+    if(!tableContainer) return;
+
+    tableContainer.style.display = 'block';
+    tableContainer.classList.remove('d-none');
+
+    document.getElementById('shiftContent').style.display = 'none';
+    document.getElementById('showTeacherBtn').style.display = 'none';
+    document.getElementById('import-files-btn').style.display = 'none';
+    document.getElementById('goBackToKeysTable').style.display = 'flex';
+    document.getElementById('dateSelector').classList.add('disabled');
+    document.getElementById('shiftTabs').classList.add('disabled');
+
+    teacherManagerState.isActive = true;
+}
+
+// Função para ocultar a tabela de professores
+function hideTeacherTable() {
+    const tableContainer = document.getElementById('teachersTable');
+
+    if(!tableContainer) return;
+
+    tableContainer.style.display = 'none';
+    tableContainer.classList.add('d-none');
+    
+    document.getElementById('shiftContent').style.display = 'block';
+    document.getElementById('showTeacherBtn').style.display = 'block';
+    document.getElementById('import-files-btn').style.display = 'block';
+    document.getElementById('goBackToKeysTable').style.display = 'none';
+    document.getElementById('dateSelector').classList.remove('disabled');
+    document.getElementById('shiftTabs').classList.remove('disabled');
+    
+    teacherManagerState.isActive = false;
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', function() {
+    updateTeacherTable();
+});
 
 // Função para lidar com ações de chave
 function handleKeyAction(recordId, currentStatus) {

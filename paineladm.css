@@ -82,8 +82,14 @@ td {
     background-color: var(--bs-info);
 }
 
+/* Estilos da tabela dos docentes */
+.teacher-name {
+    font-size: 1.05rem;
+}
+
 /* Estilos para badges de status */
-.status-badge {
+.status-badge,
+.fats-badge {
     padding: 0.375rem 0.75rem;
     border-radius: 50rem;
     font-size: 0.75rem;
@@ -92,7 +98,8 @@ td {
     letter-spacing: 0.5px;
 }
 
-.status-badge.em-uso {
+.status-badge.em-uso,
+.fats-badge {
     background-color: var(--bs-primary);
     color: white;
 }
@@ -108,7 +115,8 @@ td {
 }
 
 .status-badge.disponivel {
-    background-color: var(--bs-info);
+    /* background-color: var(--bs-info); */
+    background-color: rgba(240, 69, 66, 0.75);
     color: white;
 }
 
@@ -680,41 +688,52 @@ td {
     transition: all 0.2s ease;
 }
 
-.btn-edit {
+.btn-edit,
+.btn-edit-teacher {
     color: rgba(13, 109, 253, 0.902) !important;
     background-color: rgba(13, 109, 253, 0.022);
     border: 1px solid rgba(13, 109, 253, 0.339) !important;
 }
 
-.btn-edit:hover {
+.btn-edit:hover 
+.btn-edit-teacher:hover {
     background-color: rgba(13, 109, 253, 0.222);
 }
 
-.btn-save {
+.btn-save,
+.btn-save-teacher {
     color: rgba(25, 135, 84, 0.902) !important;
     background-color: rgba(25, 135, 84, 0.072);
     border: 1px solid rgba(25, 135, 84, 0.339) !important;
 }
 
-.btn-save:hover {
+.btn-save:hover
+.btn-save-teacher:hover {
     background-color: rgba(25, 135, 84, 0.272);
 }
 
 .btn-cancel,
-.btn-delete {
+.btn-delete,
+.btn-cancel-teacher,
+.btn-delete-teacher {
     color: rgba(242, 94, 92, 0.912) !important;
     background-color: rgba(242, 94, 92, 0.072);
     border: 1px solid rgba(242, 94, 92, 0.339) !important;
 }
 
 .btn-cancel:hover,
-.btn-delete:hover {
+.btn-delete:hover,
+.btn-cancel-teacher:hover,
+.btn-delete-teacher:hover {
     background-color: rgba(242, 94, 92, 0.272);
 }
 
 .btn-edit, 
+.btn-save,
 .btn-cancel, 
-.btn-save {
+.btn-edit-teacher, 
+.btn-cancel-teacher, 
+.btn-save-teacher {
     transition: background-color .3s ease-in-out;
 }
 
@@ -876,3 +895,17 @@ body.overlay-open .main-content *:focus {
     color: #495057;
     transform: scale(1.01);
 }
+
+/* #btns-save-back-teacher.disabled,
+#btns-save-back.disabled,
+#btns-edit-delete-teacher.disabled,
+#btns-edit-delete.disabled {
+    display: none !important;
+}
+
+#btns-save-back-teacher.active,
+#btns-save-back.active,
+#btns-edit-delete-teacher.active 
+#btns-edit-delete.active {
+    display: flex !important;
+} */
