@@ -128,7 +128,7 @@ async function handleFileImport(file) {
 
 // Função para processar o arquivo após seleção do turno
 async function processFileImport(file, selectedShift) {
-    if (!file) return;
+    if(!file) return;
 
     // Verificar extensão do arquivo - aceitar todos os formatos Excel e CSV
     const fileExt = file.name.split('.').pop().toLowerCase();
@@ -137,7 +137,7 @@ async function processFileImport(file, selectedShift) {
     const allValidFormats = [...validExcelFormats, ...validCSVFormats];
     
     if (!allValidFormats.includes(fileExt)) {
-        alert(`Formato de arquivo não suportado: .${fileExt}\nFormatos aceitos: Excel (${validExcelFormats.join(', ')}) e CSV/texto (${validCSVFormats.join(', ')})`);
+        showNotification(`Formato de arquivo não suportado: .${fileExt}\nFormatos aceitos: Excel (${validExcelFormats.join(', ')}) e CSV/texto (${validCSVFormats.join(', ')})`, 'warning');
         return;
     }
     
@@ -151,10 +151,11 @@ async function processFileImport(file, selectedShift) {
 
     try {
         // Pegar o turno atual antes de processar o arquivo
-        const currentShift = activeShift.charAt(0).toUpperCase() + activeShift.slice(1); // Capitaliza o turno
+        // const currentShift = activeShift.charAt(0).toUpperCase() + activeShift.slice(1); // Capitaliza o turno - *Não está sendo usado
 
         const data = await readFileData(file);
-        if (data && data.length > 0) {
+
+        if(data && data.length > 0) {
             // Converter os dados para o formato do mockData
             const convertedData = data.map((row, index) => {
                 // Extrair informações da linha e limpar valores FALSE
@@ -166,19 +167,20 @@ async function processFileImport(file, selectedShift) {
                 const registro = decodeText(row[5]);
 
                 // Ignorar somente quando a sala for claramente inválida
-                if (sala === 'FALSE' || sala === '---' || !sala || !sala.trim()) {
+                if(sala === 'FALSE' || sala === '---' || !sala || !sala.trim()) {
                     return null;
                 }
                 
-                    // Pular somente linhas que são claramente cabeçalho/divisória
-                    // (exatamente "SALA"/"SALAS" ou linhas com separadores), mas
-                    // NÃO descartar salas válidas como "SALA 01", "SALA A01", etc.
-                    const salaTrim = (sala || '').trim();
-                    const isHeaderSala = /^sala(s)?$/i.test(salaTrim);
-                    const isDivider = salaTrim.startsWith('---');
-                    if (!salaTrim || isHeaderSala || isDivider) {
-                        return null;
-                    }
+                // Pular somente linhas que são claramente cabeçalho/divisória
+                // (exatamente "SALA"/"SALAS" ou linhas com separadores), mas
+                // NÃO descartar salas válidas como "SALA 01", "SALA A01", etc.
+                const salaTrim = (sala || '').trim();
+                const isHeaderSala = /^sala(s)?$/i.test(salaTrim);
+                const isDivider = salaTrim.startsWith('---');
+
+                if(!salaTrim || isHeaderSala || isDivider) {
+                    return null;
+                }
 
                 // Usar o turno ativo atual para o novo registro
                 const defaultShift = activeShift;
@@ -193,10 +195,10 @@ async function processFileImport(file, selectedShift) {
                     turmaNumber: turmaStr,
                     professorName: professorName,
                     subject: disciplina,
-                    time: '', // Será preenchido quando a chave for retirada
+                    time: '',             // Será preenchido quando a chave for retirada
                     status: 'disponivel',
-                    withdrawalTime: '', // Será preenchido quando a chave for retirada
-                    returnTime: '', // Será preenchido quando a chave for devolvida
+                    withdrawalTime: '',   // Será preenchido quando a chave for retirada
+                    returnTime: '',       // Será preenchido quando a chave for devolvida
                     requiresLogin: true,
                     shift: defaultShift,
                     // Campos de compatibilidade com o painel do professor
@@ -213,7 +215,8 @@ async function processFileImport(file, selectedShift) {
                 // Filtrar e validar os dados convertidos
                 const validData = convertedData.filter(item => {
                     // Verificar se é um registro válido
-                    if (!item || !item.room) return false;
+                    if(!item || !item.room) return false;
+
                     const room = item.room.toString();
                     const roomTrim = room.trim();
                     const isDivider = roomTrim.startsWith('---');
@@ -1052,11 +1055,6 @@ function updateTable() {
     // Renderizar apenas os dados do turno atual
     renderTable();
     
-    // NOTA: Removido salvamento automático no Firebase da função updateTable
-    // pois esta função é chamada frequentemente e pode tentar salvar dados vazios
-    // O salvamento no Firebase deve ser feito apenas quando há mudanças reais nos dados
-    // através das funções específicas de ação (retirar chave, editar registro, etc.)
-    
     console.log('📊 [ADMIN] updateTable executada - tabela renderizada');
 }
 
@@ -1348,45 +1346,42 @@ function saveNewTeacher() {
     const fast = document.getElementById('tpFast').value.trim();
 
     if(!name || !fast) {
-        alert('Preencha todos os campos obrigatórios!');
+        showNotification('Preencha todos os campos obrigatórios!', 'warning');
         return;
     }
 
     // Verifica se o professor já existe no mapeamento
     const currentMapping = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
-    if (currentMapping[name]) {
-        alert(`O professor "${name}" já está cadastrado no sistema com o FAST: ${currentMapping[name]}`);
+
+    if(currentMapping[name]) {
+        showNotification(`O professor "${name}" já está cadastrado no sistema.`, 'warning');
         return;
     }
 
     // Verifica se o FAST já está sendo usado por outro professor
-    for (const [existingName, existingFast] of Object.entries(currentMapping)) {
-        if (existingFast === fast.toUpperCase()) {
-            alert(`O FAST "${fast.toUpperCase()}" já está sendo usado pelo professor: ${existingName}`);
+    for(const [existingName, existingFast] of Object.entries(currentMapping)) {
+        if(existingFast === fast.toUpperCase()) {
+            showNotification(`O FATS <strong>"${fast}"</strong> já está sendo usado pelo professor: <strong>${existingName}</strong>.`, 'warning');
             return;
         }
     }
 
     // Adiciona o professor APENAS ao mapeamento docentesCodprof (não na tabela)
     try {
-        if(typeof window.addNewProfessorToTeacherPanel === 'function') {
-            const success = window.addNewProfessorToTeacherPanel(name, fast.toUpperCase());
+        if(typeof window.addNewProfessorToTeacherPanel !== 'function') {
+            const success = window.addNewProfessorToTeacherPanel(name, fast);
             if(success) {
-                alert(`✅ Professor "${name}" cadastrado com sucesso!\nFAST: ${fast.toUpperCase()}\n\nO professor já pode usar seu FAST para retirar chaves.`);
+                showMensageConfirmationModal(name, fast);
             } else {
-                alert('❌ Erro ao cadastrar professor. Verifique se os dados estão corretos.');
+                showNotification('Erro ao cadastrar professor. Verifique se os dados estão corretos.', 'warning');
                 return;
             }
         } else {
             // Se a função não estiver disponível, adiciona diretamente ao localStorage
-            currentMapping[name] = fast.toUpperCase();
-            localStorage.setItem('docentesCodprof', JSON.stringify(currentMapping));
-            alert(`✅ Professor "${name}" cadastrado com sucesso!\nFAST: ${fast.toUpperCase()}\n\nO professor já pode usar seu FAST para retirar chaves.`);
-            console.log(`✅ Professor ${name} adicionado ao mapeamento via localStorage`);
+            showMensageConfirmationModal();
         }
     } catch (error) {
-        console.error('❌ Erro ao adicionar professor ao mapeamento:', error);
-        alert('❌ Erro ao cadastrar professor. Tente novamente.');
+        showNotification('Erro ao cadastrar professor. Tente novamente.', 'danger');
         return;
     }
 
@@ -1924,8 +1919,7 @@ function deleteSharedDataRecord(recordId) {
                     
                     if(!Array.isArray(shiftRecords)) continue;
                     
-                    const recordIndex = shiftRecords.findIndex(r => r?.id === recordId);
-                    
+                    const recordIndex = shiftRecords.findIndex(r => r?.id === recordId);                 
                     if(recordIndex === -1) continue;
                     
                     deletionDetails = { shift, deletedRecord: { ...shiftRecords[recordIndex] }, source: 'legacy' };
@@ -1950,11 +1944,71 @@ function deleteSharedDataRecord(recordId) {
         }
         
         if(!recordFound) return { success: false };
+
         return { success: true, details: deletionDetails };       
-    } catch(error) {
-        console.error('❌ Erro ao deletar:', error);
-        return { success: false, error: error.message };
-    }
+    } catch(error) { return { success: false, error: error.message } }
+}
+
+function showMensageConfirmationModal(nameTeacher, fats) {
+    // Remove modal existente
+    document.getElementById('messageConfirmationModal')?.remove();
+    
+    // Cria o modal
+    const modal = document.createElement('div');
+    modal.id = 'messageConfirmationModal';
+    modal.className = 'modal fade';
+    modal.setAttribute('tabindex', '-1');
+    modal.setAttribute('aria-hidden', 'true');
+
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered" style="z-index: 2000 !important;">
+            <div class="modal-content border-0 shadow-lg">
+                
+                <!-- Cabeçalho -->
+                <div class="modal-header text-white border-0 justify-content-center position-relative" style="background-color: #1C9B60;">
+                    <div class="d-flex justify-content-center align-items-center position-absolute" style="width: 100px; height: 100px; border-radius: 50%; background-color: #1C9B60; top: -28px;">
+                        <i class="bi bi-check-circle text-white" style="font-size: 3.2rem;"></i>                       
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <!-- Corpo -->
+                <div class="modal-body p-4 text-center">
+                    <h3 class="mb-3 mt-4" style="color: #323232;">
+                        Professor Cadastrado!
+                    </h3>
+                    <p class="text-center mb-1 mx-auto fw-semibold" style="color: #4D4D4D; max-width: 380px;">
+                        Cadastro realizado com sucesso!
+                    </p>
+                    <p class="text-center mb-1 mx-auto" style="color: #4D4D4D; max-width: 380px;">
+                        <strong>Professor(a):</strong> ${nameTeacher}
+                    </p>
+                    <p class="text-center mb-0 mx-auto" style="color: #4D4D4D; max-width: 380px;">
+                        <strong>FATS:</strong> ${fats}
+                    </p>
+                </div>
+                
+                <!-- Rodapé (ações) -->
+                <div class="modal-footer border-0 mb-1 d-flex">
+                    <button type="button" class="btn w-100" id="confirmMessageBtn" style="margin: 0 28px;">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;    
+    document.body.appendChild(modal);
+
+    const bootstrapModal = new bootstrap.Modal(modal);
+
+    // Event listener para confirmação
+    modal.querySelector('#confirmMessageBtn').addEventListener('click', function() {
+        bootstrapModal.hide();
+    });
+    
+    // Limpa tudo ao fechar
+    modal.addEventListener('hidden.bs.modal', () => modal.remove());
+    bootstrapModal.show();
 }
 
 // Listener para atualizações de outras telas
@@ -2170,8 +2224,7 @@ function normalizeRecord(item) {
         status: item.status || determineStatus(item),
         id: item.id || generateId(item),
         shift: item.shift || activeShift
-    };
-    
+    };    
     return normalized;
 }
 
@@ -2233,7 +2286,6 @@ function getStoredTeachers() {
         const stored = localStorage.getItem(STORAGE_KEYS.TEACHERS);
         return stored ? JSON.parse(stored) : {};
     } catch (error) {
-        console.error('Error loading teachers from localStorage:', error);
         return {};
     }
 }
@@ -2399,7 +2451,10 @@ function generateTeacherTableHTML(teachersData = null) {
                 <i class="bi bi-person-fill-check "></i>
                 Professores Cadastrados
             </h2>
-            <span class="badge bg-secondary">Total Cadastrados: ${Object.keys(teachers).length}</span>
+            <span class="badge bg-secondary">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                Total de Cadastros: ${Object.keys(teachers).length}
+            </span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -2840,6 +2895,7 @@ function handleKeyAction(recordId, currentStatus) {
 function showNotification(message, type = 'info') {
     // Criar elemento de notificação
     const notification = document.createElement('div');
+
     notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
     notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
     notification.innerHTML = `
