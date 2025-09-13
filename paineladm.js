@@ -1472,10 +1472,10 @@ function handleEditButton(e) {
 
     actionCell.innerHTML = `
         <div class="d-flex">
-            <button class="btn btn-save me-2" aria-label="Salvar alterações">
+            <button class="btn btn-save btn-save-group me-2" aria-label="Salvar alterações">
                 <i class="bi bi-floppy"></i>
             </button>
-            <button class="btn btn-cancel" aria-label="Cancelar edição">
+            <button class="btn btn-cancel btn-cancel-group" aria-label="Cancelar edição">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
@@ -2181,7 +2181,6 @@ function renderTable() {
     updateCurrentDate();
     
     let shiftData = getCurrentShiftData();
-    console.log('##### shiftData:', shiftData);
     
     if(!Array.isArray(shiftData)) {
         console.warn('Dados do turno não são um array:', activeShift);
@@ -2460,19 +2459,19 @@ function generateTableRow(record) {
             </td>
             <td class="text-center">
                 <div id="btns-edit-delete" class="edit-delete-group d-flex">
-                    <button class="btn btn-edit me-2" data-id="${record.id}" aria-label="Editar registro">
+                    <button class="btn btn-edit me-2 btn-edit-group" data-id="${record.id}" aria-label="Editar registro">
                         <i class="bi bi-pencil-square"></i>
                     </button>
-                    <button id="btn-delete-row" class="btn btn-delete btn-delete-row" data-id="${record.id}" aria-label="Deletar registro">
+                    <button id="btn-delete-row" class="btn btn-delete btn-delete-row btn-delete-group" data-id="${record.id}" aria-label="Deletar registro">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
 
                 <div id="btns-save-back" class="d-flex justify-content-center disabled save-cancel-group d-none">
-                    <button class="btn btn-save me-2" aria-label="Salvar alterações">
+                    <button class="btn btn-save me-2 btn-save-group" aria-label="Salvar alterações">
                         <i class="bi bi-floppy"></i>
                     </button>
-                    <button class="btn btn-cancel" aria-label="Cancelar edição">
+                    <button class="btn btn-cancel btn-cancel-group" aria-label="Cancelar edição">
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
@@ -2482,6 +2481,11 @@ function generateTableRow(record) {
 }
 
 // Funções relacionadas à gestão dos professores no sistema
+document.getElementById('goBackToKeysTable').addEventListener('click', () => {
+    hideRoomsTable();
+    hideTeacherTable();
+})
+
 function generateErrorRow(message) {
     return `
         <tr role="row" class="table-danger">
@@ -2579,13 +2583,13 @@ function generateTeacherRow(nome, fats) {
             <td>
                 <div class="action-buttons">
                     <div class="edit-delete-group d-flex justify-content-center">
-                        <button type="button" class="btn me-2 btn-edit-teacher" 
+                        <button type="button" class="btn me-2 btn-edit-teacher btn-edit-group" 
                                 data-teacher-name="${escapedName}" 
                                 aria-label="Editar professor ${escapedName}"
                             >
                             <i class="bi bi-pencil-square"></i>
                         </button>
-                        <button type="button" class="btn btn-delete-teacher" 
+                        <button type="button" class="btn btn-delete-teacher btn-delete-group" 
                                 data-teacher-name="${escapedName}" 
                                 aria-label="Excluir professor ${escapedName}"
                             >
@@ -2594,13 +2598,13 @@ function generateTeacherRow(nome, fats) {
                     </div>
 
                     <div class="save-cancel-group d-none justify-content-center align-items-center">
-                        <button type="button" class="btn me-2 btn-save-teacher" 
+                        <button type="button" class="btn me-2 btn-save-teacher btn-save-group" 
                                 data-teacher-name="${escapedName}"
                                 aria-label="Salvar alterações do professor"
                             >
                             <i class="bi bi-floppy"></i>
                         </button>
-                        <button type="button" class="btn btn-cancel-teacher" 
+                        <button type="button" class="btn btn-cancel-teacher btn-cancel-group" 
                                 data-teacher-name="${escapedName}"
                                 aria-label="Cancelar edição do professor"
                             >
@@ -2850,6 +2854,8 @@ function showTeacherTable() {
     document.getElementById('shiftContent').style.display = 'none';
     document.getElementById('showTeacherBtn').style.display = 'none';
     document.getElementById('import-files-btn').style.display = 'none';
+    document.getElementById('register-room-option').style.display = 'none';
+    document.getElementById('show-data-dropdown').style.display = 'none';
     document.getElementById('goBackToKeysTable').style.display = 'flex';
     document.getElementById('dateSelector').classList.add('disabled');
     document.getElementById('shiftTabs').classList.add('disabled');
@@ -2869,6 +2875,8 @@ function hideTeacherTable() {
     document.getElementById('shiftContent').style.display = 'block';
     document.getElementById('showTeacherBtn').style.display = 'block';
     document.getElementById('import-files-btn').style.display = 'block';
+    document.getElementById('register-room-option').style.display = 'flex';
+    document.getElementById('show-data-dropdown').style.display = 'flex';
     document.getElementById('goBackToKeysTable').style.display = 'none';
     document.getElementById('dateSelector').classList.remove('disabled');
     document.getElementById('shiftTabs').classList.remove('disabled');
@@ -2898,15 +2906,21 @@ function createRoomRow(room) {
     return `
         <tr data-room-id="${room.id}">
             <td class="room-sala">${room.sala}</td>
-            <td class="room-bloco">${room.bloco}</td>
-            <td class="room-numero">${room.numero || '-'}</td>
+            <td class="room-bloco">
+                <p class="bg-secondary-subtle m-0" style="width: fit-content; padding: 1px 12px; border-radius: 6px">
+                    ${room.bloco}
+                </p>
+            </td>
+            <td class="room-numero fw-medium">
+                ${room.numero || 'Sem numeração'}
+            </td>
             <td class="room-actions text-center">
                 <div id="btns-edit-delete" class="edit-delete-group d-flex">
-                    <button class="btn me-2 btn-edit-room" onclick="editRoom(${room.id})">
+                    <button class="btn me-2 btn-edit-room btn-edit-group" onclick="editRoom(${room.id})">
                         <i class="bi bi-pencil-square"></i>
                     </button>
 
-                    <button class="btn btn-delete-room" onclick="deleteRoom(${room.id})">
+                    <button class="btn btn-delete-room btn-delete-group" onclick="deleteRoom(${room.id})">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
@@ -2945,11 +2959,11 @@ function createEditRoomRow(room) {
             </td>
             <td class="room-actions">
                 <div id="btns-save-back" class="d-flex justify-content-center">
-                    <button class="btn me-2 btn-save-room" onclick="saveRoom(${room.id})">
+                    <button class="btn me-2 btn-save-room btn-save-group" onclick="saveRoom(${room.id})">
                         <i class="bi bi-floppy"></i>
                     </button>
 
-                    <button class="btn btn-cancel-room" onclick="cancelEdit(${room.id})">
+                    <button class="btn btn-cancel-room btn-cancel-group" onclick="cancelEdit(${room.id})">
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
@@ -3014,6 +3028,9 @@ function deleteRoom(roomId) {
 function loadRoomsTable() {
     const rooms = getRooms();
     const tbody = document.getElementById('roomsTableBody');
+    const dropdownData = getDropdownData();
+
+    document.getElementById('total-registered-rooms').innerHTML = dropdownData.length;
     
     if(rooms.length === 0) {
         tbody.innerHTML = `
@@ -3040,9 +3057,12 @@ function showRoomsTable() {
     tableContainer.style.display = 'block';
     tableContainer.classList.remove('d-none');
 
+
     document.getElementById('shiftContent').style.display = 'none';
     document.getElementById('showTeacherBtn').style.display = 'none';
     document.getElementById('import-files-btn').style.display = 'none';
+    document.getElementById('register-teacher-option').style.display = 'none';
+    document.getElementById('show-data-dropdown').style.display = 'none';
     document.getElementById('goBackToKeysTable').style.display = 'flex';
     document.getElementById('dateSelector').classList.add('disabled');
     document.getElementById('shiftTabs').classList.add('disabled');
@@ -3062,6 +3082,8 @@ function hideRoomsTable() {
     document.getElementById('shiftContent').style.display = 'block';
     document.getElementById('showTeacherBtn').style.display = 'block';
     document.getElementById('import-files-btn').style.display = 'block';
+    document.getElementById('register-teacher-option').style.display = 'flex';
+    document.getElementById('show-data-dropdown').style.display = 'flex';
     document.getElementById('goBackToKeysTable').style.display = 'none';
     document.getElementById('dateSelector').classList.remove('disabled');
     document.getElementById('shiftTabs').classList.remove('disabled');

@@ -112,9 +112,13 @@
                         </div>
                         
                         <ul id="add-data-op" class="options">
-                            <li onclick="openRegisterTeacherModal()" type="button" class="option" title="Cadastrar novo Professor">
+                            <li onclick="openRegisterTeacherModal()" type="button" id="register-teacher-option" class="option" title="Cadastrar novo Professor">
                                 <i class="bi bi-plus-lg me-1"></i>
                                 Cadastrar Professor
+                            </li>
+                            <li onclick="openRegisterTeacherModal()" type="button" id="register-room-option" class="option" title="Cadastrar novo Professor">
+                                <i class="bi bi-plus-lg me-1"></i>
+                                Cadastrar Sala
                             </li>
                         </ul>
                     </div>
@@ -140,7 +144,7 @@
                     </div>
                 </div>
 
-                <button onclick="hideTeacherTable()" type="button" id="goBackToKeysTable" class="btn btn-outline" title="Visualizar Professores" style="display: none;">
+                <button type="button" id="goBackToKeysTable" class="btn btn-outline" title="Visualizar Professores" style="display: none;">
                     <i class="bi bi-arrow-return-left me-2"></i>
                     Voltar para Chaves
                 </button>
@@ -213,20 +217,24 @@
 
         <!-- Tabela das Salas -->
         <div class="card shadow-sm border-0 p-4" id="roomsTable" style="display: none;">
-            <div class="card-header d-flex align-items-center">
+            <div class="card-header d-flex align-items-center justify-content-between">
                 <h2 class="card-title">
-                    <i class="bi bi-person-fill-check"></i>
+                    <i class="bi bi-building me-2"></i>
                     Salas Cadastradas
                 </h2>
+                <div class="badge bg-secondary">
+                    <i class="bi bi-file-earmark-text-fill"></i>
+                    Total de Salas: <span id="total-registered-rooms"></span>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th class="border-0" style="width: 31%;">Sala</th>
-                                <th class="border-0" style="width: 31%;">Bloco</th>
-                                <th class="border-0" style="width: 31%;">Número</th>
+                                <th class="border-0" style="width: 16%;">Sala</th>
+                                <th class="border-0" style="width: 16%;">Bloco</th>
+                                <th class="border-0" style="width: 60%;">Número</th>
                                 <th class="border-0 text-center" style="width: 5%;">Ações</th>
                             </tr>
                         </thead>
