@@ -2901,6 +2901,13 @@ function getDropdownData() {
     return data ? JSON.parse(data) : {};
 }
 
+// Generate unique ID for new room
+function generateRoomId() {
+    const rooms = getRooms();
+    const maxId = rooms.length > 0 ? Math.max(...rooms.map(room => room.id)) : 0;
+    return maxId + 1;
+}
+
 // Cria a linha da sala no modo padrão de exibição
 function createRoomRow(room) {
     return `
@@ -2927,6 +2934,185 @@ function createRoomRow(room) {
             </td>
         </tr>
     `;
+}
+
+// Estrutura HTML do modal para cadastro de sala
+function createRoomRegistrationModal() {
+    const modalHtml = `
+        <div class="modal fade" id="roomRegistrationModal">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="roomRegistrationModalLabel">
+                            <i class="bi bi-plus-circle me-2"></i>Cadastrar Nova Sala
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div id="roomRegistrationForm" class="modal-body">
+                        <div class="mb-3">
+                            <label for="roomName" class="form-label">
+                                Nome da Sala *
+                            </label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="roomName" 
+                                placeholder="Ex: LAB DE INFORMÁTICA" 
+                                required
+                                maxlength="50"
+                            />
+                        </div>
+                        <div class="mb-3">
+                            <label for="blockName" class="form-label">
+                                Nome do Bloco *
+                            </label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="blockName" 
+                                placeholder="Ex: A, B, C..." 
+                                maxlength="1"
+                            />
+                        </div>
+                        <div class="mb-3">
+                            <label for="roomNumber" class="form-label">
+                                Número da Sala <span class="text-muted">(opcional)</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="roomNumber" 
+                                placeholder="Ex: 1, 2, 3..." 
+                                maxlength="10"
+                            />
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn">
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-primary" id="saveNewRoomBtn">
+                            Cadastrar Sala
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remove o modal existente, caso exista
+    const existingModal = document.getElementById('roomRegistrationModal');
+
+    if(existingModal) {
+        existingModal.remove();
+    }
+
+    // Adiciona o modal ao body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // ativa os event listeners
+    setupModalEventListeners();
+}
+
+// Configuração dos event listeners para o modal
+function setupModalEventListeners() {
+    const saveBtn = document.getElementById('saveNewRoomBtn');
+    const form = document.getElementById('roomRegistrationForm');
+
+    if(saveBtn) {
+        saveBtn.addEventListener('click', handleRoomRegistration);
+    }
+
+    if(form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleRoomRegistration();
+        });
+    }
+}
+
+// Processa o cadastro das salas
+function handleRoomRegistration() {
+    const salaInput = document.getElementById('roomName');
+    const blocoInput = document.getElementById('blockName');
+    const numeroInput = document.getElementById('roomNumber');
+    const form = document.getElementById('roomRegistrationForm');
+
+    if(!salaInput || !blocoInput || !numeroInput || !form) {
+        console.error('Form elements not found');
+        return;
+    }
+
+    const sala = salaInput.value.trim().toUpperCase();
+    const bloco = blocoInput.value.trim();
+    const numero = numeroInput.value.trim();
+    
+    // Validação dos campos obrigatórios
+    if(!sala || sala === '') {
+        showNotification('Nome da sala é obrigatório.', 'warning');
+        return;
+    }
+    
+    if(!bloco || bloco === '') {
+        showNotification('Nome do bloco é obrigatório.', 'warning');
+        return;
+    }
+    
+    // Validação do tamanho dos campos
+    if(sala && sala.length > 50) {
+        showNotification('Nome da sala não pode ter mais de 50 caracteres.', 'warning');
+        return;
+    }
+    
+    if(numero && numero.length > 10) {
+        showNotification('Número da sala não pode ter mais de 10 caracteres.', 'warning');
+        return;
+    }
+    
+    // Valida se a sala já existe
+    const registredRooms = getRooms();
+
+    const roomExists = registredRooms.some(room => 
+        room.sala.toLowerCase().trim() === sala.toLowerCase() &&
+        room.bloco.toLowerCase().trim() === bloco.toLowerCase() &&
+        room.numero.toLowerCase().trim() === (numero || '').toLowerCase()
+    );
+    
+    if(roomExists) {
+        showNotification('Essa sala já foi cadastrada.', 'warning');
+        return;
+    }
+
+    // Cria um objeto da nova sala
+    const newRoom = {
+        id: generateRoomId(),
+        sala: sala,
+        bloco: bloco,
+        numero: numero
+    };
+
+    // Salva os dados no localstorage
+    const rooms = getRooms();
+    rooms.push(newRoom);
+
+    saveRooms(rooms);
+
+    // Oculta o modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('roomRegistrationModal'));
+
+    if(modal) modal.hide();
+
+    // Recarrega a tabela das salas
+    loadRoomsTable();
+}
+
+// Função que exibe o modal de cadastro de novas salas
+function openRoomRegistrationModal() {
+    createRoomRegistrationModal();
+    
+    const modal = new bootstrap.Modal(document.getElementById('roomRegistrationModal'));
+    modal.show();
 }
 
 // Cria a linha da sala no modo de Edição
