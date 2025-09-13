@@ -288,12 +288,12 @@ td {
 .drop-down-item {
     position: relative;
     opacity: 1;
-    width: 100%;
+    /* width: 100%; */
     height: fit-content;
     transition: all .8s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
-    margin-bottom: 1.65rem;
+    /* margin-bottom: 1.65rem; */
 }
 
 .drop-down-item.dropdown-active {
@@ -314,16 +314,16 @@ td {
     font-weight: 500;
     border-radius: 8px;
     cursor: pointer;
-    color: #6f6f6f;
     background: #fff;
     border: 2px solid #ececec;
     transition: transform 0.3s ease, box-shadow 0.3s ease, border 0.3s ease;
 }
 
-.selected:hover,
+/* .selected:hover, */
 .selected.active {
     transform: translateY(-2px);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1472);
+    border-radius: 8px 8px 0 0;
 }
 
 .selected.gradient {
@@ -333,10 +333,6 @@ td {
 
 .selected p {
     margin: 0;
-}
-
-.selected.active {
-    border-radius: 8px 8px 0 0;
 }
 
 .arrow-icon {
@@ -383,12 +379,18 @@ td {
 
 .option {
     position: relative;
-    padding: 10px;
+    border-radius: 0;    
+    padding: .375rem .6385rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    width: 100%;
     cursor: pointer;
+    border: 1px solid #cfe6fc;
+    background-color: #fbfdff55;
     box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.063);
     transition: background 0.25s ease, padding-left 0.2s ease;
-    opacity: 1 !important;
     transform: none !important;
+    opacity: 1 !important;
 }
 
 .option::before {
@@ -408,7 +410,7 @@ td {
 
 .option:hover {
     background: #f0f8ff;    
-    padding-left: 15px;
+    padding-left: 12px;
 }
 
 /* Remove the problematic slideOption animation */
@@ -427,13 +429,6 @@ td {
 .options.show {
     border: 2px solid #e1e1e1 !important;
     border: 2px solid #e1e1e1 !important;
-}
-
-.option {
-    border-bottom: 1px solid #eee;
-    color: #575757;
-    font-weight: 500;
-    font-size: 0.91rem;
 }
 
 .option:last-child {

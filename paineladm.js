@@ -2254,6 +2254,75 @@ function generateId(record) {
     return `${Date.now()}_${prof}_${room}`.toLowerCase();
 }
 
+// Inicia o sistema de Dropdowns
+function initializeDropdowns() {
+    // Configura os event listeners para todos os dropdowns
+    setupDropdownToggle(document.getElementById('add-data-dropdown'));
+    setupDropdownToggle(document.getElementById('show-data-dropdown'));
+}
+
+// Função para alternar os dropdowns
+function setupDropdownToggle(dropdownElement) {
+    if(!dropdownElement) return;
+    
+    const selected = dropdownElement.querySelector('.selected');
+    const options = dropdownElement.querySelector('.options');
+    
+    if(!selected || !options) return;
+    
+    selected.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        if(dropdownElement.classList.contains('disabled')) {
+            return;
+        }
+
+        const isCurrentlyActive = selected.classList.contains('active');
+
+        document.querySelectorAll('.drop-down-item').forEach(item => {
+            item.classList.remove('dropdown-active');
+        });
+        
+        // Fecha os outros dropdowns
+        document.querySelectorAll('.drop-down-item .options').forEach(op => {
+            if(op !== options) {
+                op.classList.remove('show');
+                op.parentElement.querySelector('.selected').classList.remove('active');
+            }
+        });
+
+        // Caso o dropdown não esteja ativo, ele é ativado e recebe prioridade (z-index)
+        if(!isCurrentlyActive) {
+            options.classList.add('show');
+            selected.classList.add('active');
+            // Atribui também essa prioridade ao dropdown pai
+            dropdownElement.closest('.drop-down-item').classList.add('dropdown-active');
+        } else {
+            // Se já estiver ativo, fecha
+            options.classList.remove('show');
+            selected.classList.remove('active');
+        }
+    });
+}
+
+// Ao usuário clicar fora o dropdown é fechado
+document.addEventListener('click', function() {
+
+    document.querySelectorAll('.options').forEach(options => {
+        const selected = options.parentElement.querySelector('.selected');
+        const dropdownItem = options.closest('.drop-down-item');
+
+        options.classList.remove('show');
+
+        if(selected) {
+            selected.classList.remove('active');
+        }
+        if(dropdownItem) {
+            dropdownItem.classList.remove('dropdown-active');
+        }
+    });
+});
+
 // Formatação de data (AAAA-MM-DD <para> DD/MM/AAAA)
 function formatDate(dateStr) {
     const [year, month, day] = dateStr.split('-');
@@ -2927,6 +2996,7 @@ function initializePainelAdm() {
     console.log('Inicializando renderização das abas...');
     renderShiftTabs();
     updateTable();
+    initializeDropdowns();
     
     // Inicializar sincronização Firebase se estiver disponível
     if (typeof initializeFirebaseSync === 'function') {

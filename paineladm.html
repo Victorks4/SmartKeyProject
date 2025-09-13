@@ -102,15 +102,39 @@
             <div class="tabs" id="shiftTabs"></div>
 
             <div class="toolbar">
-                <button onclick="openRegisterTeacherModal()" type="button" class="btn btn-outline" title="Cadastrar novo Professor">
-                    <i class="bi bi-plus-lg me-1"></i>
-                    Cadastrar Professor
-                </button>
-
-                <button onclick="showTeacherTable()" id="showTeacherBtn" type="button" class="btn btn-outline" title="Visualizar Professores">
-                    <i class="bi bi-eye me-1"></i>
-                    Ver Professores
-                </button>
+                
+                <!-- Dropdown - Cadastrar Novos Dados -->
+                <div id="add-data-dropdown" class="drop-down-item">                    
+                    <div class="dropdown">
+                        <div id="selected-add-data" class="btn selected d-flex justify-content-between align-items-center">
+                            <i class="bi bi-plus-lg me-2"></i>
+                            <p id="valueAddData">Cadastrar Informações</p>
+                        </div>
+                        
+                        <ul id="add-data-op" class="options">
+                            <li onclick="openRegisterTeacherModal()" type="button" class="option" title="Cadastrar novo Professor">
+                                <i class="bi bi-plus-lg me-1"></i>
+                                Cadastrar Professor
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div id="show-data-dropdown" class="drop-down-item">                    
+                    <div class="dropdown">
+                        <div id="selected-show-data" class="btn selected d-flex justify-content-between align-items-start">
+                            <i class="bi bi-eye me-2"></i>
+                            <p id="valueViewData">Visualizar Informações</p>
+                        </div>
+                        
+                        <ul id="show-data-op" class="options">
+                            <li onclick="showTeacherTable()" id="showTeacherBtn" type="button" class="option" title="Visualizar Professores">
+                                <i class="bi bi-eye me-1"></i>
+                                Ver Professores
+                            </li>
+                        </ul>
+                    </div>
+                </div>
 
                 <button onclick="hideTeacherTable()" type="button" id="goBackToKeysTable" class="btn btn-outline" title="Visualizar Professores" style="display: none;">
                     <i class="bi bi-arrow-return-left me-2"></i>
