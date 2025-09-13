@@ -2876,9 +2876,203 @@ function hideTeacherTable() {
     teacherManagerState.isActive = false;
 }
 
+// Recupera as salas do localstorage
+function getRooms() {
+    const rooms = localStorage.getItem("rooms");
+    return rooms ? JSON.parse(rooms) : [];
+}
+
+// Salva as salas no localstorage
+function saveRooms(rooms) {
+    localStorage.setItem("rooms", JSON.stringify(rooms));
+}
+
+// Recupera os dados do dropdown
+function getDropdownData() {
+    const data = localStorage.getItem("rooms");
+    return data ? JSON.parse(data) : {};
+}
+
+// Cria a linha da sala no modo padrão de exibição
+function createRoomRow(room) {
+    return `
+        <tr data-room-id="${room.id}">
+            <td class="room-sala">${room.sala}</td>
+            <td class="room-bloco">${room.bloco}</td>
+            <td class="room-numero">${room.numero || '-'}</td>
+            <td class="room-actions text-center">
+                <div id="btns-edit-delete" class="edit-delete-group d-flex">
+                    <button class="btn me-2 btn-edit-room" onclick="editRoom(${room.id})">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+
+                    <button class="btn btn-delete-room" onclick="deleteRoom(${room.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+// Cria a linha da sala no modo de Edição
+function createEditRoomRow(room) {
+    return `
+        <tr data-room-id="${room.id}">
+            <td class="room-sala">
+                <input 
+                    type="text" 
+                    class="form-control edit-input" 
+                    id="edit-sala-${room.id}" 
+                    value="${room.sala}" 
+                />
+            </td>
+            <td class="room-bloco">
+                <input 
+                    type="text" 
+                    class="form-control edit-input" 
+                    id="edit-bloco-${room.id}" 
+                    value="${room.bloco}" 
+                />
+            </td>
+            <td class="room-numero">
+                <input 
+                    type="text" 
+                    class="form-control edit-input" 
+                    id="edit-numero-${room.id}" 
+                    value="${room.numero || '-'}" 
+                />
+            </td>
+            <td class="room-actions">
+                <div id="btns-save-back" class="d-flex justify-content-center">
+                    <button class="btn me-2 btn-save-room" onclick="saveRoom(${room.id})">
+                        <i class="bi bi-floppy"></i>
+                    </button>
+
+                    <button class="btn btn-cancel-room" onclick="cancelEdit(${room.id})">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+// Função para editar sala
+function editRoom(roomId) {
+    const rooms = getRooms();
+    const room = rooms.find(r => r.id === roomId);
+
+    if(!room) return;
+
+    const row = document.querySelector(`tr[data-room-id="${roomId}"]`);
+    row.outerHTML = createEditRoomRow(room); 
+}
+
+// Função para salvar sala
+function saveRoom(roomId) {
+    const salaInput = document.getElementById(`edit-sala-${roomId}`);
+    const blocoInput = document.getElementById(`edit-bloco-${roomId}`);
+    const numeroInput = document.getElementById(`edit-numero-${roomId}`);
+    
+    const newData = {
+        sala: salaInput.value.trim(),
+        bloco: blocoInput.value.trim(),
+        numero: numeroInput.value.trim() || ''
+    };
+
+    // Atualiza a sala no localStorage
+    const rooms = getRooms();
+    const roomIndex = rooms.findIndex(r => r.id === roomId);
+
+    if(roomIndex !== -1) {
+        rooms[roomIndex] = { ...rooms[roomIndex], ...newData };
+        saveRooms(rooms);
+    }
+
+    // Recarrega a tabela
+    loadRoomsTable();
+}
+
+// Função para cancelar edição
+function cancelEdit(roomId) {
+    loadRoomsTable(); // apenas recarrega a tabela original
+}
+
+// Função para excluir sala
+function deleteRoom(roomId) {
+    if(confirm('Tem certeza que deseja excluir esta sala?')) {
+        const rooms = getRooms();
+        const filteredRooms = rooms.filter(r => r.id !== roomId);
+
+        saveRooms(filteredRooms);
+        loadRoomsTable();
+    }
+}
+
+// Função para carregar e exibir a tabela de salas
+function loadRoomsTable() {
+    const rooms = getRooms();
+    const tbody = document.getElementById('roomsTableBody');
+    
+    if(rooms.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    Nenhuma sala cadastrada
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = rooms.map(room => createRoomRow(room)).join('');
+}
+
+// Vou otimizar!!!
+// Função para exibir a tabela de salas
+function showRoomsTable() {
+    const tableContainer = document.getElementById('roomsTable');
+
+    if(!tableContainer) return;
+
+    tableContainer.style.display = 'block';
+    tableContainer.classList.remove('d-none');
+
+    document.getElementById('shiftContent').style.display = 'none';
+    document.getElementById('showTeacherBtn').style.display = 'none';
+    document.getElementById('import-files-btn').style.display = 'none';
+    document.getElementById('goBackToKeysTable').style.display = 'flex';
+    document.getElementById('dateSelector').classList.add('disabled');
+    document.getElementById('shiftTabs').classList.add('disabled');
+
+    teacherManagerState.isActive = true;
+}
+
+// Função para ocultar a tabela de salas
+function hideRoomsTable() {
+    const tableContainer = document.getElementById('roomsTable');
+
+    if(!tableContainer) return;
+
+    tableContainer.style.display = 'none';
+    tableContainer.classList.add('d-none');
+    
+    document.getElementById('shiftContent').style.display = 'block';
+    document.getElementById('showTeacherBtn').style.display = 'block';
+    document.getElementById('import-files-btn').style.display = 'block';
+    document.getElementById('goBackToKeysTable').style.display = 'none';
+    document.getElementById('dateSelector').classList.remove('disabled');
+    document.getElementById('shiftTabs').classList.remove('disabled');
+    
+    teacherManagerState.isActive = false;
+}
+
 // Initialize on load
 document.addEventListener('DOMContentLoaded', function() {
     updateTeacherTable();
+    loadRoomsTable();
 });
 
 // Função para lidar com ações de chave

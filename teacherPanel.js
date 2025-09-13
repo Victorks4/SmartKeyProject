@@ -2154,52 +2154,108 @@ function closeThirdPartyForm() {
 }
 
 // ----------- Dropdowns -----------
-const dropdown = {
-  "Bloco A": [
-    { sala: "HIDRÁULICA",  numeros: [] },
-    { sala: "AUT PREDIAL", numeros: [] }
-  ],
+const dropdown = [
+  // Bloco A
+  { id: 1, sala: "HIDRÁULICA",  bloco: "Bloco A", numero: "" },
+  { id: 2, sala: "AUT PREDIAL", bloco: "Bloco A", numero: "" },
 
-  "Bloco B": [
-    { sala: "QUÍMICA",     numeros: [] }
-  ],
+  // Bloco B
+  { id: 3, sala: "QUÍMICA",     bloco: "Bloco B", numero: "" },
 
-  "Bloco C": [
-    { sala: "FABRICAÇÃO",  numeros: [] }
-  ],
+  // Bloco C
+  { id: 4, sala: "FABRICAÇÃO",  bloco: "Bloco C", numero: "" },
 
-  "Bloco D": [
-    { sala: "PLANTA CIM",  numeros: [] },
-    { sala: "METROLOGIA",  numeros: [] },
-    { sala: "LAB MAKER",   numeros: [] }
-  ],
+  // Bloco D
+  { id: 5, sala: "PLANTA CIM",  bloco: "Bloco D", numero: "" },
+  { id: 6, sala: "METROLOGIA",  bloco: "Bloco D", numero: "" },
+  { id: 7, sala: "LAB MAKER",   bloco: "Bloco D", numero: "" },
 
-  "Bloco E": [
-    { sala: "SALAS TÉRREO", numeros: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] }
-  ],
+  // Bloco E
+  { id: 8,  sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "1" },
+  { id: 9,  sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "2" },
+  { id: 10, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "3" },
+  { id: 11, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "4" },
+  { id: 12, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "5" },
+  { id: 13, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "6" },
+  { id: 14, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "7" },
+  { id: 15, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "8" },
+  { id: 16, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "9" },
+  { id: 17, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "10" },
+  { id: 18, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "11" },
+  { id: 19, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "12" },
+  { id: 20, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "13" },
+  { id: 21, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "14" },
+  { id: 22, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "15" },
+  { id: 23, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "16" },
 
-  "Bloco F": [
-    { sala: "LAB DE INFORMÁTICA", numeros: [1,2,3,4,5,6,7,8,9,10] },
-    { sala: "LAB ELETROTÉCNICA",  numeros: [11] },
-    { sala: "SALAS - 2º ANDAR",   numeros: [12,14,16,17,18,19,20] },
-    { sala: "LAB ACIONAMENTOS",   numeros: [13] },
-    { sala: "LAB ELETRÔNICA",     numeros: [15] }
-  ],
+  // Bloco F
+  { id: 24, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "1" },
+  { id: 25, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "2" },
+  { id: 26, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "3" },
+  { id: 27, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "4" },
+  { id: 28, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "5" },
+  { id: 29, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "6" },
+  { id: 30, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "7" },
+  { id: 31, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "8" },
+  { id: 32, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "9" },
+  { id: 33, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "10" },
 
-  "Bloco G": [
-    { sala: "ARMAZENAGEM",        numeros: [] },
-    { sala: "SALA DE AUTOMOTIVA", numeros: [] },
-    { sala: "MOTOCICLETAS",       numeros: [] },
-    { sala: "FUNILARIA",          numeros: [] },
-    { sala: "PREDIAL II",         numeros: [] }
-  ],
+  { id: 34, sala: "LAB ELETROTÉCNICA", bloco: "Bloco F", numero: "11" },
+  { id: 35, sala: "SALAS - 2º ANDAR",  bloco: "Bloco F", numero: "12" },
+  { id: 36, sala: "LAB ACIONAMENTOS",  bloco: "Bloco F", numero: "13" },
+  { id: 37, sala: "SALAS - 2º ANDAR",  bloco: "Bloco F", numero: "14" },
+  { id: 38, sala: "LAB ELETRÔNICA",    bloco: "Bloco F", numero: "15" },
+  { id: 39, sala: "SALAS - 2º ANDAR",  bloco: "Bloco F", numero: "16" },
+  { id: 40, sala: "SALAS - 2º ANDAR",  bloco: "Bloco F", numero: "17" },
+  { id: 41, sala: "SALAS - 2º ANDAR",  bloco: "Bloco F", numero: "18" },
+  { id: 42, sala: "SALAS - 2º ANDAR",  bloco: "Bloco F", numero: "19" },
+  { id: 43, sala: "SALAS - 2º ANDAR",  bloco: "Bloco F", numero: "20" },
 
-  "Bloco H": [
-    { sala: "SALA EMPILHADEIRA", numeros: [] },
-    { sala: "MICROBIOLOGIA",     numeros: [] },
-    { sala: "PANIFICAÇÃO",       numeros: [] }
-  ]
-};
+  // Bloco G
+  { id: 44, sala: "ARMAZENAGEM",        bloco: "Bloco G", numero: "" },
+  { id: 45, sala: "SALA DE AUTOMOTIVA", bloco: "Bloco G", numero: "" },
+  { id: 46, sala: "MOTOCICLETAS",       bloco: "Bloco G", numero: "" },
+  { id: 47, sala: "FUNILARIA",          bloco: "Bloco G", numero: "" },
+  { id: 48, sala: "PREDIAL II",         bloco: "Bloco G", numero: "" },
+
+  // Bloco H
+  { id: 49, sala: "SALA EMPILHADEIRA",  bloco: "Bloco H", numero: "" },
+  { id: 50, sala: "MICROBIOLOGIA",      bloco: "Bloco H", numero: "" },
+  { id: 51, sala: "PANIFICAÇÃO",        bloco: "Bloco H", numero: "" }
+];
+
+if(!localStorage.getItem("rooms")) {
+    localStorage.setItem("rooms", JSON.stringify(dropdown));
+}
+
+// Função para obter os dados do dropdown do localStorage ou usar o padrão
+function getDropdownData() {
+    const stored = localStorage.getItem("rooms");
+    return stored ? JSON.parse(stored) : dropdown;
+}
+
+// Função para obter blocos únicos a partir dos dados
+function getUniqueBlocks(data) {
+    const blocks = [ ...new Set(data.map(item => item.bloco))];
+    return blocks.sort();
+}
+
+// Função para obter nomes de salas únicos de um bloco
+function getUniqueRoomsForBlock(data, selectedBlock) {
+    const rooms = data
+        .filter(item => item.bloco === selectedBlock)
+        .map(item => item.sala);
+
+    return [...new Set(rooms)];
+}
+
+// Função para obter números de sala de um bloco e sala específicos
+function getRoomNumbers(data, selectedBlock, selectedRoom) {
+    return data
+        .filter(item => item.bloco === selectedBlock && item.sala === selectedRoom)
+        .map(item => item.numero)
+        .filter(numero => numero !== ""); // Filtra números vazios
+}
 
 // Variável de seleção atual para o funcionamento dos dropdowns (cascata)
 let currentSelections = {
@@ -2334,7 +2390,8 @@ function hideMultipleSelectionSection() {
 function populateAvailableKeys() {
     const container = document.getElementById('available-keys-container');
     const block = currentSelections.block;
-    
+    const dropdownData = getDropdownData();
+
     if (!block) {
         container.innerHTML = '<div class="empty-keys-message">Selecione um bloco primeiro</div>';
         return;
@@ -2351,42 +2408,33 @@ function populateAvailableKeys() {
     
     if (currentKeyMode === 'multiple') {
         // Modo múltiplo: mostrar todas as chaves do bloco
-        const blockRooms = dropdown[block];
+        const blockRooms = dropdownData.filter(item => item.bloco === block);
         
         if (!blockRooms || blockRooms.length === 0) {
             container.innerHTML = '<div class="empty-keys-message">Nenhuma sala encontrada neste bloco</div>';
             return;
         }
         
-        blockRooms.forEach(roomObj => {
-            const room = roomObj.sala;
-            const numbers = roomObj.numeros || [];
+        blockRooms.forEach(roomItem => {
+            const room = roomItem.sala;
+            const roomNumber = roomItem.numero;
+            let salaIdentifier;
             
-            if (numbers.length === 0) {
-                // Sala sem numeração - apenas uma chave
-                const salaIdentifier = `${block} - ${room}`;
-                const isInUse = currentShiftData.some(record => record.sala === salaIdentifier);
-                
-                const keyItem = createKeySelectionItem(salaIdentifier, isInUse, {
-                    block: block,
-                    room: room,
-                    roomNumber: null
-                });
-                container.appendChild(keyItem);
+            if(roomNumber && roomNumber !== "") {
+                salaIdentifier = `${block} - ${room} - Sala ${roomNumber}`;
             } else {
-                // Sala com numeração - múltiplas chaves
-                numbers.forEach(number => {
-                    const salaIdentifier = `${block} - ${room} - Sala ${number}`;
-                    const isInUse = currentShiftData.some(record => record.sala === salaIdentifier);
-                    
-                    const keyItem = createKeySelectionItem(salaIdentifier, isInUse, {
-                        block: block,
-                        room: room,
-                        roomNumber: number
-                    });
-                    container.appendChild(keyItem);
-                });
+                salaIdentifier = `${block} - ${room}`;
             }
+            
+            const isInUse = currentShiftData.some(record => record.sala === salaIdentifier);
+            
+            const keyItem = createKeySelectionItem(salaIdentifier, isInUse, {
+                block: block,
+                room: room,
+                roomNumber: roomNumber && roomNumber !== "" ? roomNumber : null
+            });
+
+            container.appendChild(keyItem);
         });
     } else {
         // Modo single: funcionalidade original (baseada em room selecionada)
@@ -2397,10 +2445,9 @@ function populateAvailableKeys() {
             return;
         }
 
-        // Encontrar as salas/números disponíveis
-        const roomObj = dropdown[block].find(r => r.sala === room);
-        const numbers = roomObj ? roomObj.numeros : [];
-        
+        // Encontrar as salas/números disponíveis    
+        const numbers = getRoomNumbers(dropdownData, block, room);
+
         if (numbers.length === 0) {
             // Sala sem numeração - apenas uma chave
             const salaIdentifier = `${block} - ${room}`;
@@ -2585,8 +2632,11 @@ function saveSingleThirdPartyKey(name, purpose) {
     }
 
     // Encontra o objeto <sala> para recuperar o vetor de <numeros>
-    const roomObj = dropdown[block].find(r => r.sala === room);
-    const numbers = roomObj ? roomObj.numeros : [];
+    // const roomObj = dropdown[block].find(r => r.sala === room);
+    // const numbers = roomObj ? roomObj.numeros : [];
+
+    const dropdownData = getDropdownData();
+    const numbers = getRoomNumbers(dropdownData, block, room);
 
     // Valida se a sala selecionada há números e, caso tenha, se algum foi selecionado
     if(numbers.length > 0 && !roomNumber) {
@@ -2880,7 +2930,10 @@ function populateBlockDropdown() {
     
     if(!blockOptions) return;
 
-    const blocks = Object.keys(dropdown);
+    // const blocks = Object.keys(dropdown);
+
+    const dropdownData = getDropdownData();
+    const blocks = getUniqueBlocks(dropdownData);
 
     blockOptions.innerHTML = blocks.map(block => `
         <li class="option" data-value="${block}">${block}</li>
@@ -2957,10 +3010,13 @@ function populateRoomDropdown(selectedBlock) {
     
     if(!roomOptions || !roomDropdown) return;
 
-    const rooms = dropdown[selectedBlock] || [];
+    // const rooms = dropdown[selectedBlock] || [];
 
-    roomOptions.innerHTML = rooms.map(roomObj => `
-        <li class="option" data-value="${roomObj.sala}">${roomObj.sala}</li>
+    const dropdownData = getDropdownData();
+    const rooms = getUniqueRoomsForBlock(dropdownData, selectedBlock);
+
+    roomOptions.innerHTML = rooms.map(room => `
+        <li class="option" data-value="${room}">${room}</li>
     `).join('');
 
     // Ativa o dropdown
@@ -2999,8 +3055,9 @@ function populateRoomDropdown(selectedBlock) {
             // Exibe o dropdown de números de sala
             const roomNumberDropdown = document.querySelector('#room-number-dropdown');
 
-            const roomObj = dropdown[selectedBlock].find(room => room.sala === selectedRoom);
-            const numbers = roomObj ? roomObj.numeros : [];
+            // const roomObj = dropdown[selectedBlock].find(room => room.sala === selectedRoom);
+            // const numbers = roomObj ? roomObj.numeros : [];
+            const numbers = getRoomNumbers(dropdownData, selectedBlock, selectedRoom);
 
             if(numbers.length != 0) {
                 roomNumberDropdown.classList.remove('hidden');
@@ -3032,8 +3089,11 @@ function populateRoomNumberDropdown(selectedBlock, selectedRoom) {
     if(!roomNumberOptions || !roomNumberDropdown) return;
 
     // Encontra o objeto <sala> para recuperar o vetor de <numeros>
-    const roomObj = dropdown[selectedBlock].find(room => room.sala === selectedRoom);
-    const numbers = roomObj ? roomObj.numeros : [];
+    // const roomObj = dropdown[selectedBlock].find(room => room.sala === selectedRoom);
+    // const numbers = roomObj ? roomObj.numeros : [];
+
+    const dropdownData = getDropdownData();
+    const numbers = getRoomNumbers(dropdownData, selectedBlock, selectedRoom);
 
     if(numbers.length === 0) {
         // Se não houver números disponíveis, desativa o dropdown e marca como "N/A"
