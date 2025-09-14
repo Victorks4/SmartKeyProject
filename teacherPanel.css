@@ -352,7 +352,8 @@ td {
     transform: translateY(0);
 }
 
-.drop-down-item.hidden {
+.drop-down-item.hidden,
+#keys-actions-mode.hidden {
     pointer-events: none;
     opacity: 0.6;
     margin-bottom: 1rem;

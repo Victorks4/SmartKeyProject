@@ -2282,6 +2282,9 @@ function selectKeyMode(mode) {
     
     // Esconder seção de seleção múltipla (será mostrada depois se necessário)
     hideMultipleSelectionSection();
+
+    // Mostrar o badge de modo e botão de alterar o tipo
+    document.getElementById('keys-actions-mode').classList.remove('hidden');
     
     // Mostrar seleção de bloco
     document.getElementById('block-dropdown').classList.remove('hidden');
@@ -2341,6 +2344,9 @@ function goBackToKeyQuantity() {
     // Mostrar novamente a pergunta inicial
     document.getElementById('key-quantity-section').classList.remove('hidden');
     document.getElementById('key-quantity-section').classList.add('visible');
+
+    // Oculta o badge de modo e botão de alterar o tipo
+    document.getElementById('keys-actions-mode').classList.add('hidden');
     
     // Esconder todas as outras seções
     hideMultipleSelectionSection();
@@ -2632,9 +2638,6 @@ function saveSingleThirdPartyKey(name, purpose) {
     }
 
     // Encontra o objeto <sala> para recuperar o vetor de <numeros>
-    // const roomObj = dropdown[block].find(r => r.sala === room);
-    // const numbers = roomObj ? roomObj.numeros : [];
-
     const dropdownData = getDropdownData();
     const numbers = getRoomNumbers(dropdownData, block, room);
 
@@ -2910,7 +2913,7 @@ function resetDropdown(dropdownId, placeholderText, disable = true) {
         options = document.getElementById('room-number-op');
     }
     
-    if(selectedText) selectedText.textContent = placeholderText;
+    if(selectedText) selectedText.innerText = placeholderText;
     if(options) options.innerHTML = '';    
     
     if(disable) {
@@ -2998,7 +3001,7 @@ function populateBlockDropdown() {
                 // Preenche o próximo dropdown e reinicia os seguintes
                 populateRoomDropdown(selectedBlock);
             }
-            resetDropdown('room-number-dropdown', 'Selecione o número da sala', true);
+            // resetDropdown('room-number-dropdown', 'Selecione o número da sala', true);
         });
     });
 }
@@ -3059,7 +3062,7 @@ function populateRoomDropdown(selectedBlock) {
             // const numbers = roomObj ? roomObj.numeros : [];
             const numbers = getRoomNumbers(dropdownData, selectedBlock, selectedRoom);
 
-            if(numbers.length != 0) {
+            if(numbers.length > 0) {
                 roomNumberDropdown.classList.remove('hidden');
                 roomNumberDropdown.classList.remove('selectedOption');
                 roomNumberDropdown.classList.remove('gradient');
@@ -3070,8 +3073,14 @@ function populateRoomDropdown(selectedBlock) {
                 // Se não há números de sala, considerar completo para modo single
                 if (currentKeyMode === 'single') {
                     // Sala sem numeração - não precisamos mostrar seleção múltipla
-                    roomNumberDropdown.classList.remove('visible');
-                    roomNumberDropdown.classList.add('hidden');
+                    resetDropdown('room-number-dropdown', 'Sem numeração', true);
+                    currentSelections.roomNumber = null;
+                    roomNumberDropdown.classList.add('noOptions');
+                    roomNumberDropdown.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        roomNumberDropdown.classList.add('selectedOption');
+                    }, 910);
                 } else {
                     // Modo múltiplo: mostrar a seção de seleção múltipla
                     showMultipleSelectionSection();
@@ -3088,25 +3097,8 @@ function populateRoomNumberDropdown(selectedBlock, selectedRoom) {
     
     if(!roomNumberOptions || !roomNumberDropdown) return;
 
-    // Encontra o objeto <sala> para recuperar o vetor de <numeros>
-    // const roomObj = dropdown[selectedBlock].find(room => room.sala === selectedRoom);
-    // const numbers = roomObj ? roomObj.numeros : [];
-
     const dropdownData = getDropdownData();
     const numbers = getRoomNumbers(dropdownData, selectedBlock, selectedRoom);
-
-    if(numbers.length === 0) {
-        // Se não houver números disponíveis, desativa o dropdown e marca como "N/A"
-        resetDropdown('room-number-dropdown', 'Sem numeração', true);
-        currentSelections.roomNumber = null;
-        roomNumberDropdown.classList.add('noOptions');
-        roomNumberDropdown.classList.remove('hidden');
-
-        setTimeout(() => {
-            roomNumberDropdown.classList.add('selectedOption');
-        }, 910);
-        return;
-    }
 
     // Preenche com os números disponíveis
     roomNumberOptions.innerHTML = numbers.map(number => `

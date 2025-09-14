@@ -116,7 +116,7 @@
     </div> <!-- Fim do Modal Login Professor -->
 
     <!-- Modal: Registrar Terceiro -->
-    <div class="form-modal" id="thirdPartyModal" role="dialog" aria-modal="true" aria-labelledby="tpTitle">
+    <div class="form-modal" id="thirdPartyModal" role="dialog" aria-modal="true" aria-labelledby="tpTitle" style="display: flex;">
         <div class="form-modal-content">
             <div class="form-modal-header">
                 <div class="form-modal-title" id="tpTitle">
@@ -168,21 +168,21 @@
                     </div>
                 </div>
                 
+                <div id="keys-actions-mode" class="d-flex justify-content-between align-items-center hidden">
+                    <div id="mode-indicator" class="badge bg-primary" style="font-size: 0.75rem;">
+                        <i class="bi bi-key"></i> Modo Ativo
+                    </div>
+
+                    <button type="button" id="type-alter-btn" class="btn btn-sm btn-outline-secondary" onclick="goBackToKeyQuantity()" title="Alterar tipo de seleção">
+                        <i class="bi bi-arrow-left"></i> Alterar Tipo
+                    </button>
+                </div>
+
                 <!-- Seleção de bloco -->
                 <div id="block-dropdown" class="drop-down-item hidden">
-                    <div class="d-flex justify-content-between align-items-center mb-3 no-wrap">
-                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <label class="text-sm font-medium">
-                                Selecione o Bloco *
-                            </label>
-                            <span id="mode-indicator" class="badge bg-primary" style="font-size: 0.75rem;">
-                                <i class="bi bi-key"></i> Modo Ativo
-                            </span>
-                        </div>
-                        <button type="button" id="type-alter-btn" class="btn btn-sm btn-outline-secondary" onclick="goBackToKeyQuantity()" title="Alterar tipo de seleção">
-                            <i class="bi bi-arrow-left"></i> Alterar Tipo
-                        </button>
-                    </div>
+                    <label class="dropdown-header">
+                        Selecione o Bloco *
+                    </label>
                     
                     <div class="dropdown">
                         <div class="selected d-flex justify-content-between align-items-center">
