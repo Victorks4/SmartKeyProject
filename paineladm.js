@@ -1335,7 +1335,7 @@ function closeRegisterTeacherModal() {
 // Faz o que for digitado no campo de fast ser convertido para UPPERCASE automáticamente
 const inputFast = document.getElementById("tpFast");
 
-if (inputFast) {
+if(inputFast) {
     inputFast.addEventListener("input", () => {
         inputFast.value = inputFast.value.toUpperCase();
     });
@@ -1344,14 +1344,19 @@ if (inputFast) {
 // Função para salvar novo professor
 function saveNewTeacher() {
     const name = document.getElementById('tpFullName').value.trim();
-    const fast = document.getElementById('tpFast').value.trim();
 
-    if(!name || !fast) {
-        showNotification('Preencha todos os campos obrigatórios!', 'warning');
+    if(!name) {
+        showNotification('Preencha corretamente o nome do professor!', 'warning');
         return;
     }
 
-    // Verifica se o professor já existe no mapeamento
+    // Validar se o nome tem pelo menos 3 caracteres
+    if(name.length < 3) {
+        showNotification('O nome do professor deve ter pelo menos 3 caracteres.', 'warning');
+        return;
+    }
+
+    // Valida se o professor já existe
     const currentMapping = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
 
     if(currentMapping[name]) {
@@ -1359,35 +1364,26 @@ function saveNewTeacher() {
         return;
     }
 
-    // Verifica se o FAST já está sendo usado por outro professor
-    for(const [existingName, existingFast] of Object.entries(currentMapping)) {
-        if(existingFast === fast.toUpperCase()) {
-            showNotification(`O FATS <strong>"${fast}"</strong> já está sendo usado pelo professor: <strong>${existingName}</strong>.`, 'warning');
-            return;
-        }
-    }
-
-    // Adiciona o professor APENAS ao mapeamento docentesCodprof (não na tabela)
+    // Tenta adicionar ao sistema de nomes de professores
     try {
-        if(typeof window.addNewProfessorToTeacherPanel !== 'function') {
-            const success = window.addNewProfessorToTeacherPanel(name, fast);
-            if(success) {
-                showMensageConfirmationModal(name, fast);
-            } else {
-                showNotification('Erro ao cadastrar professor. Verifique se os dados estão corretos.', 'warning');
-                return;
-            }
-        } else {
-            // Se a função não estiver disponível, adiciona diretamente ao localStorage
-            showMensageConfirmationModal();
-        }
-    } catch (error) {
-        showNotification('Erro ao cadastrar professor. Tente novamente.', 'danger');
-        return;
-    }
+        const teacherNames = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
+        
+        teacherNames[name] = "TEACHER";
+        localStorage.setItem('teacherNames', JSON.stringify(teacherNames));
+        
+        const currentMapping = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
+        const sharedFats = localStorage.getItem('sharedTeacherFats') || 'FATS1578';
 
-    // Limpar campos e fechar modal
-    closeRegisterTeacherModal();
+        currentMapping[name] = sharedFats;
+        localStorage.setItem('docentesCodprof', JSON.stringify(currentMapping));
+        
+        showNotification(`Professor '<strong>${name}</strong>' cadastrado(a) com sucesso!`, 'success');
+        return true;
+    } catch(error) {
+        console.error('Erro ao cadastrar professor:', error);
+        showNotification('Erro ao cadastrar professor.', 'danger');
+        return false;
+    }
 }
 
 function initializeAll() {
@@ -1848,6 +1844,81 @@ function showDeleteConfirmationModal(recordId, row) {
 }
 
 function showDeleteRoomConfirmationModal(roomId) {
+    // Criar o modal
+    const modal = document.createElement('div');
+
+    const rooms = getRooms();
+    const roomExists = rooms.filter(r => r.id === roomId);
+    // const textRoomNumber = (roomExists[0].numero != 'Sem numeração') ? roomExists[0].numero : 'Sem numeração';
+
+    modal.id = 'deleteRoomConfirmationModal';
+    modal.className = 'modal fade';
+    modal.setAttribute('tabindex', '-1');
+
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg d-flex gap-0">
+                <div class="d-flex justify-content-center modal-header bg-danger text-white border-0" style="position: relative;">
+                    <div class="d-flex align-self-center justify-content-center align-items-center position-absolute" style="width: 100px; height: 100px; border-radius: 50%; background-color: #dc3545;">
+                        <i class="bi bi-trash3-fill text-white" style="font-size: 3.5rem;"></i>
+                    </div>
+                    
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 d-flex flex-column">
+                    <div class="text-center mb-3"></div>
+
+                    <h3 class="text-center mb-2 mt-3" style="color: #323232">
+                        Remover Sala?
+                    </h3>
+
+                    <p class="text-center align-self-center mb-4" style="color: #4D4D4D; width: 378px">
+                        Tem certeza que deseja <strong class="text-light-emphasis">excluir permanentemente</strong> esta sala? Esta ação não pode ser desfeita!
+                    </p>
+
+                    <div class="card bg-light border-0 ">
+                        <div class="card-body p-3">
+                            <h6 class="card-subtitle mb-2 pb-2 text-muted border-1 border-bottom">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Detalhes da Sala
+                            </h6>
+                            <div class="small d-flex flex-column register-details">
+                                <p><strong>Sala:</strong> ${roomExists[0].sala}</p>
+                                <p><strong>Bloco:</strong> ${roomExists[0].bloco}</p>
+                                <p><strong>Numero da sala:</strong> ${roomExists[0].numero || 'sem numeração'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-body modal-actions border-0 d-flex gap-2">
+                    <button type="button" id="cancel-btn" class="btn" data-bs-dismiss="modal" style="width: 100%;">
+                        Cancelar
+                    </button>
+
+                    <button type="button" class="btn" id="confirmDeleteRoomBtn" style="width: 100%;">
+                        Deletar Registro
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;    
+    document.body.appendChild(modal);
+
+    const bootstrapModal = new bootstrap.Modal(modal);
+    
+    // Event listener para confirmação
+    modal.querySelector('#confirmDeleteRoomBtn').addEventListener('click', function() {
+        deleteRoom(roomId);
+        bootstrapModal.hide();
+    });
+    
+    // Auto-cleanup
+    modal.addEventListener('hidden.bs.modal', () => modal.remove());
+    bootstrapModal.show();
+}
+
+function showDeleteTeacherConfirmationModal(roomId) {
     // Criar o modal
     const modal = document.createElement('div');
 
@@ -2645,7 +2716,7 @@ function generateTeacherRow(nome, fats) {
 
     const teacherId = sanitizeId(nome);
     const escapedName = escapeHtml(nome);
-    const escapedFats = escapeHtml(String(fats || ''));
+    const generalFats = localStorage.getItem('sharedTeacherFats');
     
     return `
         <tr data-teacher-name="${escapedName}" data-teacher-id="${teacherId}">
@@ -2654,7 +2725,7 @@ function generateTeacherRow(nome, fats) {
                 <span class="teacher-name-text">${escapedName}</span>
             </td>
             <td class="fats-badge-cell">
-                <span class="fats-badge">${escapedFats}</span>
+                <span class="fats-badge">${generalFats}</span>
             </td>
             <td>
                 <div class="action-buttons">
