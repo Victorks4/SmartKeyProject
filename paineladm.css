@@ -88,7 +88,8 @@ td {
 
 /* Estilos para badges de status */
 .status-badge,
-.fats-badge {
+.fats-badge,
+.block-badge {
     padding: 0.375rem 0.75rem;
     border-radius: 50rem;
     font-size: 0.75rem;
@@ -101,6 +102,12 @@ td {
 .fats-badge {
     background-color: var(--bs-primary);
     color: white;
+}
+
+.block-badge {
+    background-color: rgba(13, 109, 253, 0.947);
+    color: white;
+    padding: 0.65rem 0.75rem;
 }
 
 .status-badge.devolvida {

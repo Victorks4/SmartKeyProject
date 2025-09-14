@@ -17,8 +17,8 @@ function getCurrentShiftByTime() {
 
 // let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
 let teacherModalActive = false;
-// let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
-let selectedDate = "2025-08-31";
+let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
+// let selectedDate = "2025-08-31";
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 
 // Função para obter ou criar estrutura de dados para uma data
@@ -3059,9 +3059,12 @@ function generateRoomId() {
 function createRoomRow(room) {
     return `
         <tr data-room-id="${room.id}">
-            <td class="room-sala">${room.sala}</td>
+            <td class="room-sala">
+                <i class="bi bi-bookmark table-icon"></i>
+                ${room.sala}
+            </td>
             <td class="room-bloco">
-                <p class="bg-secondary-subtle m-0" style="width: fit-content; padding: 1px 12px; border-radius: 6px">
+                <p class="block-badge mb-0" style="width: fit-content; padding: 1px 12px; border-radius: 6px">
                     ${room.bloco}
                 </p>
             </td>
@@ -3192,7 +3195,7 @@ function createEditRoomRow(room) {
                     type="text" 
                     class="form-control edit-input" 
                     id="edit-numero-${room.id}" 
-                    value="${room.numero || '-'}" 
+                    value="${room.numero || 'Sem numeração'}" 
                 />
             </td>
             <td class="room-actions">
