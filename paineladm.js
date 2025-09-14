@@ -2716,7 +2716,7 @@ function generateTeacherRow(nome, fats) {
 
     const teacherId = sanitizeId(nome);
     const escapedName = escapeHtml(nome);
-    const generalFats = localStorage.getItem('sharedTeacherFats');
+    const escapedFats = escapeHtml(String(fats || ''));
     
     return `
         <tr data-teacher-name="${escapedName}" data-teacher-id="${teacherId}">
@@ -2725,7 +2725,7 @@ function generateTeacherRow(nome, fats) {
                 <span class="teacher-name-text">${escapedName}</span>
             </td>
             <td class="fats-badge-cell">
-                <span class="fats-badge">${generalFats}</span>
+                <span class="fats-badge">${escapedFats}</span>
             </td>
             <td>
                 <div class="action-buttons">
