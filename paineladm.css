@@ -181,6 +181,46 @@ td {
     margin-bottom: 2rem;
 }
 
+/* Estilos para o campo de pesquisa */
+/* .search-container {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.search-input {
+    border: 2px solid var(--border-color);
+    border-radius: 50px;
+    padding: 15px 55px 15px 20px;
+    font-size: 1.1rem;
+    width: 600px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.search-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+    transform: translateY(-2px);
+}
+
+.search-icon {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.search-stats {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+} */
+
 /* Modal */
 #registerTeacherModal {
     position: fixed;
