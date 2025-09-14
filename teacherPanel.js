@@ -3,7 +3,6 @@ let activeShift = 'manhã';
 let sortAlphabetically = false;
 // let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
 let selectedDate = "2025-08-31";
-// 2025-08-31
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 
 // Variáveis para seleção múltipla de chaves
@@ -11,708 +10,834 @@ let selectedKeys = [];
 let multipleSelectionMode = false;
 let currentKeyMode = null; // 'single' ou 'multiple'
 
+// FATS GERAL
+const SHARED_TEACHER_FATS = "FATS1578";
+
 // Mapa de docentes para CODPROF (DOCENTE -> CODPROF)
 let docentesCodprof = {
-    "Adalberto da Silva Correia": "FATS1578",
-    "Adeildo Apolonio da Silva Junior": "FATS4451",
-    "Aderlan dos Santos": "NORTE233",
-    "Adilson Alexandre Amorim": "CALC1227",
-    "Adjalbas de Oliveira Santos": "FATS3070",
-    "Adriana Bitencourt Bezerra": "FATS5014",
-    "Adriana Freitas de Moura": "FATS4312",
-    "Adriane do Nascimento Apostolo": "FATS5071",
-    "Adrianne Bastos Ferreira": "FATS5189",
-    "Adriano Santos de Araujo": "FATS5049",
-    "Adriel Rasslan da Silva Gama": "FATS4758",
-    "Adson Aragão Carvalho": "FATS4656",
-    "Agnelo Souto de Jesus Filho": "FATS1673",
-    "Aislan da Silva Souza": "FATS4277",
-    "Alberto César Queiroz Fonseca": "ALA265",
-    "Alberto Luís Santos e Santos": "AUT0087",
-    "Alcígledes de Jesus Sales": "FATS4977",
-    "Aldivan Fernandes Conceição Moura Junior": "FATS4990",
-    "Alessandra Knoll": "043EAD",
-    "Alex Almeida de Souza": "FATS7899",
-    "Alex Ferreira": "ALF767",
-    "Alexandre da Silva Nogueira": "FATS999109",
-    "Alexandre Hartkopf Cardozo": "EAD098",
-    "Alexandre Jose Guerra Praia": "ATO074",
-    "Alexandre Morais Barbosa": "FATS2399",
-    "Alexsandra Alves de Macedo Aquino": "CALC1154",
-    "Alexsandra Zaparoli": "FATS022",
-    "Aline de Andrade Bonifácio": "EAD010",
-    "Aline de Cerqueira dos Santos": "FATS5010",
-    "Alisson Cleisson Carvalho Silva": "FATS5060",
-    "Allan Jackson Alves da Silva": "FATS3546",
-    "Alvaro Tadeu Paes Fiuza Filho": "FATS4732",
-    "Amanda de Almeida Santana": "FATS4819",
-    "Amanda Moreira Santiago Pereira": "FATS5158",
-    "ANA CARMEM CASTRO LEITE": "ALA0163",
-    "Ana Carolina Rabêlo Nonato": "FATS4280",
-    "Ana Caroline Neves da Silva": "ALA0171",
-    "Ana Cláudia de Almeida Gomes Galiza": "FATS4959",
-    "Ana Karine Ferreira Bastos Vidal": "FATS4725",
-    "Ana Marcia dos Santos Silva": "FATS4112",
-    "Ana Paula Farias Goulart": "EAD739",
-    "Ana Paula Pereira Lima": "CAM 251",
-    "Anderson Batista Córdova": "FATS3124",
-    "Anderson Bismark Porto e Silva": "FATS5047",
-    "Anderson Emanuel Oliveira Daltro": "FATS4103",
-    "Anderson Leandro da Silva Pita": "FATS5108",
-    "Anderson Marcos Santos Lobo": "FATS4984",
-    "André Luis Pinho Braga": "FATS5194",
-    "André Luís Rocha Reis": "ALA0178",
-    "André Luiz Gomes da Silva": "FATS5213",
-    "André Luiz Santos Santana": "REG161",
-    "Andre Pires Araujo Kuhn": "MAN-40238",
-    "Andressa Mirella Figueiras da Silva": "ALA0086",
-    "Anésio Sousa Dos Santos Neto": "FATS4995",
-    "Angel Cristian Barbosa Santos": "ALA0053",
-    "Angelica da Silveira Lima": "SECBA0003",
-    "Anna Carolina Araujo Romualdo": "ALA193",
-    "Anna Paula Paz de Jesus": "ALA214",
-    "Anselmo Luiz Lima Brito Junior": "FATS4796",
-    "Antônia Raniele Costa Lima": "FATS4994",
-    "Antonio Henrique Ramos Bismarck César": "ALA243",
-    "Antonio Luis Gomes dos Santos": "FATS4334",
-    "Antonio Marcos Pereira dos Santos": "SB0792",
-    "Antonio Nery da Silva Filho": "FATS4119",
-    "Antônio Pinto de Santana Neto": "FATS3506",
-    "Ari Santos Gomes": "FATS1629",
-    "Ariádene Gomes Pinheiro": "Alim00022",
-    "Arícia Silva Gama Muniz": "FATS5141",
-    "Arlete do Nascimento Rocha": "FATS5217",
-    "Arthur Gomes Lima França": "AGLF857",
-    "Audrei de Abreu Marques": "MOB 134",
-    "Augusto Magno Ornelas Saraiva": "ALA286",
-    "Áurea Pereira da Costa": "FATS5028",
-    "Bárbara da Marilia Madureira Conceição": "FATS5099",
-    "Bárbara Daiana da Anunciação Nascimento": "FATS5029",
-    "BRUNO CHAVES SILVA": "ALA0074",
-    "Bruno de Almeida Borges": "FATS4777",
-    "Bruno de Menezes Moreira": "FATS5193",
-    "Bruno dos Santos Pereira": "FATS5115",
-    "Bruno dos Santos Pereira": "NORTE515",
-    "Bruno Ferreira de Oliveira": "FATS5001",
-    "Bruno Geovani Santos Silva": "ALA0119",
-    "Bruno Oliveira da Silva": "FATS5825",
-    "Bruno Paranhos Lima Bitencourt": "FATS3980",
-    "Bruno Schramm Alves de Matos": "ALA282",
-    "Caio Hamab Costa": "FATS4696",
-    "Caio Rhuan Ribeiro Oliveira": "FATS5186",
-    "Caique Barbosa Santos": "FATS5215",
-    "Caleb Sena da Silva": "FATS4839",
-    "Camila Martins Ghilardi": "FATS5200",
-    "Camila Pereira da Silva": "FATS5065",
-    "Carini dos Santos de Souza": "CAM 060",
-    "Carla Evelin Xavier Freitas": "ALA247",
-    "Carlos Alexandre Sant'ana Figueiredo": "ALA205",
-    "Carlos André de Jesus Santos": "FATS4603",
-    "Carlos Augusto da Cruz Santos de Jesus": "ALA245",
-    "Carlos Augusto de Assis Alves Junior": "FATS5137",
-    "Carlos Eduardo da Cruz Nascimento": "MOB 121",
-    "Carlos Eduardo Ferreira Gomes": "FATS5083",
-    "Carlos Robson Santos Cerqueira": "FATS4189",
-    "Carmen Luft Bammesberger": "EAD388",
-    "Carolina Gesteira Lopes Lima": "FATS3393",
-    "Carolina Souto Ferreira": "FATS857",
-    "Caroline Souza Cardoso da Silva Oliveira": "FATS5027",
-    "Celia Nascimento Felix Filha": "SEG0035",
-    "Celso de Oliveira": "FATS4739",
-    "Chrislaynne Cardoso Cerqueira": "FATS4765",
-    "Christiano Martinez Garcia": "FATS1060",
-    "Cíntia Azevedo de Araújo": "FATS4170",
-    "Cintia Gomes de Siqueira": "FATS5136",
-    "CIRO TADEU DE MATOS BASTOS": "ALA0041",
-    "Cislandia Maria dos Santos Oliveira": "FATS4648",
-    "Clara Fernandes Bastos": "FATS5199",
-    "Claryssa Palloma Rosa Barros de Oliveira": "FATS5204",
-    "Claudemir Felix": "CALC 02",
-    "Cláudia de Matos Santos": "FATS0005",
-    "Claudia Mendes da Silva": "FATS4518",
-    "Claudinei Aparecido Ferreira de Paula": "1940",
-    "Claudiomiro José Henn": "CALC1103",
-    "Cléa Mercedes Alves de Jesus Oliva": "FATS5110",
-    "Cleomenes Nunes Torres": "FATS5092",
-    "Clóvis Andrade Filho": "40704",
-    "Crislane de Jesus Gomes": "ALA0132",
-    "Crislayne Conceição da Silva de Oliveira": "FATS5103",
-    "Cristiane de Souza Oliveira": "FATS5133",
-    "Cristiane Pereira Santos de Souza": "FATS4658",
-    "Cristiani de Moura": "ALA217",
-    "Cristiano Vieira Santos Passos": "FATS5101",
-    "Daiana de Oliveira Machado Bulos": "FATS5039",
-    "Daiane dos Santos Carvalho": "FATS5093",
-    "Daniel Austregesilo Xavier de Oliveira": "FATS4534",
-    "Daniel da Silva Araújo": "FATS4079",
-    "Daniel dos Santos Lima": "FATS5206",
-    "Daniel Duarte de Souza da Silva": "FATS5149",
-    "DANIEL FERNANDES LIMA BISPO": "FATS4496",
-    "Daniel Rabelo do Vale": "GRAF814",
-    "Daniela Borges Cerqueira Tavares": "FATS5155",
-    "Daniela Silva Chagas": "FATS10000",
-    "Danieli da Silva Machado Souza": "FATS5079",
-    "Danilo Brandão Soares": "FATS5111",
-    "Danilo Ferreira Barros": "FATS5127",
-    "Danilo Souza de Oliveira": "FATS4682",
-    "Dannywill Medeiros dos Santos": "ALA0129",
-    "Dante Bitencourt Nascimento Filho": "ALA255",
-    "Dante Nascimento Cunha": "CAM518",
-    "Dara Lima Medeiros": "FATS3498",
-    "Darlene Neves Ramos Liger": "FATS5061",
-    "Davi dos Santos Haack": "FATS5032",
-    "David Roberto Vasel": "EAD920",
-    "Dayse Marana de Brito Araujo": "FATS3895",
-    "Debora Maia Teixeira de Moura": "FATS4156",
-    "Deivson Nonato Alves": "NGE6989",
-    "Dejanira Silva Alves Pereira": "ALA0055",
-    "Dejany dos Santos Silva": "CAM460",
-    "Denilson Brito dos Santos": "MOB021",
-    "Denivaldo de Queiroz Bispo": "FATS1687",
-    "Dennis Jean Borges Rosado da Rocha": "065EAD",
-    "Diana Pereira dos Santos": "FATS4966",
-    "Diego de Oliveira Teixeira": "EAD052",
-    "Diego Santos de Oliveira": "VEST120",
-    "Dilma Ribeiro Lopes": "FATS4431",
-    "Dilson Portela Santos": "MOB 017",
-    "Dinis Caetano Pereira Nascimento": "FATS5162",
-    "Divino Alves Vieira": "ALA252",
-    "Docente Autoinstrucional": "AUTO",
-    "Duilio Almeida Norberto Da Silva": "ALA257",
-    "Dulcila Barreiros Torres": "REG241",
-    "Ecatarine Ivi Guerrreiro de Freitas Figueiredo": "ALA207",
-    "Eddie William Calazans Ventura": "EWCV030",
-    "Edilma Mendes de Sousa": "FATS4585",
-    "Edilza Santana Bomfim": "FATS5045",
-    "Edimilson Chaves dos Reis": "FATS5002",
-    "Edinaldo do Nascimento Pereira Gomes": "SLEM760",
-    "Edmayre Coelho dos Santos": "FATS3186",
-    "Edmilson da Silva Rocha": "FATS4472",
-    "Edson dos Santos": "FATS4533",
-    "Edson José Nunes": "FATS1596",
-    "Edson Luiz Pinto Cruz Junior": "FATS4826",
-    "Edvaldo Cerqueira Santos": "FATS5069",
-    "Elaine Graziela Sampaio Passos": "FATS5195",
-    "Elaine Santos Silva": "FATS5197",
-    "Elder Nunes da Silva": "ALA200",
-    "Eliana Pereira dos Santos": "MOU1971",
-    "Eliandra dos Santos Mendes": "FATS4830",
-    "Elias Dias Arruda de Paulo": "FATS183",
-    "ELIAS WASHINGTON CAMPOS OLIVEIRA": "FATS5037",
-    "Eliecy Guirra Reis": "SB0781",
-    "Eliézer José da Silva": "FATS3277",
-    "Eliseu Miranda Alves": "0FATS6814",
-    "Ellen Midian Santana da Silva": "FATS4965",
-    "Ellerry Lima Silva": "ALA0164",
-    "Emanoel Ferreira Costa da Rocha": "FATS1690",
-    "Emerson Salgado de Carvalho": "FATS5105",
-    "Emilly Nathalia Sousa Almeida": "FATS4824",
-    "Eneida Crisitina Cardoso das Neves": "FATS4538",
-    "Enio Cezar Dias Junior": "ALA284",
-    "Eric Cristiano Silva Soares": "ALA194",
-    "Éric Nunes Gomes": "FATSI3204",
-    "Érica Almeida Soares Araújo": "FATS5766",
-    "Érica de Oliveira Silva": "FATS4821",
-    "Érica Lavinia Borges Moraes de Oliveira": "FATS5019",
-    "Erik do Carmo Marques": "FATS3304",
-    "Erik do Carmo Marques": "FATS3438",
-    "Erimonica Santos de Jesus Dantas": "FATS4054",
-    "Euzebio Bastos da Silva": "FATS5077",
-    "Evangildo Santana Santos": "ALA221",
-    "Evans Andrade Costa": "CALC1236",
-    "Evson Santos Silva": "ALA0014",
-    "Fabiana Araujo Diniz": "EAD617",
-    "Fábio da Silva Campos": "GES0112",
-    "Fábio Luciano Carvalho dos Santos": "EMI00200",
-    "Fabio Lúcio Almeida Lima": "CAM 004",
-    "Fabrício da Silva do Espírito Santo": "FATS5166",
-    "Fabrício Pacheco Borges": "SEG9136",
-    "Fagna Gomes da Silva Santos": "FATS5050",
-    "Felipe de Lima Oliveira": "FATS5112",
-    "Fernanda de Matos Fialho Tojo": "Fats514",
-    "Fernando Marafon Balem": "EAD06",
-    "Fernando Vessosi Alberti": "EAD979",
-    "Filipe Almeida da Conceição Inocencio": "FATS5120",
-    "Filipe Santanna Freitas da Silva": "FATS4745",
-    "Filipe Silva Santos": "ALA294",
-    "Flávio Ferreira Barbosa": "FATS6870",
-    "Francegleide Souza Oliveira": "ALA0145",
-    "Francieli Pacassa": "EAD082",
-    "Francielle Bitencourt de Oliveira": "FATS5004",
-    "Francielli Pinto da Silva": "FATS4957",
-    "Francisca Maria Mami Kaneoya": "FATS320",
-    "Francisco Marcos Rosa de Sousa": "FATS4081",
-    "Francisco Vieira Lima": "FATS5214",
-    "Francklin Moura da Costa": "FATS5212",
-    "Frederico Dominguez Fonseca": "FATS3114",
-    "Frederico Iglezias Figueira": "FIF1300",
-    "Gabriel Cabral Daltro": "FATS5074",
-    "Gabriel Queiroz dos Santos": "FATS3597",
-    "Gabriel Rocha Santos": "ALA264",
-    "Gabriel Souza de Santana": "FATSC1559",
-    "Gabriel Vitorio de Arcanjo": "FATS5114",
-    "Gabriel Wendel Santos da Silva": "021EAD",
-    "Gabrielle Albuquerque Maciel Brasileiro": "FATS5023",
-    "Geandson Almeida de Sousa": "FATS4806",
-    "Geisa Ferraz Lima Córdova": "FATS3452",
-    "Genilson Santana Santos": "FATS5053",
-    "Genival de Andrade Silva": "FATS031000",
-    "Genivania Gomes Oliveira": "FATS4541",
-    "George Anderson Soares e Sales": "NOAAUTO62",
-    "George Bispo dos Santos": "ALA0070",
-    "Gerusa Souza Pimentel": "FATS4736",
-    "Giancarlo Alves Simões": "FATS999112",
-    "Gilberto Lopes Nery": "FATS4988",
-    "Gildean Santos Ribeiro": "GSR044",
-    "Gilmar Menezes": "FATS4506",
-    "Gilmar Pereira Mota": "FATS4972",
-    "Gilmario dos Santos Machado": "FATS3992",
-    "Gilsimar de Jesus Benicio": "FATS5082",
-    "Gilson Marcelo da Silva Rios": "FATS5168",
-    "Girlene Bispo de Oliveira": "FATS5012",
-    "Gislana Santana Machado": "FATS5025",
-    "Gizelle Karine Santos Alcantara": "ALA231",
-    "Gleice da Silva Diogo": "FATS4463",
-    "Gleison Fernandes da Silva": "FATS5106",
-    "Guilherme Canarin Marcellino": "EAD050",
-    "Hanna Mayara Miranda Araujo": "FATS5126",
-    "Hebert Santos Peneluc": "ALAA007",
-    "Henderson Cari Nascimento": "EAD070",
-    "Henderson Souza Chalegre": "FATS5051",
-    "Henrique Silveira Alves Marques": "SNSUD240",
-    "HERBERT CÂNDIDO DOS SANTOS": "ALA0167",
-    "Heron Borges Machado": "FATS4793",
-    "Hiago Santos Silva": "ALA250",
-    "Hikaro dos Santos Carvalho": "FATS4599",
-    "Hilton Brandão": "FATSI1797",
-    "Hipólito Matos Carneiro": "FATS5205",
-    "Hudson de Carvalho Lima": "FATS4413",
-    "Iago de Cerqueira Azevedo": "FATS5006",
-    "Ian Hudson Martins de Oliveira": "FATS4816",
-    "Ian Pedro Martinez Silva": "FATS4735",
-    "Iara de Andrade Oliveira": "FATS4998",
-    "Ícaro Vasconcelos Alvim": "FATS4803",
-    "Igor Ernandez Almeida Santana": "CAM 213",
-    "Igor Silva Marques": "FATS5009",
-    "Igor Souza de Almeida": "ALA263",
-    "Iguaraci de Souza Tavares": "ALA249",
-    "ILKA MARA ALVES DA SILVA": "FATS5000",
-    "Ingrid Barreto de Almeida Passos": "FATS4576",
-    "Ingrid Rocha Teixeira": "ALA259",
-    "Iraneide dos Anjos dos Santos": "FATS5094",
-    "Iranilton Pereira Santos": "ALA269",
-    "Iris Araújo Silva": "FATS5143",
-    "Irlan Silva de Almeida": "FATS5154",
-    "Iromar de Freitas Nascimento Filho": "FATS5078",
-    "Isaac Porto Assunção": "FATS4082",
-    "Islane Ferreira de Andrade": "FATS5090",
-    "Ismael de Andrade Gonçalves": "FATS4855",
-    "Ivan Gomes Soares": "ALA230",
-    "Ivanildo Gomes da Silva": "FATS4960",
-    "Ivo Ribeiro Almeida": "FATS5054",
-    "Jaciane Saba Bispo": "FATS5172",
-    "Jaciara Teodora dos Reis Malta": "ALA0151",
-    "Jadiane de Almeida Ribeiro de Santana": "NOAVIRT027",
-    "Jadieli Sansão Elias Lima": "ALA0061",
-    "Jadilma Rodrigues da Silva Dias": "FATS3874",
-    "Jailson dos Santos Júnior": "ALA0152",
-    "Jair Santos de Almeida": "FATS3319",
-    "Jairo Alves da Silva": "PLAN2011",
-    "Jamile Batista dos Santos": "ALA0017",
-    "Janaína Gonçalves Bastos": "FATS3368",
-    "Janielson Barbosa de Oliveira": "FATS5150",
-    "Jaqueline de Souza Pereira": "ALA0149",
-    "Jaqueline Santos da Silva": "FATS5063",
-    "Jean dos Santos Carvalho Goes": "FATS4969",
-    "Jean Moreira Lins": "MAN-40233",
-    "Jeane Cerqueira Ferreira": "FATS4794",
-    "Jeane Lima dos Santos": "FATS5216",
-    "Jeanildo de Aragão Alves": "FATS5026",
-    "Jeferson Navarro": "FATS5046",
-    "Jefferson Leite de Jesus": "FATS4955",
-    "Jefté Goes Salvador Silva": "FATS4838",
-    "Jeilson Soares Cerqueira": "SLEM0049",
-    "Jeovan Moreira dos Reis": "FATS4234",
-    "Jessica Alves Dutra": "FATS5222",
-    "Jéssica Franco Freitas Macena": "FATS5219",
-    "Jéssica Queli Santos Santana Nunes": "FATS5015",
-    "Jessiele Caroline Santos Santana Nunes": "FATS4996",
-    "Jhonatan Filippe Alves Macedo": "FATS5140",
-    "Jhonne Elson Queiroz Moreira": "FATS4644",
-    "Joab Lima Alves": "FATS4723",
-    "Joacy Marley Queiroz Mota": "FATS4844",
-    "Joane de Jesus Araújo": "FATS5057",
-    "João Batista Moura Santos": "FATS3163",
-    "João Fernando Souza Flores Filho": "ALA271",
-    "João Gabriel Ferreira Vitório": "FATS4672",
-    "João Gabriel Santos de Souza": "ALA209",
-    "João Garcia da Mota": "QTEC10001",
-    "João Guilherme Lisboa Moreira": "FATS4991",
-    "João Marcos Araujo Pereira": "FATS4028",
-    "João Marcos Xavier Matos": "ALA0177",
-    "João Paulo Dias da Silva Munck": "EAD118",
-    "João Valter Batista Santos Filho": "FATS4727",
-    "João Vitor Ferreira Matos": "FATS4981",
-    "João Vitor Merlo": "096EAD",
-    "João Vitor Santos Silva": "ALA228",
-    "Joce Macedo Ramos": "FATS3281",
-    "Jociel Alves de Jesus": "FATS4831",
-    "Joeli Rodrigues da Hora": "254218",
-    "Joéliton Santos Neri": "FATS8640",
-    "Joice Oliveira de Jesus Bastos": "ALA0114",
-    "Joilson Garcia da Mota": "FATS4606",
-    "Jonatah Nery de Carvalho": "432158",
-    "Jonatas Mendes dos Santos": "FATS5089",
-    "Jones Emanuel dos Santos Junior": "EMI318",
-    "Jorgeana Shirley dos Santos": "FATS5067",
-    "Jorgevany Almeida Santos": "REG145",
-    "José Ademar da Silva de Souza Junior": "FATS5038",
-    "Jose Antonio de Oliveira Fonseca": "FATS4713",
-    "José Batista de Macedo Júnior": "FATS4798",
-    "José Benedito de Lima": "FATS3033",
-    "José da Costa Lima Neto": "FATS3598",
-    "JOSE DOMINGOS NUNES DOS SANTOS": "FATS5040",
-    "José Eliseu Araújo Damião": "FATS5097",
-    "José Fabricio Oliveira de Santana": "FATS5073",
-    "José Luis da Silva Rocha": "REG213",
-    "José Marciel Reis Mascarenhas": "VEST187",
-    "Jose Mario de Jesus Pinheiro": "FATS5163",
-    "José Milton Vitorino dos Reis": "FATS4482",
-    "José Vagner de Souza Batista": "FATS4814",
-    "José Vital de Souza Filho": "CAM 075",
-    "Josefa Fagner dos Santos": "FATS5033",
-    "Joselia Lima de Sena Alves": "FATS5052",
-    "Josenildo Macêdo Oliveira": "FATS5170",
-    "Josete Oliveira Carvalho": "FATS5042",
-    "Josi dos Anjos Silva": "FATS4520",
-    "Josilene da Silva de Jesus": "FATS5044",
-    "Josimary Kelly Amado Santos": "ALA270",
-    "Josue dos Santos Souza": "ALA224",
-    "Josué Leite Conceição": "FATS3309",
-    "Josué Oliveira de Araujo": "FATS4804",
-    "Jozan dos Santos Barbosa": "SOLD043",
-    "Juciara Pedreira de Jesus Freitas": "FATS4586",
-    "Jucinaldo Cardoso dos Reis": "FATS4382",
-    "Julia dos Anjos Costa": "FATS4086",
-    "Júlia Oliveira Cordeiro": "FATS4477",
-    "Juliana Santos da Silva": "FATS5148",
-    "Juliana Silva Bastos": "FATS5041",
-    "Juliana Vieira Santos Pereira": "SECBA0012",
-    "Juracy Oliveira Cardoso": "FATS5008",
-    "Justino Neves de Jesus Neto": "FATS4542",
-    "Karina Casola Fernandes": "EAD023",
-    "Karine das Neves Paixão Silva": "FATS3863",
-    "Karoline Conceicao da Fonseca Santos": "SLEM718",
-    "Karolyne Mota Gomes": "FATS4770",
-    "Kelly Dourado Rodrigues": "FATS72479",
-    "Kleber Bomfim de Oliveira": "FATS4761",
-    "Laecio dos Santos Teixeira": "FATS4989",
-    "Laís Leão Sampaio Leite": "FATS5165",
-    "Lais Lorena Ribeiro": "ALA210",
-    "Layla de Oliveira Pires Aquino": "CAM469",
-    "Leandro dos Santos Viana": "FATS5218",
-    "Leandro Neves Alves": "LNA0324",
-    "Leandro Silva Costa": "FATS5064",
-    "Leda dos Santos Souza": "FATS1575",
-    "Leilane Ferreira Santos": "FATS5207",
-    "Leiliane Vieira Souza": "FATS5182",
-    "Leniel Oliveira dos Santos": "ALA223",
-    "Leonard Fernandes e Silva": "ALA183",
-    "Leonardo Andrade Souza": "FATS5096",
-    "Leonardo Argolo dos Santos": "FATS5036",
-    "Leonardo da Costa Lins": "ALA125",
-    "Leonardo Silva Pinto": "FATS4718",
-    "Leonice Nascimento Santiago": "FATS4961",
-    "Leticia Rodrigues Pereira de Santana": "FATS4962",
-    "Létícia Rosa de Jesus": "FATS4982",
-    "LÍBIA XIMENES CABRAL MARTINS": "ALA0023",
-    "Lidiane de Jesus Freitas": "FATS4250",
-    "Liliane Ribeiro dos Santos": "FATS99963",
-    "Liliane Ribeiro dos Santos Fernandes": "ALA253",
-    "Lindinéia Gomes Bastos": "CALC1235",
-    "Lindomar Carlos Sodré da Silva": "FATS3667",
-    "Lindsei Oliveira Machado": "FATS5018",
-    "Lívia Graziele Gomes Ramos da Silva": "MAN-40087",
-    "Livia Suely Silva Souza": "FATS4152",
-    "Liziane da Silva Carneiro": "FATS5070",
-    "Luan Guimarães da Silva": "FATS4810",
-    "Luana Moura Silva": "FATS5123",
-    "Luana Silva dos Santos": "FATS5024",
-    "Lucas Cauã de Souza Mota": "FATS4829",
-    "Lucas da Glória Oliva Costa": "FATS5138",
-    "Lucas Moreira Reis": "FATS4976",
-    "Lucas Porto Assunção": "FATS3968",
-    "Lucas Santos Brandão": "FATS5107",
-    "Lucas Silva Sampaio": "ALA237",
-    "Lucas Soares Santos": "FATS566",
-    "Luciana Cassia Goes Pereira": "ALA285",
-    "Luciana dos Santos Silva Marques": "FATS4843",
-    "Luciana Maria Limeira dos Santos": "CALC1233",
-    "Luciana Mendes Brito Vidal": "SECBA101",
-    "Luciana Santos Nobre": "FATS4158",
-    "Luciano Santos Ribeiro": "AUTOMO24",
-    "Luciélia dos Santos Novaes": "CALC1243",
-    "Lucineide Miranda Silva Araújo": "FATS4537",
-    "Lucio Roberto Severo Rosas": "ALA0020",
-    "Lucivânia Silva Carneiro de Cintra": "FATS4274",
-    "Luidivan Rodrigues Alves": "FATS3230",
-    "Luis Fabio Santos da Silva": "ALA238",
-    "Luis Tertuliano Silva de Souza": "CAM 347",
-    "Luiz Carlos Campos Torres": "EAD922",
-    "Luiz Eduardo Araujo Machado": "FATS4827",
-    "Luiz Eduardo Batista Barreto Junior": "FATS4020",
-    "Luize Muricy dos Santos Vieira": "FATS4851",
-    "Lumma da Silva Borges": "FATS4578",
-    "Luziete Moreira Santos": "FATS5072",
-    "Luzimary Carneiro de Lima": "FATS5132",
-    "Magna Maria Lima": "FATS5091",
-    "Magno Santana Morais": "FATS999143",
-    "Maiara Argolo Negromonte": "FATS4367",
-    "Maiara de Jesus Araújo": "FATS5031",
-    "Maicon Luiz Muniz da Silva": "FATS5013",
-    "Maida Santos Alcântara": "FATS5174",
-    "MANOEL DAMASIO ALVES": "FATS5034",
-    "Manoel Gustavo Souza de Almeida Pina": "MGSAP068",
-    "Manoel Hito Sampaio Mascarenhas": "CALC1272",
-    "Manoel Serafim da Silva Neto": "FATS7854",
-    "Manoela Trabuco de Queiroz": "FATS5151",
-    "Marcello Oliveira Coelho Silva": "FATS5066",
-    "Marcelo de Vasconcelos Pereira": "FATS4741",
-    "Marcelo dos Santos Santana": "FATSI96180",
-    "Marcelo Luis Moreira Sousa": "FATS987563",
-    "Marcelo Márcio de Oliveira Ferreira": "11208401",
-    "Marcelo Santana Lacerda": "SNSUD343",
-    "Marcilio Aquino Marques": "FATS5201",
-    "Márcio Lima Carneiro de Oliveira": "FATS4813",
-    "Marco Antonio Maia Santos": "FATS4992",
-    "Marcos Antônio Vieira Costa": "FATS5128",
-    "Marcos Augusto de Jesus Souza": "FATS4392",
-    "Marcos Cesar Nunes Laranjeiras Filho": "MCNLF-038",
-    "Marcos Davi Barbosa de Oliveira": "FATS3198",
-    "Marcos de Souza Simões": "FATS4671",
-    "Marcos Paulo Araujo Santiago": "FATS2801",
-    "Marcos Teixeira Quadro": "FATS4050",
-    "Marcos Vinicius Cerqueira Santos": "ALA240",
-    "Marcos Vinicius de Oliveira Santos": "FATS4272",
-    "Marcos Vinicius Petri": "EAD691",
-    "Maria das Graças Oliveira Lira": "FATS4325",
-    "Maria Do Carmo Souza Santos": "ALA190",
-    "Maria Fernanda Menezes de Oliveira de Souza": "CAM470",
-    "Maria Gilcilene Maciel Rocha": "FATS5055",
-    "Maria Izabel Cruz Alves Simões": "FATS5113",
-    "Maria Janaina Daltro Alves": "FATS3901",
-    "Maria Mariluce Vitalino Santos": "ALA203",
-    "Mariana do Rosário Liger": "ALA235",
-    "Mariana Moura Pinheiro": "FATS4975",
-    "Mariana Torres Uchôa": "EAD03",
-    "Marileia Araujo da Silva": "FATS3072",
-    "Marilene Santos de Jesus Lins": "FATS4512",
-    "Marilia Neri Porto": "FATS4834",
-    "Marina Ane Gomes Cordeiro": "FATS5220",
-    "Marina Brayner dos Santos": "ALA248",
-    "Mario Andre Correia Ribeiro": "FATS5121",
-    "Marisete Kniess Adriano": "FATS045",
-    "Mariza de Oliveira Conceição Bela": "FATS4964",
-    "Marlangela Santos Cunha": "FATS5005",
-    "Marlon Nunes Couto": "FATS5210",
-    "Marta Farias Almeida da Silva": "FATS5007",
-    "Mateus de Santana Souza": "FATS4150",
-    "Matheus Araujo de Assis": "FATS3332",
-    "Matheus Barreto Ribas": "12275752",
-    "Matheus da Silva Teixeira": "FATS4263",
-    "Matheus de Oliveira": "EAD091",
-    "Matheus Nunes Menezes": "ALA216",
-    "Mathias de Oliveira Carneiro": "FATS5192",
-    "Mauricio de Almeida Silva": "FATS4568",
-    "Maurino Candido de Medeiros": "FATS3287",
-    "Maxuel Carlos de Melo": "FATS3359",
-    "Mayk Fernandes Lima da Silva": "FATS5003",
-    "Meirise Araújo dos Santos Silva": "FATS4997",
-    "Mennandro Menezes de Oliveira": "FATS1703",
-    "Merilin Gomes de Oliveira Moreira": "FATS4726",
-    "Michelle Sousa de Freitas": "FATS5117",
-    "MIGUEL DA SILVA BASTOS": "FATS5043",
-    "MILENA CORDEIRO DA SILVA": "ALA0039",
-    "Milena Fonsêca Rios Araújo": "FATS5179",
-    "Milena Ribeiro dos Santos": "NGE99",
-    "Milenna Santos Silva": "FATS3966",
-    "Millena Pereira Brito": "FATS4974",
-    "Mirela Macedo Sandes": "FATS4730",
-    "Mirian Maria Araújo": "FATS5144",
-    "Moisés Lima Santos": "80993",
-    "Murilo Gomes Santana": "FATS5211",
-    "Nadja Rita Santos Cezar": "FATS5152",
-    "Naila Naja Silva Soares": "FATS5116",
-    "Natália Campbell Correa": "58086",
-    "Natalia Cristina Amorim Nascimento": "FATS3128",
-    "Natalicio Diego da Silva": "FATS5118",
-    "Natanael do Nascimento Pereira Neto": "ALA234",
-    "Nathanael Pereira de Oliveira": "FATS5095",
-    "Nayara Oliveira de Lima": "ALA297",
-    "Nayara Santos Queiroz": "ADM01",
-    "Neidson Santana de Souza": "FATS3967",
-    "Nilo Dantas da Silva": "FATS5021",
-    "Norman Bitencourt da Silva Montenegro": "ALA296",
-    "Nubia Oliveira da Silva": "FATS4024",
-    "Nubia Viana Cardoso Leal": "FATS5130",
-    "Olandiara de Aragão dos Santos": "GES0751",
-    "Osny Dantas de Oliveira Silva": "EAD007",
-    "Osvaldo da Silva Neto": "009EAD",
-    "Otávio Teixeira Pinto": "FATS016",
-    "Ozair Santos Lima": "FATS4608",
-    "Pablo Cruz de Santana": "ALA0155",
-    "Pâmela Villare Fernandes Fonseca": "FATS4258",
-    "Patricia Claudia da Silva": "FATS5119",
-    "Patrícia Cristiane Alcarria Martins": "FATS1927",
-    "Patricia dos Santos": "NOAVIRT050",
-    "PATRICIA REIS CALASANS": "PRC0309",
-    "Patrícia Silva das Merces": "FATS5129",
-    "Paulo Ferreira da Costa Neto": "ALA258",
-    "Paulo Sergio da Silva Oliveira Junior": "FATS5142",
-    "Paulo Victor Aragão dos Santos": "FATS5135",
-    "Pedro Geraldo Correia da Silva": "3",
-    "Pedro Henrique Almeida dos Santos Alves": "NOAVIRT033",
-    "Pedro Ivo Santos Furtado": "MAN40106",
-    "Pedro Kleber Matos de Araujo": "FATS4064",
-    "Pedro Lopes Batista Neto": "ALA283",
-    "Pedro Raimundo Soares da Conceição": "FATS1634",
-    "Phillipe Ramos Brandão": "FATS4262",
-    "Poliana Silva Araújo": "MAT2304",
-    "Priscila Mikulski Guedes": "PMG0194",
-    "Priscila Natividade de Jesus": "FATS5017",
-    "Priscila Saturnino dos Santos Brandão": "FATS5022",
-    "Priscila Souza Azevedo": "FATS5098",
-    "Priscilla Araujo Vieira": "FATS4849",
-    "Quécia Ferreira de Oliveira": "FATS4799",
-    "Quelen Priscila Santana da Silva Santos": "FATS4967",
-    "Quelme de Jesus Silva Brito": "FATS5016",
-    "Rachell Adrielle Bomfim Reis Santos": "ALA272",
-    "Rafael Brito Teixeira": "SNSUD387",
-    "Rafael Nascimento Caldeira": "ALA287",
-    "Rafael Parenti": "EAD085",
-    "Rafaella Braga Santos": "FATS4999",
-    "Rafaella Cerqueira Oliveira Souza": "FATS5075",
-    "Raphaela Santana Melo Araujo": "FATS5131",
-    "Raul Dauram de Vasconcelos": "NORTE349",
-    "Rayanna Rodrigues Evangelho": "FATS5056",
-    "Regis Marsico Cayret": "FATS4342",
-    "Regivaldo Francisco da Silva Junior": "FATS5159",
-    "Reinalda dos Santos Ramos": "FATS4983",
-    "Reinaldo Silva de Sena": "FATS4970",
-    "Renaldo dos Santos Ramos": "ALA229",
-    "Renan do Carmo Araujo": "ALA275",
-    "Renata da Purificação Pinto": "FATS3363",
-    "Renato Buranelli": "ALA0147",
-    "Renildo da Silva Santos": "FATS5160",
-    "Rescima Fernanda Novais dos Santos": "FATS4993",
-    "Rhavi Gonçalves de Borda": "FATS071",
-    "Rita Urânia Silva Santos": "FATS5109",
-    "Roberta Silva Pereira": "FATS4292",
-    "Roberto Carrion Eça da Silva": "PRON8579",
-    "Robson Carvalho Freitas": "FATS4802",
-    "Rodrigo Roberto Dias": "EAD024",
-    "Rogério Cerqueira Lima": "FATS1667",
-    "Rogerio da Silva Fiscina": "SNSUD216",
-    "Romário Andrade Rodrigues": "FATS3278",
-    "Romulo Carvalho de Souza Vieira": "ALA277",
-    "Romulo Lopes Souza": "FATS1708",
-    "Ronaldo Soares Monteiro": "FATS5169",
-    "Ronei Vagner Alves": "EAD038",
-    "Roquelane Ramos da Conceição": "FATS5030",
-    "Rosenilson Lima Macêdo": "FATS1709",
-    "Rosilene da Silva Dias": "FATS4179",
-    "Rosimeire de Vasconcelos": "ALA0113",
-    "RUBENS OLIVEIRA LIMA JUNIOR": "FATS5035",
-    "Rudney Oliveira de Freitas": "NORTE 527",
-    "Sabrina Bet": "EAD0055",
-    "Samer Magaldi Almerindo": "EAD054",
-    "Samuel da Silva Cunha": "FATS5161",
-    "Saolo Santos Souza": "ALA246",
-    "Sergio Henrique Ferreira Martins": "FATS3912",
-    "Shirlei Lima dos Anjos": "ALA197",
-    "Sidnei dos Santos Sacramento": "ALA0076",
-    "Sidney Conceição Andrade": "CALC1246",
-    "Sidney da Silva Jesus": "ALA208",
-    "Silas Pereira Santos": "ALA128",
-    "Silas Santos Carvalho": "FATS4340",
-    "Sillas Leal Castro Silva": "FATS3399",
-    "Silmara Simas dos Santos": "FATS5202",
-    "Silvano Pinto Dias": "FATS3256",
-    "Silvoney Santos Couto": "CALC1252",
-    "Simone dos Santos do Amaral": "FATS4971",
-    "Sirlex de Almeida Figueredo": "FATS4776",
-    "Sócrates Sousa Queiroz": "FATS3042",
-    "Solismar De Souza Aroeira": "FATS5134",
-    "Stefanie Daysy Sipert Miranda": "NOAVIRT03",
-    "Sterfany da Silva Almeida": "FATS5059",
-    "Sueli Oliveira Costa": "FATS4956",
-    "Sueli Vieira Leão": "SVL8192",
-    "SUNANDA MARIA RODRIGUES BATISTA": "ALA0063",
-    "Suran Oliveira Messias": "FATS4600",
-    "Suzanna Raquel Ramos Lima": "ALA256",
-    "Tainá Melo de Oliveira": "FATS4797",
-    "Talita Emanuele Abreu da Silva": "FATS5104",
-    "Tamara Eloy Caldas": "FATS4400",
-    "Tânia Maria Cardoso Cerqueira": "TMCC466",
-    "Tania Renilda Santos Torres": "TRST009",
-    "Tarcisio Marques Santos de Souza": "FATS3909",
-    "Tassio de Freitas Ferreira": "FATS3335",
-    "Tayane de Jesus Nunes": "TJN026",
-    "Tércio Borges Ribeiro": "EAD094",
-    "Thaiany Santana da Cruz Nunes": "FATS4963",
-    "Thais Santana Barreto": "NOAVIRT035",
-    "Thiago Alves Carneiro": "FATS4800",
-    "Thiago Jesus de Oliveira Trindade": "ALA0179",
-    "Thiago Mendes Paixão Melo": "FATS4688",
-    "Thiago Vinicius Barbosa Menezes Sales": "ALA0012",
-    "Thomas Santos da Silva": "FATS4615",
-    "Tiago Araujo Freaza dos Santos": "FATS5058",
-    "Tiago Araujo Matos": "FATS5196",
-    "Tiago da Silva Oliveira": "FATS4661",
-    "Tiago Luis Santos Silva": "ALA213",
-    "Tiago Martins dos Santos de Jesus": "ALA233",
-    "TIAGO MEDRADO COSTA": "FATSI9613",
-    "Tony Clériston Oliveira dos Santos": "FATS4575",
-    "Topson Andrade dos Santos": "SECBA0060",
-    "Ualison Pereira Roque Freitas": "FATS5100",
-    "Uallas Henrique de Oliveira de Brito": "030EAD",
-    "Uerles Bastos de Menezes": "FATS4978",
-    "Uilberton de Oliveira Soares": "UOS0253",
-    "Vando Silva Bizerra": "FATS3378",
-    "Vanessa de Oliveira Debiasi": "FATS072",
-    "Vanessa Silva Lima": "FATS4817",
-    "Vanessa Vilanova Fraga Vieira": "CAM 267",
-    "Vânia Lago Guimarães Correia": "FATS3925",
-    "Velluma Cerqueira Invenção de Oliveira": "FATS5167",
-    "Victor da Silva Pimenta": "FATS4973",
-    "Victor Lima Cardoso": "ALA0058",
-    "Victor Moak da Silva Souza": "FATS4854",
-    "Victor Montes Fernandes Pereira": "ALA242",
-    "Victor Oliveira Mascarenhas": "FATS4636",
-    "Vinicius Camelo Molinari": "slem222",
-    "Vinicius Lima Cardoso": "NGE70110",
-    "Vinícius Ornellas de Araújo": "ALA239",
-    "Viviane Rafael Ferreira": "FATS5102",
-    "Wagner José Mezoni": "004EAD",
-    "Waldemir Pereira Santiago": "FATS5145",
-    "Wanna Nascimento Macedo": "FATS5011",
-    "Weiller Queiroz Silva": "FATS5068",
-    "Welber Lima de Brito Guimarães": "NORTE277",
-    "Welder Nascimento dos Santos": "FATS5048",
-    "Welder Nascimento dos Santos": "FATS5081",
-    "Welington Salomão Pereira": "FATS4832",
-    "Wesley Moura da Silva Pereira": "FATS4536",
-    "Wguaracy Araujo Santana": "FATS4300",
-    "William Martins Lopes Ribeiro": "FATS4647",
-    "Williane Santana Marques": "FATS5076",
-    "Wilton Silva Souza": "ALA198",
-    "Yanes Costa Nascimento": "FATS4968",
-    "Yanna Carvalho de Assis": "FATS3634",
-    "Zilmaura Santos Daltro": "FATS4775"
+    "Adalberto da Silva Correia": "TEACHER",
+    "Adeildo Apolonio da Silva Junior": "TEACHER",
+    "Aderlan dos Santos": "TEACHER",
+    "Adilson Alexandre Amorim": "TEACHER",
+    "Adjalbas de Oliveira Santos": "TEACHER",
+    "Adriana Bitencourt Bezerra": "TEACHER",
+    "Adriana Freitas de Moura": "TEACHER",
+    "Adriane do Nascimento Apostolo": "TEACHER",
+    "Adrianne Bastos Ferreira": "TEACHER",
+    "Adriano Santos de Araujo": "TEACHER",
+    "Adriel Rasslan da Silva Gama": "TEACHER",
+    "Adson Aragão Carvalho": "TEACHER",
+    "Agnelo Souto de Jesus Filho": "TEACHER",
+    "Aislan da Silva Souza": "TEACHER",
+    "Alberto César Queiroz Fonseca": "TEACHER",
+    "Alberto Luís Santos e Santos": "TEACHER",
+    "Alcígledes de Jesus Sales": "TEACHER",
+    "Aldivan Fernandes Conceição Moura Junior": "TEACHER",
+    "Alessandra Knoll": "TEACHER",
+    "Alex Almeida de Souza": "TEACHER",
+    "Alex Ferreira": "TEACHER",
+    "Alexandre da Silva Nogueira": "TEACHER",
+    "Alexandre Hartkopf Cardozo": "TEACHER",
+    "Alexandre Jose Guerra Praia": "TEACHER",
+    "Alexandre Morais Barbosa": "TEACHER",
+    "Alexsandra Alves de Macedo Aquino": "TEACHER",
+    "Alexsandra Zaparoli": "TEACHER",
+    "Aline de Andrade Bonifácio": "TEACHER",
+    "Aline de Cerqueira dos Santos": "TEACHER",
+    "Alisson Cleisson Carvalho Silva": "TEACHER",
+    "Allan Jackson Alves da Silva": "TEACHER",
+    "Alvaro Tadeu Paes Fiuza Filho": "TEACHER",
+    "Amanda de Almeida Santana": "TEACHER",
+    "Amanda Moreira Santiago Pereira": "TEACHER",
+    "ANA CARMEM CASTRO LEITE": "TEACHER",
+    "Ana Carolina Rabêlo Nonato": "TEACHER",
+    "Ana Caroline Neves da Silva": "TEACHER",
+    "Ana Cláudia de Almeida Gomes Galiza": "TEACHER",
+    "Ana Karine Ferreira Bastos Vidal": "TEACHER",
+    "Ana Marcia dos Santos Silva": "TEACHER",
+    "Ana Paula Farias Goulart": "TEACHER",
+    "Ana Paula Pereira Lima": "TEACHER",
+    "Anderson Batista Córdova": "TEACHER",
+    "Anderson Bismark Porto e Silva": "TEACHER",
+    "Anderson Emanuel Oliveira Daltro": "TEACHER",
+    "Anderson Leandro da Silva Pita": "TEACHER",
+    "Anderson Marcos Santos Lobo": "TEACHER",
+    "André Luis Pinho Braga": "TEACHER",
+    "André Luís Rocha Reis": "TEACHER",
+    "André Luiz Gomes da Silva": "TEACHER",
+    "André Luiz Santos Santana": "TEACHER",
+    "Andre Pires Araujo Kuhn": "TEACHER",
+    "Andressa Mirella Figueiras da Silva": "TEACHER",
+    "Anésio Sousa Dos Santos Neto": "TEACHER",
+    "Angel Cristian Barbosa Santos": "TEACHER",
+    "Angelica da Silveira Lima": "TEACHER",
+    "Anna Carolina Araujo Romualdo": "TEACHER",
+    "Anna Paula Paz de Jesus": "TEACHER",
+    "Anselmo Luiz Lima Brito Junior": "TEACHER",
+    "Antônia Raniele Costa Lima": "TEACHER",
+    "Antonio Henrique Ramos Bismarck César": "TEACHER",
+    "Antonio Luis Gomes dos Santos": "TEACHER",
+    "Antonio Marcos Pereira dos Santos": "TEACHER",
+    "Antonio Nery da Silva Filho": "TEACHER",
+    "Antônio Pinto de Santana Neto": "TEACHER",
+    "Ari Santos Gomes": "TEACHER",
+    "Ariádene Gomes Pinheiro": "TEACHER",
+    "Arícia Silva Gama Muniz": "TEACHER",
+    "Arlete do Nascimento Rocha": "TEACHER",
+    "Arthur Gomes Lima França": "TEACHER",
+    "Audrei de Abreu Marques": "TEACHER",
+    "Augusto Magno Ornelas Saraiva": "TEACHER",
+    "Áurea Pereira da Costa": "TEACHER",
+    "Bárbara da Marilia Madureira Conceição": "TEACHER",
+    "Bárbara Daiana da Anunciação Nascimento": "TEACHER",
+    "BRUNO CHAVES SILVA": "TEACHER",
+    "Bruno de Almeida Borges": "TEACHER",
+    "Bruno de Menezes Moreira": "TEACHER",
+    "Bruno dos Santos Pereira": "TEACHER",
+    "Bruno dos Santos Pereira": "TEACHER",
+    "Bruno Ferreira de Oliveira": "TEACHER",
+    "Bruno Geovani Santos Silva": "TEACHER",
+    "Bruno Oliveira da Silva": "TEACHER",
+    "Bruno Paranhos Lima Bitencourt": "TEACHER",
+    "Bruno Schramm Alves de Matos": "TEACHER",
+    "Caio Hamab Costa": "TEACHER",
+    "Caio Rhuan Ribeiro Oliveira": "TEACHER",
+    "Caique Barbosa Santos": "TEACHER",
+    "Caleb Sena da Silva": "TEACHER",
+    "Camila Martins Ghilardi": "TEACHER",
+    "Camila Pereira da Silva": "TEACHER",
+    "Carini dos Santos de Souza": "TEACHER",
+    "Carla Evelin Xavier Freitas": "TEACHER",
+    "Carlos Alexandre Sant'ana Figueiredo": "TEACHER",
+    "Carlos André de Jesus Santos": "TEACHER",
+    "Carlos Augusto da Cruz Santos de Jesus": "TEACHER",
+    "Carlos Augusto de Assis Alves Junior": "TEACHER",
+    "Carlos Eduardo da Cruz Nascimento": "TEACHER",
+    "Carlos Eduardo Ferreira Gomes": "TEACHER",
+    "Carlos Robson Santos Cerqueira": "TEACHER",
+    "Carmen Luft Bammesberger": "TEACHER",
+    "Carolina Gesteira Lopes Lima": "TEACHER",
+    "Carolina Souto Ferreira": "TEACHER",
+    "Caroline Souza Cardoso da Silva Oliveira": "TEACHER",
+    "Celia Nascimento Felix Filha": "TEACHER",
+    "Celso de Oliveira": "TEACHER",
+    "Chrislaynne Cardoso Cerqueira": "TEACHER",
+    "Christiano Martinez Garcia": "TEACHER",
+    "Cíntia Azevedo de Araújo": "TEACHER",
+    "Cintia Gomes de Siqueira": "TEACHER",
+    "CIRO TADEU DE MATOS BASTOS": "TEACHER",
+    "Cislandia Maria dos Santos Oliveira": "TEACHER",
+    "Clara Fernandes Bastos": "TEACHER",
+    "Claryssa Palloma Rosa Barros de Oliveira": "TEACHER",
+    "Claudemir Felix": "TEACHER",
+    "Cláudia de Matos Santos": "TEACHER",
+    "Claudia Mendes da Silva": "TEACHER",
+    "Claudinei Aparecido Ferreira de Paula": "TEACHER",
+    "Claudiomiro José Henn": "TEACHER",
+    "Cléa Mercedes Alves de Jesus Oliva": "TEACHER",
+    "Cleomenes Nunes Torres": "TEACHER",
+    "Clóvis Andrade Filho": "TEACHER",
+    "Crislane de Jesus Gomes": "TEACHER",
+    "Crislayne Conceição da Silva de Oliveira": "TEACHER",
+    "Cristiane de Souza Oliveira": "TEACHER",
+    "Cristiane Pereira Santos de Souza": "TEACHER",
+    "Cristiani de Moura": "TEACHER",
+    "Cristiano Vieira Santos Passos": "TEACHER",
+    "Daiana de Oliveira Machado Bulos": "TEACHER",
+    "Daiane dos Santos Carvalho": "TEACHER",
+    "Daniel Austregesilo Xavier de Oliveira": "TEACHER",
+    "Daniel da Silva Araújo": "TEACHER",
+    "Daniel dos Santos Lima": "TEACHER",
+    "Daniel Duarte de Souza da Silva": "TEACHER",
+    "DANIEL FERNANDES LIMA BISPO": "TEACHER",
+    "Daniel Rabelo do Vale": "TEACHER",
+    "Daniela Borges Cerqueira Tavares": "TEACHER",
+    "Daniela Silva Chagas": "TEACHER",
+    "Danieli da Silva Machado Souza": "TEACHER",
+    "Danilo Brandão Soares": "TEACHER",
+    "Danilo Ferreira Barros": "TEACHER",
+    "Danilo Souza de Oliveira": "TEACHER",
+    "Dannywill Medeiros dos Santos": "TEACHER",
+    "Dante Bitencourt Nascimento Filho": "TEACHER",
+    "Dante Nascimento Cunha": "TEACHER",
+    "Dara Lima Medeiros": "TEACHER",
+    "Darlene Neves Ramos Liger": "TEACHER",
+    "Davi dos Santos Haack": "TEACHER",
+    "David Roberto Vasel": "TEACHER",
+    "Dayse Marana de Brito Araujo": "TEACHER",
+    "Debora Maia Teixeira de Moura": "TEACHER",
+    "Deivson Nonato Alves": "TEACHER",
+    "Dejanira Silva Alves Pereira": "TEACHER",
+    "Dejany dos Santos Silva": "TEACHER",
+    "Denilson Brito dos Santos": "TEACHER",
+    "Denivaldo de Queiroz Bispo": "TEACHER",
+    "Dennis Jean Borges Rosado da Rocha": "TEACHER",
+    "Diana Pereira dos Santos": "TEACHER",
+    "Diego de Oliveira Teixeira": "TEACHER",
+    "Diego Santos de Oliveira": "TEACHER",
+    "Dilma Ribeiro Lopes": "TEACHER",
+    "Dilson Portela Santos": "TEACHER",
+    "Dinis Caetano Pereira Nascimento": "TEACHER",
+    "Divino Alves Vieira": "TEACHER",
+    "Docente Autoinstrucional": "TEACHER",
+    "Duilio Almeida Norberto Da Silva": "TEACHER",
+    "Dulcila Barreiros Torres": "TEACHER",
+    "Ecatarine Ivi Guerrreiro de Freitas Figueiredo": "TEACHER",
+    "Eddie William Calazans Ventura": "TEACHER",
+    "Edilma Mendes de Sousa": "TEACHER",
+    "Edilza Santana Bomfim": "TEACHER",
+    "Edimilson Chaves dos Reis": "TEACHER",
+    "Edinaldo do Nascimento Pereira Gomes": "TEACHER",
+    "Edmayre Coelho dos Santos": "TEACHER",
+    "Edmilson da Silva Rocha": "TEACHER",
+    "Edson dos Santos": "TEACHER",
+    "Edson José Nunes": "TEACHER",
+    "Edson Luiz Pinto Cruz Junior": "TEACHER",
+    "Edvaldo Cerqueira Santos": "TEACHER",
+    "Elaine Graziela Sampaio Passos": "TEACHER",
+    "Elaine Santos Silva": "TEACHER",
+    "Elder Nunes da Silva": "TEACHER",
+    "Eliana Pereira dos Santos": "TEACHER",
+    "Eliandra dos Santos Mendes": "TEACHER",
+    "Elias Dias Arruda de Paulo": "TEACHER",
+    "ELIAS WASHINGTON CAMPOS OLIVEIRA": "TEACHER",
+    "Eliecy Guirra Reis": "TEACHER",
+    "Eliézer José da Silva": "TEACHER",
+    "Eliseu Miranda Alves": "TEACHER",
+    "Ellen Midian Santana da Silva": "TEACHER",
+    "Ellerry Lima Silva": "TEACHER",
+    "Emanoel Ferreira Costa da Rocha": "TEACHER",
+    "Emerson Salgado de Carvalho": "TEACHER",
+    "Emilly Nathalia Sousa Almeida": "TEACHER",
+    "Eneida Crisitina Cardoso das Neves": "TEACHER",
+    "Enio Cezar Dias Junior": "TEACHER",
+    "Eric Cristiano Silva Soares": "TEACHER",
+    "Éric Nunes Gomes": "TEACHER",
+    "Érica Almeida Soares Araújo": "TEACHER",
+    "Érica de Oliveira Silva": "TEACHER",
+    "Érica Lavinia Borges Moraes de Oliveira": "TEACHER",
+    "Erik do Carmo Marques": "TEACHER",
+    "Erik do Carmo Marques": "TEACHER",
+    "Erimonica Santos de Jesus Dantas": "TEACHER",
+    "Euzebio Bastos da Silva": "TEACHER",
+    "Evangildo Santana Santos": "TEACHER",
+    "Evans Andrade Costa": "TEACHER",
+    "Evson Santos Silva": "TEACHER",
+    "Fabiana Araujo Diniz": "TEACHER",
+    "Fábio da Silva Campos": "TEACHER",
+    "Fábio Luciano Carvalho dos Santos": "TEACHER",
+    "Fabio Lúcio Almeida Lima": "TEACHER",
+    "Fabrício da Silva do Espírito Santo": "TEACHER",
+    "Fabrício Pacheco Borges": "TEACHER",
+    "Fagna Gomes da Silva Santos": "TEACHER",
+    "Felipe de Lima Oliveira": "TEACHER",
+    "Fernanda de Matos Fialho Tojo": "TEACHER",
+    "Fernando Marafon Balem": "TEACHER",
+    "Fernando Vessosi Alberti": "TEACHER",
+    "Filipe Almeida da Conceição Inocencio": "TEACHER",
+    "Filipe Santanna Freitas da Silva": "TEACHER",
+    "Filipe Silva Santos": "TEACHER",
+    "Flávio Ferreira Barbosa": "TEACHER",
+    "Francegleide Souza Oliveira": "TEACHER",
+    "Francieli Pacassa": "TEACHER",
+    "Francielle Bitencourt de Oliveira": "TEACHER",
+    "Francielli Pinto da Silva": "TEACHER",
+    "Francisca Maria Mami Kaneoya": "TEACHER",
+    "Francisco Marcos Rosa de Sousa": "TEACHER",
+    "Francisco Vieira Lima": "TEACHER",
+    "Francklin Moura da Costa": "TEACHER",
+    "Frederico Dominguez Fonseca": "TEACHER",
+    "Frederico Iglezias Figueira": "TEACHER",
+    "Gabriel Cabral Daltro": "TEACHER",
+    "Gabriel Queiroz dos Santos": "TEACHER",
+    "Gabriel Rocha Santos": "TEACHER",
+    "Gabriel Souza de Santana": "TEACHER",
+    "Gabriel Vitorio de Arcanjo": "TEACHER",
+    "Gabriel Wendel Santos da Silva": "TEACHER",
+    "Gabrielle Albuquerque Maciel Brasileiro": "TEACHER",
+    "Geandson Almeida de Sousa": "TEACHER",
+    "Geisa Ferraz Lima Córdova": "TEACHER",
+    "Genilson Santana Santos": "TEACHER",
+    "Genival de Andrade Silva": "TEACHER",
+    "Genivania Gomes Oliveira": "TEACHER",
+    "George Anderson Soares e Sales": "TEACHER",
+    "George Bispo dos Santos": "TEACHER",
+    "Gerusa Souza Pimentel": "TEACHER",
+    "Giancarlo Alves Simões": "TEACHER",
+    "Gilberto Lopes Nery": "TEACHER",
+    "Gildean Santos Ribeiro": "TEACHER",
+    "Gilmar Menezes": "TEACHER",
+    "Gilmar Pereira Mota": "TEACHER",
+    "Gilmario dos Santos Machado": "TEACHER",
+    "Gilsimar de Jesus Benicio": "TEACHER",
+    "Gilson Marcelo da Silva Rios": "TEACHER",
+    "Girlene Bispo de Oliveira": "TEACHER",
+    "Gislana Santana Machado": "TEACHER",
+    "Gizelle Karine Santos Alcantara": "TEACHER",
+    "Gleice da Silva Diogo": "TEACHER",
+    "Gleison Fernandes da Silva": "TEACHER",
+    "Guilherme Canarin Marcellino": "TEACHER",
+    "Hanna Mayara Miranda Araujo": "TEACHER",
+    "Hebert Santos Peneluc": "TEACHER",
+    "Henderson Cari Nascimento": "TEACHER",
+    "Henderson Souza Chalegre": "TEACHER",
+    "Henrique Silveira Alves Marques": "TEACHER",
+    "HERBERT CÂNDIDO DOS SANTOS": "TEACHER",
+    "Heron Borges Machado": "TEACHER",
+    "Hiago Santos Silva": "TEACHER",
+    "Hikaro dos Santos Carvalho": "TEACHER",
+    "Hilton Brandão": "TEACHER",
+    "Hipólito Matos Carneiro": "TEACHER",
+    "Hudson de Carvalho Lima": "TEACHER",
+    "Iago de Cerqueira Azevedo": "TEACHER",
+    "Ian Hudson Martins de Oliveira": "TEACHER",
+    "Ian Pedro Martinez Silva": "TEACHER",
+    "Iara de Andrade Oliveira": "TEACHER",
+    "Ícaro Vasconcelos Alvim": "TEACHER",
+    "Igor Ernandez Almeida Santana": "TEACHER",
+    "Igor Silva Marques": "TEACHER",
+    "Igor Souza de Almeida": "TEACHER",
+    "Iguaraci de Souza Tavares": "TEACHER",
+    "ILKA MARA ALVES DA SILVA": "TEACHER",
+    "Ingrid Barreto de Almeida Passos": "TEACHER",
+    "Ingrid Rocha Teixeira": "TEACHER",
+    "Iraneide dos Anjos dos Santos": "TEACHER",
+    "Iranilton Pereira Santos": "TEACHER",
+    "Iris Araújo Silva": "TEACHER",
+    "Irlan Silva de Almeida": "TEACHER",
+    "Iromar de Freitas Nascimento Filho": "TEACHER",
+    "Isaac Porto Assunção": "TEACHER",
+    "Islane Ferreira de Andrade": "TEACHER",
+    "Ismael de Andrade Gonçalves": "TEACHER",
+    "Ivan Gomes Soares": "TEACHER",
+    "Ivanildo Gomes da Silva": "TEACHER",
+    "Ivo Ribeiro Almeida": "TEACHER",
+    "Jaciane Saba Bispo": "TEACHER",
+    "Jaciara Teodora dos Reis Malta": "TEACHER",
+    "Jadiane de Almeida Ribeiro de Santana": "TEACHER",
+    "Jadieli Sansão Elias Lima": "TEACHER",
+    "Jadilma Rodrigues da Silva Dias": "TEACHER",
+    "Jailson dos Santos Júnior": "TEACHER",
+    "Jair Santos de Almeida": "TEACHER",
+    "Jairo Alves da Silva": "TEACHER",
+    "Jamile Batista dos Santos": "TEACHER",
+    "Janaína Gonçalves Bastos": "TEACHER",
+    "Janielson Barbosa de Oliveira": "TEACHER",
+    "Jaqueline de Souza Pereira": "TEACHER",
+    "Jaqueline Santos da Silva": "TEACHER",
+    "Jean dos Santos Carvalho Goes": "TEACHER",
+    "Jean Moreira Lins": "TEACHER",
+    "Jeane Cerqueira Ferreira": "TEACHER",
+    "Jeane Lima dos Santos": "TEACHER",
+    "Jeanildo de Aragão Alves": "TEACHER",
+    "Jeferson Navarro": "TEACHER",
+    "Jefferson Leite de Jesus": "TEACHER",
+    "Jefté Goes Salvador Silva": "TEACHER",
+    "Jeilson Soares Cerqueira": "TEACHER",
+    "Jeovan Moreira dos Reis": "TEACHER",
+    "Jessica Alves Dutra": "TEACHER",
+    "Jéssica Franco Freitas Macena": "TEACHER",
+    "Jéssica Queli Santos Santana Nunes": "TEACHER",
+    "Jessiele Caroline Santos Santana Nunes": "TEACHER",
+    "Jhonatan Filippe Alves Macedo": "TEACHER",
+    "Jhonne Elson Queiroz Moreira": "TEACHER",
+    "Joab Lima Alves": "TEACHER",
+    "Joacy Marley Queiroz Mota": "TEACHER",
+    "Joane de Jesus Araújo": "TEACHER",
+    "João Batista Moura Santos": "TEACHER",
+    "João Fernando Souza Flores Filho": "TEACHER",
+    "João Gabriel Ferreira Vitório": "TEACHER",
+    "João Gabriel Santos de Souza": "TEACHER",
+    "João Garcia da Mota": "TEACHER",
+    "João Guilherme Lisboa Moreira": "TEACHER",
+    "João Marcos Araujo Pereira": "TEACHER",
+    "João Marcos Xavier Matos": "TEACHER",
+    "João Paulo Dias da Silva Munck": "TEACHER",
+    "João Valter Batista Santos Filho": "TEACHER",
+    "João Vitor Ferreira Matos": "TEACHER",
+    "João Vitor Merlo": "TEACHER",
+    "João Vitor Santos Silva": "TEACHER",
+    "Joce Macedo Ramos": "TEACHER",
+    "Jociel Alves de Jesus": "TEACHER",
+    "Joeli Rodrigues da Hora": "TEACHER",
+    "Joéliton Santos Neri": "TEACHER",
+    "Joice Oliveira de Jesus Bastos": "TEACHER",
+    "Joilson Garcia da Mota": "TEACHER",
+    "Jonatah Nery de Carvalho": "TEACHER",
+    "Jonatas Mendes dos Santos": "TEACHER",
+    "Jones Emanuel dos Santos Junior": "TEACHER",
+    "Jorgeana Shirley dos Santos": "TEACHER",
+    "Jorgevany Almeida Santos": "TEACHER",
+    "José Ademar da Silva de Souza Junior": "TEACHER",
+    "Jose Antonio de Oliveira Fonseca": "TEACHER",
+    "José Batista de Macedo Júnior": "TEACHER",
+    "José Benedito de Lima": "TEACHER",
+    "José da Costa Lima Neto": "TEACHER",
+    "JOSE DOMINGOS NUNES DOS SANTOS": "TEACHER",
+    "José Eliseu Araújo Damião": "TEACHER",
+    "José Fabricio Oliveira de Santana": "TEACHER",
+    "José Luis da Silva Rocha": "TEACHER",
+    "José Marciel Reis Mascarenhas": "TEACHER",
+    "Jose Mario de Jesus Pinheiro": "TEACHER",
+    "José Milton Vitorino dos Reis": "TEACHER",
+    "José Vagner de Souza Batista": "TEACHER",
+    "José Vital de Souza Filho": "TEACHER",
+    "Josefa Fagner dos Santos": "TEACHER",
+    "Joselia Lima de Sena Alves": "TEACHER",
+    "Josenildo Macêdo Oliveira": "TEACHER",
+    "Josete Oliveira Carvalho": "TEACHER",
+    "Josi dos Anjos Silva": "TEACHER",
+    "Josilene da Silva de Jesus": "TEACHER",
+    "Josimary Kelly Amado Santos": "TEACHER",
+    "Josue dos Santos Souza": "TEACHER",
+    "Josué Leite Conceição": "TEACHER",
+    "Josué Oliveira de Araujo": "TEACHER",
+    "Jozan dos Santos Barbosa": "TEACHER",
+    "Juciara Pedreira de Jesus Freitas": "TEACHER",
+    "Jucinaldo Cardoso dos Reis": "TEACHER",
+    "Julia dos Anjos Costa": "TEACHER",
+    "Júlia Oliveira Cordeiro": "TEACHER",
+    "Juliana Santos da Silva": "TEACHER",
+    "Juliana Silva Bastos": "TEACHER",
+    "Juliana Vieira Santos Pereira": "TEACHER",
+    "Juracy Oliveira Cardoso": "TEACHER",
+    "Justino Neves de Jesus Neto": "TEACHER",
+    "Karina Casola Fernandes": "TEACHER",
+    "Karine das Neves Paixão Silva": "TEACHER",
+    "Karoline Conceicao da Fonseca Santos": "TEACHER",
+    "Karolyne Mota Gomes": "TEACHER",
+    "Kelly Dourado Rodrigues": "TEACHER",
+    "Kleber Bomfim de Oliveira": "TEACHER",
+    "Laecio dos Santos Teixeira": "TEACHER",
+    "Laís Leão Sampaio Leite": "TEACHER",
+    "Lais Lorena Ribeiro": "TEACHER",
+    "Layla de Oliveira Pires Aquino": "TEACHER",
+    "Leandro dos Santos Viana": "TEACHER",
+    "Leandro Neves Alves": "TEACHER",
+    "Leandro Silva Costa": "TEACHER",
+    "Leda dos Santos Souza": "TEACHER",
+    "Leilane Ferreira Santos": "TEACHER",
+    "Leiliane Vieira Souza": "TEACHER",
+    "Leniel Oliveira dos Santos": "TEACHER",
+    "Leonard Fernandes e Silva": "TEACHER",
+    "Leonardo Andrade Souza": "TEACHER",
+    "Leonardo Argolo dos Santos": "TEACHER",
+    "Leonardo da Costa Lins": "TEACHER",
+    "Leonardo Silva Pinto": "TEACHER",
+    "Leonice Nascimento Santiago": "TEACHER",
+    "Leticia Rodrigues Pereira de Santana": "TEACHER",
+    "Létícia Rosa de Jesus": "TEACHER",
+    "LÍBIA XIMENES CABRAL MARTINS": "TEACHER",
+    "Lidiane de Jesus Freitas": "TEACHER",
+    "Liliane Ribeiro dos Santos": "TEACHER",
+    "Liliane Ribeiro dos Santos Fernandes": "TEACHER",
+    "Lindinéia Gomes Bastos": "TEACHER",
+    "Lindomar Carlos Sodré da Silva": "TEACHER",
+    "Lindsei Oliveira Machado": "TEACHER",
+    "Lívia Graziele Gomes Ramos da Silva": "TEACHER",
+    "Livia Suely Silva Souza": "TEACHER",
+    "Liziane da Silva Carneiro": "TEACHER",
+    "Luan Guimarães da Silva": "TEACHER",
+    "Luana Moura Silva": "TEACHER",
+    "Luana Silva dos Santos": "TEACHER",
+    "Lucas Cauã de Souza Mota": "TEACHER",
+    "Lucas da Glória Oliva Costa": "TEACHER",
+    "Lucas Moreira Reis": "TEACHER",
+    "Lucas Porto Assunção": "TEACHER",
+    "Lucas Santos Brandão": "TEACHER",
+    "Lucas Silva Sampaio": "TEACHER",
+    "Lucas Soares Santos": "TEACHER",
+    "Luciana Cassia Goes Pereira": "TEACHER",
+    "Luciana dos Santos Silva Marques": "TEACHER",
+    "Luciana Maria Limeira dos Santos": "TEACHER",
+    "Luciana Mendes Brito Vidal": "TEACHER",
+    "Luciana Santos Nobre": "TEACHER",
+    "Luciano Santos Ribeiro": "TEACHER",
+    "Luciélia dos Santos Novaes": "TEACHER",
+    "Lucineide Miranda Silva Araújo": "TEACHER",
+    "Lucio Roberto Severo Rosas": "TEACHER",
+    "Lucivânia Silva Carneiro de Cintra": "TEACHER",
+    "Luidivan Rodrigues Alves": "TEACHER",
+    "Luis Fabio Santos da Silva": "TEACHER",
+    "Luis Tertuliano Silva de Souza": "TEACHER",
+    "Luiz Carlos Campos Torres": "TEACHER",
+    "Luiz Eduardo Araujo Machado": "TEACHER",
+    "Luiz Eduardo Batista Barreto Junior": "TEACHER",
+    "Luize Muricy dos Santos Vieira": "TEACHER",
+    "Lumma da Silva Borges": "TEACHER",
+    "Luziete Moreira Santos": "TEACHER",
+    "Luzimary Carneiro de Lima": "TEACHER",
+    "Magna Maria Lima": "TEACHER",
+    "Magno Santana Morais": "TEACHER",
+    "Maiara Argolo Negromonte": "TEACHER",
+    "Maiara de Jesus Araújo": "TEACHER",
+    "Maicon Luiz Muniz da Silva": "TEACHER",
+    "Maida Santos Alcântara": "TEACHER",
+    "MANOEL DAMASIO ALVES": "TEACHER",
+    "Manoel Gustavo Souza de Almeida Pina": "TEACHER",
+    "Manoel Hito Sampaio Mascarenhas": "TEACHER",
+    "Manoel Serafim da Silva Neto": "TEACHER",
+    "Manoela Trabuco de Queiroz": "TEACHER",
+    "Marcello Oliveira Coelho Silva": "TEACHER",
+    "Marcelo de Vasconcelos Pereira": "TEACHER",
+    "Marcelo dos Santos Santana": "TEACHER",
+    "Marcelo Luis Moreira Sousa": "TEACHER",
+    "Marcelo Márcio de Oliveira Ferreira": "TEACHER",
+    "Marcelo Santana Lacerda": "TEACHER",
+    "Marcilio Aquino Marques": "TEACHER",
+    "Márcio Lima Carneiro de Oliveira": "TEACHER",
+    "Marco Antonio Maia Santos": "TEACHER",
+    "Marcos Antônio Vieira Costa": "TEACHER",
+    "Marcos Augusto de Jesus Souza": "TEACHER",
+    "Marcos Cesar Nunes Laranjeiras Filho": "TEACHER",
+    "Marcos Davi Barbosa de Oliveira": "TEACHER",
+    "Marcos de Souza Simões": "TEACHER",
+    "Marcos Paulo Araujo Santiago": "TEACHER",
+    "Marcos Teixeira Quadro": "TEACHER",
+    "Marcos Vinicius Cerqueira Santos": "TEACHER",
+    "Marcos Vinicius de Oliveira Santos": "TEACHER",
+    "Marcos Vinicius Petri": "TEACHER",
+    "Maria das Graças Oliveira Lira": "TEACHER",
+    "Maria Do Carmo Souza Santos": "TEACHER",
+    "Maria Fernanda Menezes de Oliveira de Souza": "TEACHER",
+    "Maria Gilcilene Maciel Rocha": "TEACHER",
+    "Maria Izabel Cruz Alves Simões": "TEACHER",
+    "Maria Janaina Daltro Alves": "TEACHER",
+    "Maria Mariluce Vitalino Santos": "TEACHER",
+    "Mariana do Rosário Liger": "TEACHER",
+    "Mariana Moura Pinheiro": "TEACHER",
+    "Mariana Torres Uchôa": "TEACHER",
+    "Marileia Araujo da Silva": "TEACHER",
+    "Marilene Santos de Jesus Lins": "TEACHER",
+    "Marilia Neri Porto": "TEACHER",
+    "Marina Ane Gomes Cordeiro": "TEACHER",
+    "Marina Brayner dos Santos": "TEACHER",
+    "Mario Andre Correia Ribeiro": "TEACHER",
+    "Marisete Kniess Adriano": "TEACHER",
+    "Mariza de Oliveira Conceição Bela": "TEACHER",
+    "Marlangela Santos Cunha": "TEACHER",
+    "Marlon Nunes Couto": "TEACHER",
+    "Marta Farias Almeida da Silva": "TEACHER",
+    "Mateus de Santana Souza": "TEACHER",
+    "Matheus Araujo de Assis": "TEACHER",
+    "Matheus Barreto Ribas": "TEACHER",
+    "Matheus da Silva Teixeira": "TEACHER",
+    "Matheus de Oliveira": "TEACHER",
+    "Matheus Nunes Menezes": "TEACHER",
+    "Mathias de Oliveira Carneiro": "TEACHER",
+    "Mauricio de Almeida Silva": "TEACHER",
+    "Maurino Candido de Medeiros": "TEACHER",
+    "Maxuel Carlos de Melo": "TEACHER",
+    "Mayk Fernandes Lima da Silva": "TEACHER",
+    "Meirise Araújo dos Santos Silva": "TEACHER",
+    "Mennandro Menezes de Oliveira": "TEACHER",
+    "Merilin Gomes de Oliveira Moreira": "TEACHER",
+    "Michelle Sousa de Freitas": "TEACHER",
+    "MIGUEL DA SILVA BASTOS": "TEACHER",
+    "MILENA CORDEIRO DA SILVA": "TEACHER",
+    "Milena Fonsêca Rios Araújo": "TEACHER",
+    "Milena Ribeiro dos Santos": "TEACHER",
+    "Milenna Santos Silva": "TEACHER",
+    "Millena Pereira Brito": "TEACHER",
+    "Mirela Macedo Sandes": "TEACHER",
+    "Mirian Maria Araújo": "TEACHER",
+    "Moisés Lima Santos": "TEACHER",
+    "Murilo Gomes Santana": "TEACHER",
+    "Nadja Rita Santos Cezar": "TEACHER",
+    "Naila Naja Silva Soares": "TEACHER",
+    "Natália Campbell Correa": "TEACHER",
+    "Natalia Cristina Amorim Nascimento": "TEACHER",
+    "Natalicio Diego da Silva": "TEACHER",
+    "Natanael do Nascimento Pereira Neto": "TEACHER",
+    "Nathanael Pereira de Oliveira": "TEACHER",
+    "Nayara Oliveira de Lima": "TEACHER",
+    "Nayara Santos Queiroz": "TEACHER",
+    "Neidson Santana de Souza": "TEACHER",
+    "Nilo Dantas da Silva": "TEACHER",
+    "Norman Bitencourt da Silva Montenegro": "TEACHER",
+    "Nubia Oliveira da Silva": "TEACHER",
+    "Nubia Viana Cardoso Leal": "TEACHER",
+    "Olandiara de Aragão dos Santos": "TEACHER",
+    "Osny Dantas de Oliveira Silva": "TEACHER",
+    "Osvaldo da Silva Neto": "TEACHER",
+    "Otávio Teixeira Pinto": "TEACHER",
+    "Ozair Santos Lima": "TEACHER",
+    "Pablo Cruz de Santana": "TEACHER",
+    "Pâmela Villare Fernandes Fonseca": "TEACHER",
+    "Patricia Claudia da Silva": "TEACHER",
+    "Patrícia Cristiane Alcarria Martins": "TEACHER",
+    "Patricia dos Santos": "TEACHER",
+    "PATRICIA REIS CALASANS": "TEACHER",
+    "Patrícia Silva das Merces": "TEACHER",
+    "Paulo Ferreira da Costa Neto": "TEACHER",
+    "Paulo Sergio da Silva Oliveira Junior": "TEACHER",
+    "Paulo Victor Aragão dos Santos": "TEACHER",
+    "Pedro Geraldo Correia da Silva": "TEACHER",
+    "Pedro Henrique Almeida dos Santos Alves": "TEACHER",
+    "Pedro Ivo Santos Furtado": "TEACHER",
+    "Pedro Kleber Matos de Araujo": "TEACHER",
+    "Pedro Lopes Batista Neto": "TEACHER",
+    "Pedro Raimundo Soares da Conceição": "TEACHER",
+    "Phillipe Ramos Brandão": "TEACHER",
+    "Poliana Silva Araújo": "TEACHER",
+    "Priscila Mikulski Guedes": "TEACHER",
+    "Priscila Natividade de Jesus": "TEACHER",
+    "Priscila Saturnino dos Santos Brandão": "TEACHER",
+    "Priscila Souza Azevedo": "TEACHER",
+    "Priscilla Araujo Vieira": "TEACHER",
+    "Quécia Ferreira de Oliveira": "TEACHER",
+    "Quelen Priscila Santana da Silva Santos": "TEACHER",
+    "Quelme de Jesus Silva Brito": "TEACHER",
+    "Rachell Adrielle Bomfim Reis Santos": "TEACHER",
+    "Rafael Brito Teixeira": "TEACHER",
+    "Rafael Nascimento Caldeira": "TEACHER",
+    "Rafael Parenti": "TEACHER",
+    "Rafaella Braga Santos": "TEACHER",
+    "Rafaella Cerqueira Oliveira Souza": "TEACHER",
+    "Raphaela Santana Melo Araujo": "TEACHER",
+    "Raul Dauram de Vasconcelos": "TEACHER",
+    "Rayanna Rodrigues Evangelho": "TEACHER",
+    "Regis Marsico Cayret": "TEACHER",
+    "Regivaldo Francisco da Silva Junior": "TEACHER",
+    "Reinalda dos Santos Ramos": "TEACHER",
+    "Reinaldo Silva de Sena": "TEACHER",
+    "Renaldo dos Santos Ramos": "TEACHER",
+    "Renan do Carmo Araujo": "TEACHER",
+    "Renata da Purificação Pinto": "TEACHER",
+    "Renato Buranelli": "TEACHER",
+    "Renildo da Silva Santos": "TEACHER",
+    "Rescima Fernanda Novais dos Santos": "TEACHER",
+    "Rhavi Gonçalves de Borda": "TEACHER",
+    "Rita Urânia Silva Santos": "TEACHER",
+    "Roberta Silva Pereira": "TEACHER",
+    "Roberto Carrion Eça da Silva": "TEACHER",
+    "Robson Carvalho Freitas": "TEACHER",
+    "Rodrigo Roberto Dias": "TEACHER",
+    "Rogério Cerqueira Lima": "TEACHER",
+    "Rogerio da Silva Fiscina": "TEACHER",
+    "Romário Andrade Rodrigues": "TEACHER",
+    "Romulo Carvalho de Souza Vieira": "TEACHER",
+    "Romulo Lopes Souza": "TEACHER",
+    "Ronaldo Soares Monteiro": "TEACHER",
+    "Ronei Vagner Alves": "TEACHER",
+    "Roquelane Ramos da Conceição": "TEACHER",
+    "Rosenilson Lima Macêdo": "TEACHER",
+    "Rosilene da Silva Dias": "TEACHER",
+    "Rosimeire de Vasconcelos": "TEACHER",
+    "RUBENS OLIVEIRA LIMA JUNIOR": "TEACHER",
+    "Rudney Oliveira de Freitas": "TEACHER",
+    "Sabrina Bet": "TEACHER",
+    "Samer Magaldi Almerindo": "TEACHER",
+    "Samuel da Silva Cunha": "TEACHER",
+    "Saolo Santos Souza": "TEACHER",
+    "Sergio Henrique Ferreira Martins": "TEACHER",
+    "Shirlei Lima dos Anjos": "TEACHER",
+    "Sidnei dos Santos Sacramento": "TEACHER",
+    "Sidney Conceição Andrade": "TEACHER",
+    "Sidney da Silva Jesus": "TEACHER",
+    "Silas Pereira Santos": "TEACHER",
+    "Silas Santos Carvalho": "TEACHER",
+    "Sillas Leal Castro Silva": "TEACHER",
+    "Silmara Simas dos Santos": "TEACHER",
+    "Silvano Pinto Dias": "TEACHER",
+    "Silvoney Santos Couto": "TEACHER",
+    "Simone dos Santos do Amaral": "TEACHER",
+    "Sirlex de Almeida Figueredo": "TEACHER",
+    "Sócrates Sousa Queiroz": "TEACHER",
+    "Solismar De Souza Aroeira": "TEACHER",
+    "Stefanie Daysy Sipert Miranda": "TEACHER",
+    "Sterfany da Silva Almeida": "TEACHER",
+    "Sueli Oliveira Costa": "TEACHER",
+    "Sueli Vieira Leão": "TEACHER",
+    "SUNANDA MARIA RODRIGUES BATISTA": "TEACHER",
+    "Suran Oliveira Messias": "TEACHER",
+    "Suzanna Raquel Ramos Lima": "TEACHER",
+    "Tainá Melo de Oliveira": "TEACHER",
+    "Talita Emanuele Abreu da Silva": "TEACHER",
+    "Tamara Eloy Caldas": "TEACHER",
+    "Tânia Maria Cardoso Cerqueira": "TEACHER",
+    "Tania Renilda Santos Torres": "TEACHER",
+    "Tarcisio Marques Santos de Souza": "TEACHER",
+    "Tassio de Freitas Ferreira": "TEACHER",
+    "Tayane de Jesus Nunes": "TEACHER",
+    "Tércio Borges Ribeiro": "TEACHER",
+    "Thaiany Santana da Cruz Nunes": "TEACHER",
+    "Thais Santana Barreto": "TEACHER",
+    "Thiago Alves Carneiro": "TEACHER",
+    "Thiago Jesus de Oliveira Trindade": "TEACHER",
+    "Thiago Mendes Paixão Melo": "TEACHER",
+    "Thiago Vinicius Barbosa Menezes Sales": "TEACHER",
+    "Thomas Santos da Silva": "TEACHER",
+    "Tiago Araujo Freaza dos Santos": "TEACHER",
+    "Tiago Araujo Matos": "TEACHER",
+    "Tiago da Silva Oliveira": "TEACHER",
+    "Tiago Luis Santos Silva": "TEACHER",
+    "Tiago Martins dos Santos de Jesus": "TEACHER",
+    "TIAGO MEDRADO COSTA": "TEACHER",
+    "Tony Clériston Oliveira dos Santos": "TEACHER",
+    "Topson Andrade dos Santos": "TEACHER",
+    "Ualison Pereira Roque Freitas": "TEACHER",
+    "Uallas Henrique de Oliveira de Brito": "TEACHER",
+    "Uerles Bastos de Menezes": "TEACHER",
+    "Uilberton de Oliveira Soares": "TEACHER",
+    "Vando Silva Bizerra": "TEACHER",
+    "Vanessa de Oliveira Debiasi": "TEACHER",
+    "Vanessa Silva Lima": "TEACHER",
+    "Vanessa Vilanova Fraga Vieira": "TEACHER",
+    "Vânia Lago Guimarães Correia": "TEACHER",
+    "Velluma Cerqueira Invenção de Oliveira": "TEACHER",
+    "Victor da Silva Pimenta": "TEACHER",
+    "Victor Lima Cardoso": "TEACHER",
+    "Victor Moak da Silva Souza": "TEACHER",
+    "Victor Montes Fernandes Pereira": "TEACHER",
+    "Victor Oliveira Mascarenhas": "TEACHER",
+    "Vinicius Camelo Molinari": "TEACHER",
+    "Vinicius Lima Cardoso": "TEACHER",
+    "Vinícius Ornellas de Araújo": "TEACHER",
+    "Viviane Rafael Ferreira": "TEACHER",
+    "Wagner José Mezoni": "TEACHER",
+    "Waldemir Pereira Santiago": "TEACHER",
+    "Wanna Nascimento Macedo": "TEACHER",
+    "Weiller Queiroz Silva": "TEACHER",
+    "Welber Lima de Brito Guimarães": "TEACHER",
+    "Welder Nascimento dos Santos": "TEACHER",
+    "Welder Nascimento dos Santos": "TEACHER",
+    "Welington Salomão Pereira": "TEACHER",
+    "Wesley Moura da Silva Pereira": "TEACHER",
+    "Wguaracy Araujo Santana": "TEACHER",
+    "William Martins Lopes Ribeiro": "TEACHER",
+    "Williane Santana Marques": "TEACHER",
+    "Wilton Silva Souza": "TEACHER",
+    "Yanes Costa Nascimento": "TEACHER",
+    "Yanna Carvalho de Assis": "TEACHER",
+    "Zilmaura Santos Daltro": "TEACHER"
 };
 
-// Salva os dados no localStorage
+// Função para validar se um professor existe no sistema
+function isValidTeacher(teacherName) {
+    if(!teacherName || typeof teacherName !== 'string') return false;
+    
+    const normalizedInput = teacherName.trim().toLowerCase();
+    
+    if(docentesCodprof[teacherName]) return true;
+    
+    // Faz a validação convertendo os valores para LowerCase
+    for(const name of Object.keys(docentesCodprof)) {
+        if(name.toLowerCase() === normalizedInput) return true;
+    }
+    
+    return false;
+}
+
+// Função para obter o FATS compartilhado
+function getSharedFatsForTeacher(teacherName) {
+    if(!isValidTeacher(teacherName)) {
+        console.warn(`Professor não encontrado no sistema: ${teacherName}`);
+        return '';
+    }
+    
+    return SHARED_TEACHER_FATS;
+}
+
+// Função para validar FATS
+function validateTeacherFats(inputFats, teacherName) {
+    if(!inputFats || typeof inputFats !== 'string') {
+        return { valid: false, message: 'FATS ID é obrigatório' };
+    }
+    
+    const normalizedInput = inputFats.trim().toUpperCase();
+    
+    if(!isValidTeacher(teacherName)) {
+        return { 
+            valid: false, 
+            message: 'Professor não encontrado no sistema' 
+        };
+    }
+    
+    if(normalizedInput === SHARED_TEACHER_FATS) {
+        return { valid: true, message: 'FATS validado com sucesso' };
+    }
+    
+    return { 
+        valid: false, 
+        message: 'FATS ID incorreto. Use o FATS compartilhado pelos professores.' 
+    };
+}
+
+// Salva o FATS compartilhado no localStorage
+localStorage.setItem("sharedTeacherFats", SHARED_TEACHER_FATS);
+
+// Salva os dados dos professores no localStorage
 localStorage.setItem("docentesCodprof", JSON.stringify(docentesCodprof));
+
+// Função adicionar novo professor
+function addTeacherToSystem(teacherName) {
+    if(!teacherName || typeof teacherName !== 'string') {
+        console.warn('Nome do professor é obrigatório');
+        return false;
+    }
+    
+    const normalizedName = teacherName.trim();
+    
+    // Verifica se o professor já existe
+    if(isValidTeacher(normalizedName)) {
+        console.warn(`Professor ${normalizedName} já existe no sistema`);
+        return false;
+    }
+    
+    // Adiciona professor ao sistema
+    docentesCodprof[normalizedName] = "TEACHER";
+    
+    // Salva no localStorage
+    saveTeacherNamesToStorage();
+    
+    console.log(`Professor ${normalizedName} adicionado ao sistema`);
+    return true;
+}
+
+// Salva os nomes de professores no localStorage
+function saveTeacherNamesToStorage() {
+    try {
+        localStorage.setItem('docentesCodprof', JSON.stringify(docentesCodprof));
+        console.log('Lista de professores salva no localStorage');
+    } catch(error) {
+        console.error('Erro ao salvar lista de professores: ', error);
+    }
+}
+
+// Carrega os nomes de professores do localStorage
+function loadTeacherNamesFromStorage() {
+    try {
+        const saved = localStorage.getItem('docentesCodprof');
+
+        if(saved) {
+            const savedNames = JSON.parse(saved);
+
+            Object.assign(docentesCodprof, savedNames);
+            console.log('Lista de professores carregada do localStorage');
+        }
+    } catch(error) {
+        console.error('Erro ao carregar lista de professores: ', error);
+    }
+}
+
+// Funções globais para uso externo
+window.addNewTeacherToSystem = function(teacherName) {
+    return addTeacherToSystem(teacherName);
+};
+
+window.viewAllTeachers = function() {
+    console.log('👥 Professores cadastrados no sistema:');
+    console.table(docentesCodprof);
+    const total = Object.keys(docentesCodprof).length;
+    console.log(`📊 Total de professores: ${total}`);
+    console.log(`🔑 FATS compartilhado: ${SHARED_TEACHER_FATS}`);
+    return { teachers: docentesCodprof, sharedFats: SHARED_TEACHER_FATS };
+};
+
+window.getSharedFats = function() {
+    return SHARED_TEACHER_FATS;
+};
 
 // Função para adicionar novo professor ao mapeamento docentesCodprof
 function addProfessorToMapping(professorName, fast) {
@@ -1701,7 +1826,6 @@ function renderTableForShift(shift) {
 // ----------- Ações da chave -----------
 function handleKey(recordId, action) {
     const currentData = getCurrentShiftData();
-    // Tentar encontrar por ID primeiro, depois por sala
     const record = currentData.find(r => r.id === recordId) || 
                    currentData.find(r => r.sala === recordId) ||
                    currentData.find(r => r.curso === recordId) ||
@@ -1719,14 +1843,14 @@ function handleKey(recordId, action) {
 
     document.getElementById('btn-retirar-chave').innerText = (action === 'remove') ? 'Retirar a chave' : 'Devolver a chave';
 
-    // Para ações de remoção por professores, abrir modal de login para validação FATS4796
+    // Para professores, abre o modal de login para validação do FATS compartilhado
     if((action === 'remove' || action === 'return') && record.curso != "Terceiros") {
         activeAction = { record, action };
         openLogin();
         return;
     }
 
-    // Para outras ações (ex.: devolução) e para remoção de chaves por terceiros, executar diretamente
+    // Para terceiros, executa diretamente
     executeKeyAction(record, action);
 }
 
@@ -1991,19 +2115,18 @@ function showNotification(message, type = 'info') {
 
 // ----------- Login modal -----------
 function openLogin() { 
-    // Limpar mensagens de erro anteriores
+    // Limpa mensagens de erro anteriores
     document.getElementById('msg-erro').textContent = '';
     document.getElementById('loginFast').value = '';
     
-    // Mostrar informações sobre a ação
+    // Mostra informações sobre a ação
     if(activeAction && activeAction.record) {
         const record = activeAction.record;
         const professorName = record.professor;
-        const expectedFastId = docentesCodprof[professorName];
         
-        // Atualizar o título do modal para mostrar qual professor
+        // Atualiza o título do modal
         const modalTitle = document.getElementById('loginModalTitle');
-        
+
         if(modalTitle) {
             modalTitle.textContent = `Validação - ${professorName}`;
         }
@@ -2011,29 +2134,30 @@ function openLogin() {
         const helpMessage = document.getElementById('msg-erro');
 
         if(helpMessage) {
-            helpMessage.innerHTML = `<p class="text-info-fast">Digite o FAST ID correspondente ao professor: <br> <strong>${professorName}</strong></p>`;
+            helpMessage.innerHTML = `
+                <p class="text-info-fast">
+                    Digite o FATS compartilhado dos professores para validar a ação:<br>
+                    <strong>Professor: ${professorName}</strong><br>
+                    <small class="text-muted">Todos os professores usam o mesmo FATS</small>
+                </p>
+            `;
         }
     }
     
     document.getElementById('loginModal').style.display = 'flex';
     
-    // Foca no campo de input e adiciona event listener ao pressionar Enter
+    // Foca no campo de input e adiciona listener para tecla Enter
     setTimeout(() => {
         const fastInput = document.getElementById('loginFast');
 
         if(fastInput) {
             fastInput.focus();
             
-            // Adicionar event listener para Enter
             const handleEnter = (e) => {
-                if(e.key === 'Enter') {
-                    confirmLogin();
-                }
+                if(e.key === 'Enter') confirmLogin();
             };
             
             fastInput.addEventListener('keypress', handleEnter);
-            
-            // Armazenar o handler para remoção posterior
             fastInput._enterHandler = handleEnter;
         }
     }, 100);
@@ -2067,32 +2191,27 @@ function confirmLogin() {
     const fastId = (document.getElementById('loginFast').value || '').trim();
 
     if(!fastId) {
-        document.getElementById('msg-erro').textContent = 'Por favor, preencha o FAST ID!';
+        document.getElementById('msg-erro').textContent = 'Por favor, preencha o FATS ID!';
         return; 
     }
 
     const record = activeAction ? activeAction.record : null;
-
     if(!record) {
         document.getElementById('msg-erro').textContent = 'Erro: Registro não encontrado.';
         return;
     }
 
-    // Validar se o FAST ID corresponde ao nome do professor
     const professorName = record.professor;
-    const expectedFastId = docentesCodprof[professorName];
-
-    if(!expectedFastId) {
-        document.getElementById('msg-erro').textContent = 'Erro: Professor não encontrado na base de dados.';
+    
+    // Valida usando sistema de FATS compartilhado
+    const validation = validateTeacherFats(fastId, professorName);
+    
+    if(!validation.valid) {
+        document.getElementById('msg-erro').textContent = validation.message;
         return;
     }
 
-    if(fastId !== expectedFastId) {
-        document.getElementById('msg-erro').textContent = 'FAST ID incorreto para este professor.';
-        return;
-    }
-
-    // Validação bem-sucedida - fechar modal e executar ação
+    // Validação bem-sucedida === fechar modal e executar ação
     document.getElementById('loginModal').style.display = 'none';
     document.getElementById('msg-erro').textContent = '';
     document.getElementById('loginFast').value = ''; 
@@ -2102,6 +2221,142 @@ function confirmLogin() {
         activeAction = null; 
     }
 }
+
+function getFastForProfessor(professorName) {
+    if(!professorName || typeof professorName !== 'string') return '';
+    
+    if(isValidTeacher(professorName)) {
+        return SHARED_TEACHER_FATS;
+    }
+    
+    return '';
+}
+
+// Funções de gerenciamento de configuração
+function updateSharedFats(newFats) {
+    if(!newFats || typeof newFats !== 'string') {
+        console.error('FATS inválido fornecido');
+        return false;
+    }
+    
+    const normalizedFats = newFats.trim().toUpperCase();
+
+    if(normalizedFats.length < 4) {
+        console.error('FATS deve ter pelo menos 4 caracteres');
+        return false;
+    }
+    
+    SHARED_TEACHER_FATS = normalizedFats;
+    localStorage.setItem("sharedTeacherFats", SHARED_TEACHER_FATS);
+    
+    console.log(`FATS compartilhado atualizado para: ${SHARED_TEACHER_FATS}`);
+    return true;
+}
+
+// Carrega a configuração ao iniciar
+function loadConfiguration() {
+    // Carrega os FATS compartilhado
+    const savedFats = localStorage.getItem('sharedTeacherFats');
+    if (savedFats) {
+        SHARED_TEACHER_FATS = savedFats;
+        console.log(`📁 FATS compartilhado carregado: ${SHARED_TEACHER_FATS}`);
+    }
+    
+    // Carregar nomes de professores
+    loadTeacherNamesFromStorage();
+}
+
+// Exportar configuração para uso administrativo
+window.exportTeacherConfiguration = function() {
+    const config = {
+        sharedFats: SHARED_TEACHER_FATS,
+        teachers: Object.keys(teacherNames),
+        totalTeachers: Object.keys(teacherNames).length,
+        lastUpdated: new Date().toISOString()
+    };
+    
+    console.log('Configuração atual do sistema:', config);
+    
+    if(navigator.clipboard) {
+        navigator.clipboard.writeText(JSON.stringify(config, null, 2)).then(() => {
+            console.log('Configuração copiada para a área de transferência!');
+        }).catch(err => {
+            console.error('Erro ao copiar configuração: ', err);
+        });
+    }
+    
+    return config;
+};
+
+// Função administrativa para alterar FATS compartilhado
+window.changeSharedFats = function(newFats) {
+    return updateSharedFats(newFats);
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadConfiguration();
+    
+    const dateSelector = document.getElementById('teacherDateSelector');
+    if (dateSelector) {
+        dateSelector.value = selectedDate;
+        
+        dateSelector.addEventListener('change', async function() {
+            const oldDate = selectedDate;
+            selectedDate = this.value;
+            console.log(`Data alterada de ${oldDate} para ${selectedDate}`);
+            
+            if (typeof stopSyncDataRealtime === 'function') {
+                console.log('[PROFESSOR] 🛑 Parando sincronização da data anterior...');
+                stopSyncDataRealtime(oldDate, 'manhã');
+                stopSyncDataRealtime(oldDate, 'tarde');
+                stopSyncDataRealtime(oldDate, 'noite');
+            }
+            
+            let firebaseLoaded = false;
+            if (typeof loadTeacherDataFromFirebase === 'function') {
+                console.log(`[PROFESSOR] 🔥 Carregando dados do Firebase para nova data: ${selectedDate}`);
+                try {
+                    firebaseLoaded = await loadTeacherDataFromFirebase(selectedDate);
+                    if (firebaseLoaded) {
+                        console.log('[PROFESSOR] ✅ Dados da nova data carregados do Firebase!');
+                        
+                        if (typeof syncTeacherDataRealtime === 'function') {
+                            console.log('[PROFESSOR] 🔄 Iniciando sincronização para nova data...');
+                            syncTeacherDataRealtime(selectedDate, 'manhã');
+                            syncTeacherDataRealtime(selectedDate, 'tarde');
+                            syncTeacherDataRealtime(selectedDate, 'noite');
+                        }
+                    }
+                } catch (error) {
+                    console.error('[PROFESSOR] ❌ Erro ao carregar nova data do Firebase:', error);
+                }
+            }
+            
+            if (!firebaseLoaded) {
+                console.log('[PROFESSOR] 📁 Verificando localStorage para nova data...');
+                const dateData = getDataForDate(selectedDate);
+                const shiftData = dateData[activeShift] || [];
+                console.log(`Dados encontrados para ${selectedDate} no turno ${activeShift}:`, shiftData);
+            }
+            
+            renderTableForShift(activeShift);
+        });
+    }
+
+    console.log('[PROFESSOR] ==> Inicializando painel do professor com FATS compartilhado');
+    console.log('[PROFESSOR] ==> FATS compartilhado:', SHARED_TEACHER_FATS);
+    console.log('[PROFESSOR] ==> Total de professores:', Object.keys(teacherNames).length);
+    
+    renderTabs();
+    
+    loadSharedData().then(() => {
+        console.log('[PROFESSOR] ==> Dados carregados, renderizando tabela...');
+        renderTableForShift(activeShift);
+    }).catch(error => {
+        console.error('[PROFESSOR] ==> Erro ao carregar dados:', error);
+        renderTableForShift(activeShift);
+    });
+});
 
 // ----------- Terceiros modal -----------
 function openThirdPartyForm() { 

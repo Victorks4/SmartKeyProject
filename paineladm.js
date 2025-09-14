@@ -17,6 +17,7 @@ function getCurrentShiftByTime() {
 
 // let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
 let teacherModalActive = false;
+// let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
 let selectedDate = "2025-08-31";
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 
