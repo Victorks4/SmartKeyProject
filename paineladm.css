@@ -1,5 +1,4 @@
 /* Custom CSS para complementar o Bootstrap */
-
 :root {
     --bs-primary: #0d6efd;
     --bs-primary-rgb: 13, 110, 253;
@@ -115,7 +114,6 @@ td {
 }
 
 .status-badge.disponivel {
-    /* background-color: var(--bs-info); */
     background-color: rgba(240, 69, 66, 0.75);
     color: white;
 }
@@ -187,24 +185,46 @@ td {
     z-index: 999;
 }
 
-.teacher-modal-content {
+#roomRegistrationModal {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+}
+
+#roomRegistrationModal .teacher-modal-content {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.form-modal-content {
     background: #fff;
     border-radius: 0.75rem;
     width: 488px;
     max-width: 92vw;
     padding: 1.8rem 1.93rem 1.5rem;
-    box-shadow: 0 4px 12px -2px hsl(210 85% 9% 0.08);
+    box-shadow: 0 4px 12px -2px hsl(210, 85%, 9%, 0.08);
 }
 
-.teacher-modal-header {
+.form-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 8px 4px;
     margin-bottom: 1.3rem;
+    border-bottom: 1px solid #dee2e6;
 }
 
-.teacher-modal-header .btn {
+.form-modal-header .btn {
     color: rgb(116, 116, 116);
 }
 
@@ -220,18 +240,18 @@ td {
     transform: rotate(-45deg);
 }
 
-.teacher-modal-title {
+.form-modal-title {
     display: flex;
     align-items: center;
     gap: 0.6rem;
 }
 
-.teacher-modal-title h2,
-.teacher-modal-title i {
+.form-modal-title h2,
+.form-modal-title i {
     color: #024AB6;
 }
 
-.teacher-modal-title i {
+.form-modal-title i {
     font-size: 2.1rem;
     display: inline-flex;
     align-items: center;
@@ -239,14 +259,14 @@ td {
     margin-bottom: 4px;
 }
 
-.teacher-modal label {
+.form-modal label {
     display: block;
     font-size: 0.97rem;
     font-weight: 500;
     color: #495057;
 }
 
-.teacher-modal input {
+.form-modal input {
     width: 100%;
     padding: .98rem .98rem 12px;
     margin: .25rem 0 1.12rem;
@@ -255,10 +275,10 @@ td {
     border-bottom: 1px solid #dedede;
     border-radius: 0.4rem;
     background: #fff;
-    color: hsl(210 85% 9%);
+    color: hsl(210, 85%, 9%);
 }
 
-.teacher-modal input:focus {
+.form-modal input:focus {
     outline: none;
     border-bottom: 1px solid var(--bs-primary);
 }
@@ -288,12 +308,10 @@ td {
 .drop-down-item {
     position: relative;
     opacity: 1;
-    /* width: 100%; */
     height: fit-content;
     transition: all .8s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
-    /* margin-bottom: 1.65rem; */
 }
 
 .drop-down-item.dropdown-active {
@@ -319,7 +337,6 @@ td {
     transition: transform 0.3s ease, box-shadow 0.3s ease, border 0.3s ease;
 }
 
-/* .selected:hover, */
 .selected.active {
     transform: translateY(-2px);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1472);
@@ -367,11 +384,11 @@ td {
     opacity: 1;
     margin-top: 2px;
     font-weight: 500;
-    max-height: 500px;
     font-size: 0.92rem;
     transform: scaleY(1);
     box-shadow: 0px 1px 12px rgba(0, 0, 0, 0.163);
     max-height: 184px;
+    border: 2px solid #e1e1e1;
 } 
 
 .option {
@@ -410,24 +427,6 @@ td {
     padding-left: 12px;
 }
 
-/* Remove the problematic slideOption animation */
-@keyframes slideOption {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.disabled {
-    opacity: 0.5;
-    pointer-events: none;
-}
-
-.options.show {
-    border: 2px solid #e1e1e1 !important;
-    border: 2px solid #e1e1e1 !important;
-}
-
 .option:last-child {
     border-bottom: none;
 }
@@ -455,19 +454,19 @@ td {
     pointer-events: none;
 }
 
-.teacher-modal-actions {
+.form-modal-actions {
     gap: .5rem;
     margin-top: .25rem;
     display: flex;
     justify-content: space-between;
 }
 
-.teacher-modal-actions button {
+.form-modal-actions button {
     flex: 1;
     padding: .8rem 0;
 }
 
-#btn-register,
+.form-modal-actions .form-btn-register,
 #btn-retirar-chave {
     background-color: var(--bs-primary);
     color: #fff;
@@ -476,21 +475,21 @@ td {
     transition: background 0.2s, transform 0.2s;
 }
 
-#btn-register:hover,
+.form-modal-actions .form-btn-register:hover,
 #btn-retirar-chave:hover {
     background-color: #0b5ed7;
     color: #fff;
     transform: scale(1.01);
 }
 
-#cancel-btn {
+.form-modal-actions .form-cancel-btn {
     background-color: transparent;
     border: 1px solid #ced4da;
     color: #495057;
     transition: background 0.2s, transform 0.2s;
 }
 
-#cancel-btn:hover {
+.form-modal-actions .form-cancel-btn:hover {
     background-color: #e9ecef;
     border-color: #ced4da;
     color: #495057;
@@ -544,7 +543,7 @@ td {
     filter: brightness(0) invert(1);
 }
 
-/* Navbar responsivo com título centralizado, MEU ORGULHO AQUI TA? */
+/* Navbar responsivo com título centralizado */
 .navbar .container-fluid {
     display: grid;
     grid-template-columns: auto 1fr auto;
@@ -558,7 +557,6 @@ td {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    
 }
 
 .navbar-title {
@@ -576,7 +574,6 @@ td {
     margin-bottom: 7px;
     position: relative;
     left: 15px;
-    
 }
 
 @media (max-width: 576px) {
@@ -641,7 +638,7 @@ td {
     font-size: 0.875rem;
 }
 
-/* Estilos para as abas de turno (igual ao teacherPanel) */
+/* Estilos para as abas de turno */
 .row-actions {
     width: 100%;
     display: flex;
@@ -742,7 +739,7 @@ td {
     background: #dee2e6;
 }
 
-/* Estilos específicos para os botões do teacher-modal de importação */
+/* Estilos específicos para os botões do modal de importação */
 #confirmImportShift {
     background-color: var(--bs-primary) !important;
     border-color: var(--bs-primary) !important;
@@ -767,7 +764,7 @@ td {
     color: white !important;
 }
 
-.overlay{
+.overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -781,7 +778,6 @@ td {
     visibility: visible;
     pointer-events: auto;
 }
-
 
 /* Bloqueia interação no conteúdo subjacente quando overlay está ativo */
 body.overlay-open .main-content,
@@ -797,7 +793,7 @@ body.overlay-open .main-content *:focus {
     outline: none !important;
 }
 
-.popup{
+.popup {
     background: white;
     padding: 20px;
     border-radius: 12px;
@@ -806,7 +802,7 @@ body.overlay-open .main-content *:focus {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.popup input{
+.popup input {
     width: 90%;
     padding: 8px;
     margin: 8px 0;
@@ -814,18 +810,18 @@ body.overlay-open .main-content *:focus {
     border-radius: 6px;
 }
 
-.popup button{
+.popup button {
     width: 100%;
     padding: 10px;
-    background:white;
+    background: white;
     color: black;
     border: none;
     border-radius: 6px;
     cursor: pointer;
 }
 
-.popup button:hover{
-    background:gray;
+.popup button:hover {
+    background: gray;
 }
 
 .btn-close-popup {
@@ -839,6 +835,7 @@ body.overlay-open .main-content *:focus {
 .register-details {
     gap: 8px;
 }
+
 .register-details p {
     margin: 0;
     color: #575A5E;
@@ -860,20 +857,6 @@ body.overlay-open .main-content *:focus {
 #confirmDeleteBtn:hover {
     background-color: #BF2231;
     color: #fff;
-    transform: scale(1.01);
-}
-
-#cancel-btn {
-    background-color: transparent;
-    border: 1px solid #ced4da;
-    color: #495057;
-    transition: background 0.2s, transform 0.2s;
-}
-
-#cancel-btn:hover {
-    background-color: #e9ecef;
-    border-color: #ced4da;
-    color: #495057;
     transform: scale(1.01);
 }
 

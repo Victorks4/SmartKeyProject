@@ -292,10 +292,10 @@
     </div>
 
     <!-- Modal: Cadastrar novo Professor -->
-    <div class="teacher-modal" id="registerTeacherModal" role="dialog" aria-modal="true" aria-labelledby="tpTitle">
-        <div class="teacher-modal-content">
-            <div class="teacher-modal-header">
-                <div class="teacher-modal-title" id="tpTitle">
+    <div class="form-modal" id="registerTeacherModal" role="dialog" aria-modal="true" aria-labelledby="tpTitle">
+        <div class="form-modal-content">
+            <div class="form-modal-header">
+                <div class="form-modal-title" id="tpTitle">
                     <i class="bi bi-person-fill-add"></i>
                     <h2>Cadastro Professor</h2>
                 </div>
@@ -330,16 +330,81 @@
                 </div>
             </label>
 
-            <div class="teacher-modal-actions">
-                <button id="cancel-btn" class="btn btn-outline" onclick="closeRegisterTeacherModal()" aria-label="Cancelar cadastro de professor">
+            <div class="form-modal-actions">
+                <button id="cancel-btn" class="btn form-cancel-btn" onclick="closeRegisterTeacherModal()" aria-label="Cancelar cadastro de professor">
                     Cancelar
                 </button>
-                <button id="btn-register" class="btn btn-outline" onclick="saveNewTeacher()" aria-label="Salvar dados do novo professor">
+                <button id="btn-register" class="btn form-btn-register" onclick="saveNewTeacher()" aria-label="Salvar dados do novo professor">
                     Cadastrar Professor
                 </button>
             </div>
         </div>
     </div> <!-- Fim do Modal Cadastrar novo Professor -->
+
+    <!-- Modal: Cadastrar nova Sala -->
+    <div class="form-modal" id="roomRegistrationModal" role="dialog" aria-modal="true" aria-labelledby="roomTitle">
+        <div class="form-modal-content">
+            <div class="form-modal-header">
+                <div class="form-modal-title" id="roomTitle">
+                    <i class="bi bi-building-add"></i>
+                    <h2>Cadastrar Nova Sala</h2>
+                </div>
+                <button class="btn-close-popup" onclick="closeRoomRegistrationModal()" aria-label="Fechar">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+
+            <label class="text-sm font-medium">Nome da Sala *
+                <div class="input-item">
+                    <i class="bi bi-building"></i>
+                    <input 
+                        type="text" 
+                        id="roomName" 
+                        required 
+                        maxlength="50" 
+                        autocomplete="off"
+                        placeholder="Ex: LAB DE INFORMÁTICA" 
+                    >
+                </div>
+            </label>
+
+            <label class="text-sm font-medium">Nome do Bloco *
+                <div class="input-item">
+                    <i class="bi bi-columns-gap"></i>
+                    <input 
+                        type="text" 
+                        id="blockName" 
+                        required 
+                        maxlength="1" 
+                        autocomplete="off"
+                        placeholder="Ex: A, B, C..." 
+                    >
+                </div>
+            </label>
+
+            <label class="text-sm font-medium">Número da Sala <span class="text-muted">(opcional)</span>
+                <div class="input-item">
+                    <i class="bi bi-hash"></i>
+                    <input 
+                        type="text" 
+                        id="roomNumber" 
+                        maxlength="10" 
+                        autocomplete="off"
+                        placeholder="Ex: 1, 2, 3..." 
+                    >
+                </div>
+            </label>
+
+            <div class="form-modal-actions">
+                <button id="cancel-btn" class="btn form-cancel-btn" onclick="closeRoomRegistrationModal()" aria-label="Cancelar cadastro da sala">
+                    Cancelar
+                </button>
+                <button id="saveNewRoomBtn" class="btn form-btn-register" onclick="handleRoomRegistration()" aria-label="Salvar nova sala">
+                    Cadastrar Nova Sala
+                </button>
+            </div>
+        </div>
+    </div> <!-- Fim do Modal: Cadastrar nova Sala -->
 
     <!-- Custom JS -->
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
