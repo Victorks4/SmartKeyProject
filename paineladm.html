@@ -28,18 +28,41 @@
     <!-- Overlay de login -->
     <div id="overlay" class="overlay">
         <div class="popup">
+            <div class="logo-login-adm">
+                <i class="bi bi-gear-fill"></i>
+            </div>
+
             <h2>Login do Administrador</h2>
-            <input type="text" id="username" placeholder="Digite seu login">
-            <input type="password" id="senha" placeholder="Digite sua senha">
 
-            <button id="btn-login" onclick="login()" aria-label="Fazer login como administrador">
-                Entrar
-            </button>
-            <button id="cancel-btn" onclick="cancel()" aria-label="Cancelar login">
-                Cancelar
-            </button>
+            <div class="adm-login-input d-flex flex-column align-items-start mb-2">
+                <label for="username">Nome de usuário:</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    placeholder="Digite seu login"
+                    autocomplete="off"
+                >
+            </div>
 
-            <p id="msg-erro" class="msg-erro font-size-14px "></p>
+            <div class="adm-login-input d-flex flex-column align-items-start mb-3">
+                <label for="username">Senha:</label>
+                <input 
+                    type="password" 
+                    id="senha" 
+                    placeholder="Digite sua senha"
+                >
+            </div>
+
+            <div class="adm-login-actions d-flex gap-2">
+                <button id="btn-login" class="" onclick="login()" aria-label="Fazer login como administrador">
+                    Entrar
+                </button>
+                <button id="cancel-btn" onclick="cancel()" aria-label="Cancelar login">
+                    Cancelar
+                </button>
+            </div>
+
+            <p id="msg-erro" class="msg-erro font-size-14px mt-2"></p>
         </div>
     </div> <!-- fim do overlay-->
 
