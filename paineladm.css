@@ -189,7 +189,7 @@ td {
     position: fixed;
     width: 100%;
     height: 100%;
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     background: rgba(0, 0, 0, 0.5);
@@ -846,7 +846,8 @@ body.overlay-open .main-content *:focus {
     padding: .8rem 0;
 }
 
-#confirmDeleteBtn {
+#confirmDeleteBtn,
+#confirmDeleteRoomBtn {
     background-color: #dc3545;
     color: #fff;
     border: none;
@@ -854,7 +855,8 @@ body.overlay-open .main-content *:focus {
     transition: background 0.2s, transform 0.2s;
 }
 
-#confirmDeleteBtn:hover {
+#confirmDeleteBtn:hover,
+#confirmDeleteRoomBtn:hover {
     background-color: #BF2231;
     color: #fff;
     transform: scale(1.01);

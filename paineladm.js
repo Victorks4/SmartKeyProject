@@ -1536,10 +1536,10 @@ function handleSaveButton(e) {
 
     actionCell.innerHTML = `
         <div class="d-flex">
-            <button class="btn btn-edit me-1" aria-label="Editar registro">
+            <button class="btn btn-edit btn-edit-group me-1" aria-label="Editar registro">
                 <i class="bi bi-pencil-square"></i>
             </button>
-            <button class="btn btn-delete" aria-label="Cancelar edição">
+            <button class="btn btn-delete btn-delete-group" aria-label="Cancelar edição">
                 <i class="bi bi-trash3"></i>
             </button>
         </div>
@@ -1719,10 +1719,10 @@ function handleCancelButton(e) {
 
     actionCell.innerHTML = `
         <div class="d-flex">
-            <button class="btn btn-edit me-2" aria-label="Editar registro">
+            <button class="btn btn-edit btn-edit-group me-2" aria-label="Editar registro">
                 <i class="bi bi-pencil-square"></i>
             </button>
-            <button class="btn btn-delete" aria-label="Cancelar edição">
+            <button class="btn btn-delete btn-delete-group" aria-label="Cancelar edição">
                 <i class="bi bi-trash3"></i>
             </button>
         </div>
@@ -1839,6 +1839,81 @@ function showDeleteConfirmationModal(recordId, row) {
             this.innerHTML = '<i class="bi bi-trash3-fill me-1"></i> Deletar Registro';
             this.disabled = false;
         }
+    });
+    
+    // Auto-cleanup
+    modal.addEventListener('hidden.bs.modal', () => modal.remove());
+    bootstrapModal.show();
+}
+
+function showDeleteRoomConfirmationModal(roomId) {
+    // Criar o modal
+    const modal = document.createElement('div');
+
+    const rooms = getRooms();
+    const roomExists = rooms.filter(r => r.id === roomId);
+    // const textRoomNumber = (roomExists[0].numero != 'Sem numeração') ? roomExists[0].numero : 'Sem numeração';
+
+    modal.id = 'deleteRoomConfirmationModal';
+    modal.className = 'modal fade';
+    modal.setAttribute('tabindex', '-1');
+
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg d-flex gap-0">
+                <div class="d-flex justify-content-center modal-header bg-danger text-white border-0" style="position: relative;">
+                    <div class="d-flex align-self-center justify-content-center align-items-center position-absolute" style="width: 100px; height: 100px; border-radius: 50%; background-color: #dc3545;">
+                        <i class="bi bi-trash3-fill text-white" style="font-size: 3.5rem;"></i>
+                    </div>
+                    
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 d-flex flex-column">
+                    <div class="text-center mb-3"></div>
+
+                    <h3 class="text-center mb-2 mt-3" style="color: #323232">
+                        Remover Sala?
+                    </h3>
+
+                    <p class="text-center align-self-center mb-4" style="color: #4D4D4D; width: 378px">
+                        Tem certeza que deseja <strong class="text-light-emphasis">excluir permanentemente</strong> esta sala? Esta ação não pode ser desfeita!
+                    </p>
+
+                    <div class="card bg-light border-0 ">
+                        <div class="card-body p-3">
+                            <h6 class="card-subtitle mb-2 pb-2 text-muted border-1 border-bottom">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Detalhes da Sala
+                            </h6>
+                            <div class="small d-flex flex-column register-details">
+                                <p><strong>Sala:</strong> ${roomExists[0].sala}</p>
+                                <p><strong>Bloco:</strong> ${roomExists[0].bloco}</p>
+                                <p><strong>Numero da sala:</strong> ${roomExists[0].numero || 'sem numeração'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-body modal-actions border-0 d-flex gap-2">
+                    <button type="button" id="cancel-btn" class="btn" data-bs-dismiss="modal" style="width: 100%;">
+                        Cancelar
+                    </button>
+
+                    <button type="button" class="btn" id="confirmDeleteRoomBtn" style="width: 100%;">
+                        Deletar Registro
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;    
+    document.body.appendChild(modal);
+
+    const bootstrapModal = new bootstrap.Modal(modal);
+    
+    // Event listener para confirmação
+    modal.querySelector('#confirmDeleteRoomBtn').addEventListener('click', function() {
+        deleteRoom(roomId);
+        bootstrapModal.hide();
     });
     
     // Auto-cleanup
@@ -2927,7 +3002,7 @@ function createRoomRow(room) {
                         <i class="bi bi-pencil-square"></i>
                     </button>
 
-                    <button class="btn btn-delete-room btn-delete-group" onclick="deleteRoom(${room.id})">
+                    <button class="btn btn-delete-room btn-delete-group" onclick="showDeleteRoomConfirmationModal(${room.id})">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
@@ -3106,13 +3181,13 @@ function cancelEdit(roomId) {
 
 // Função para excluir sala
 function deleteRoom(roomId) {
-    if(confirm('Tem certeza que deseja excluir esta sala?')) {
-        const rooms = getRooms();
-        const filteredRooms = rooms.filter(r => r.id !== roomId);
+    const rooms = getRooms();
+    const filteredRooms = rooms.filter(r => r.id !== roomId);
 
-        saveRooms(filteredRooms);
-        loadRoomsTable();
-    }
+    showNotification('Sala removida com sucesso!', 'success');
+
+    saveRooms(filteredRooms);
+    loadRoomsTable();    
 }
 
 // Função para carregar e exibir a tabela de salas
