@@ -653,6 +653,7 @@ let docentesCodprof = {
     "Silmara Simas dos Santos": "FATS5202",
     "Silvano Pinto Dias": "FATS3256",
     "Silvoney Santos Couto": "CALC1252",
+    "Simone de Almeida Silva": "FATS5227",
     "Simone dos Santos do Amaral": "FATS4971",
     "Sirlex de Almeida Figueredo": "FATS4776",
     "Sócrates Sousa Queiroz": "FATS3042",
