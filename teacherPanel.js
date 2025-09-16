@@ -1,8 +1,8 @@
 let activeAction = null;
 let activeShift = 'manhã';
 let sortAlphabetically = false;
-// let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
-let selectedDate = "2025-08-31";
+let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
+// let selectedDate = "2025-08-31";
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 
 // Variáveis para seleção múltipla de chaves
@@ -1396,7 +1396,18 @@ function getActionButton(recordId, record) {
                 Devolver
             </button>
         `;
-    } else {
+    } else if(record.horaDevolucao) {
+        // Indisponível - opção de retirar bloqueada após devolução
+        return `
+            <div style="cursor: not-allowed">
+                <button class="btn action-btn btn-locked">
+                    <i class="bi bi-key me-1"></i>
+                    Retirar
+                </button>
+            </div>
+        `;
+    } 
+    else {
         // Disponível - opção de retirar
         return `
             <button 
@@ -1636,7 +1647,9 @@ function renderTableForShift(shift) {
         <tr>
             <td>${sala}</td>
             <td>${curso}</td>
-            <td>${turma}</td>
+            <td>
+                <span class="badge fw-bold text-dark">${turma}</span>
+            </td>
             <td class="fw-medium">
                 <i class="bi bi-person-circle table-icon"></i>
                 ${professor}
@@ -1729,65 +1742,6 @@ function handleKey(recordId, action) {
     executeKeyAction(record, action);
 }
 
-// Função para criar e mostrar modal de mensagem
-//titleMessage, message, recordId, row
-function showMensageConfirmationModal() {
-    // Remove modal existente
-    document.getElementById('messageConfirmationModal')?.remove();
-    
-    // Cria o modal
-    const modal = document.createElement('div');
-    modal.id = 'messageConfirmationModal';
-    modal.className = 'modal fade';
-    modal.setAttribute('tabindex', '-1');
-    modal.setAttribute('aria-hidden', 'true');
-
-    modal.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered" style="z-index: 2000 !important;">
-            <div class="modal-content border-0 shadow-lg">
-                
-                <!-- Cabeçalho -->
-                <div class="modal-header bg-primary text-white border-0 justify-content-center position-relative">
-                    <div class="d-flex justify-content-center align-items-center position-absolute" style="width: 100px; height: 100px; border-radius: 50%; background-color: #0d6efd; top: -28px;">
-                        <i class="bi bi-exclamation-triangle-fill text-white" style="font-size: 3.2rem;"></i>                        
-                    </div>
-                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-
-                <!-- Corpo -->
-                <div class="modal-body p-4 text-center">
-                    <h3 class="mb-3 mt-4" style="color: #323232;">
-                        Retirada não permitida!
-                    </h3>
-                    <p class="text-center mb-1 mx-auto" style="color: #4D4D4D; max-width: 380px;">
-                        Não é possível retirar a chave novamente após a devolução!
-                    </p>
-                </div>
-                
-                <!-- Rodapé (ações) -->
-                <div class="modal-footer border-0 mb-1 d-flex">
-                    <button type="button" class="btn" id="confirmMessageBtn" style="margin: 0 28px;">
-                        Confirmar
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;    
-    document.body.appendChild(modal);
-
-    const bootstrapModal = new bootstrap.Modal(modal);
-
-    // Event listener para confirmação
-    modal.querySelector('#confirmMessageBtn').addEventListener('click', function() {
-        bootstrapModal.hide();
-    });
-    
-    // Limpa tudo ao fechar
-    modal.addEventListener('hidden.bs.modal', () => modal.remove());
-    bootstrapModal.show();
-}
-
-
 function executeKeyAction(record, action) {
     const now = new Date();
     const hm = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -1847,6 +1801,7 @@ function executeKeyAction(record, action) {
             // Atualizar campos do administrador para compatibilidade
             currentShiftData[recordIndex].returnTime = hm;
             currentShiftData[recordIndex].status = 'devolvida';
+
             
             // Mostrar notificação de sucesso
             showNotification(`Chave devolvida por ${record.professor} às ${hm}`, 'info');

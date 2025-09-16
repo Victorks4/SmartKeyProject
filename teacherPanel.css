@@ -101,10 +101,12 @@ td {
     background-color: transparent;
     border: none;
 }
+
 #btnAdm:hover {
     transform: scale(1.016);
     border: 1px solid #cfe6fc64;
 }
+
 .btn-close-popup { color: #6c757d; }
 
 .action-btn {
@@ -133,6 +135,15 @@ td {
 .action-btn.devolver:hover {
     background-color: #ffca2c;
     border-color: #ffca2c;
+}
+
+.action-btn.btn-locked {
+    background: #0d6efd;
+    color: rgba(255, 255, 255, 0.6);
+    opacity: 0.5;
+    filter: grayscale(20%);
+    pointer-events: none;
+    position: relative;        /* para o ::after funcionar */
 }
 
 /* Tabela */
