@@ -92,9 +92,9 @@ td {
 }
 
 .status-badge.em_uso     { background-color: var(--bs-primary); }
-.status-badge.devolvida  { background-color: var(--bs-success); }
+.status-badge.devolvida  { background-color: var(--bs-warning); color:#212529 ; }
 .status-badge.retirada   { background-color: var(--bs-warning); color: #212529; }
-.status-badge.disponivel { background-color: rgba(240, 69, 66, 0.75); }
+.status-badge.disponivel { background-color: var(--bs-success); }
 
 #btnAdm,
 .btn-close-popup {
@@ -114,14 +114,14 @@ td {
 }
 
 .action-btn.retirar {
-    background-color: var(--bs-success);
-    border-color: var(--bs-success);
+    background-color: #0d6efd;
+    border-color: #0d6efd;
     color: white;
 }
 
 .action-btn.retirar:hover {
-    background-color: #157347;
-    border-color: #157347;
+    background-color: #0258d8;
+    border-color: #0868f8;
 }
 
 .action-btn.devolver {
@@ -229,6 +229,12 @@ td {
     width: 506px;
     padding: 1.8rem 1.93rem 1.5rem;
     box-shadow: 0 4px 12px -2px hsl(210 85% 9% / 0.08);
+}
+
+.scroll-vertical {
+  height: 300px;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 .form-modal-header {
