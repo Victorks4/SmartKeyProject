@@ -17,8 +17,8 @@ function getCurrentShiftByTime() {
 
 // let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
 let teacherModalActive = false;
-let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
-// let selectedDate = "2025-08-31";
+// let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
+let selectedDate = "2025-08-31";
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 
 // Função para obter ou criar estrutura de dados para uma data
@@ -1344,9 +1344,10 @@ if(inputFast) {
 // Função para salvar novo professor
 function saveNewTeacher() {
     const name = document.getElementById('tpFullName').value.trim();
+    const fats = document.getElementById('tpFast').value.trim();
 
-    if(!name) {
-        showNotification('Preencha corretamente o nome do professor!', 'warning');
+    if(!name || !fats) {
+        showNotification('Preencha todos os campos obrigatórios!!', 'warning');
         return;
     }
 
@@ -1364,6 +1365,14 @@ function saveNewTeacher() {
         return;
     }
 
+    // Verifica se o FAST já está sendo usado por outro professor
+    for(const [existingName, existingFast] of Object.entries(currentMapping)) {
+        if(existingFast === fats) {
+            showNotification(`O FATS <strong>"${fats}"</strong> já está sendo usado pelo professor: <strong>${existingName}</strong>.`, 'warning');
+            return;
+        }
+    }
+
     // Tenta adicionar ao sistema de nomes de professores
     try {
         const teacherNames = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
@@ -1372,15 +1381,14 @@ function saveNewTeacher() {
         localStorage.setItem('teacherNames', JSON.stringify(teacherNames));
         
         const currentMapping = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
-        const sharedFats = localStorage.getItem('sharedTeacherFats') || 'FATS1578';
 
-        currentMapping[name] = sharedFats;
+        currentMapping[name] = fats;
         localStorage.setItem('docentesCodprof', JSON.stringify(currentMapping));
         
         showNotification(`Professor '<strong>${name}</strong>' cadastrado(a) com sucesso!`, 'success');
         return true;
     } catch(error) {
-        console.error('Erro ao cadastrar professor:', error);
+        console.error('Erro ao cadastrar professor: ', error);
         showNotification('Erro ao cadastrar professor.', 'danger');
         return false;
     }
@@ -2886,10 +2894,11 @@ function startEditTeacher(teacherName) {
     `;
     fatsCell.innerHTML = `
         <input 
-            type="text" 
+            type="text"
             class="form-control" 
             value="${escapeHtml(originalFats)}" 
             data-original="${escapeHtml(originalFats)}"
+            style="text-transform: uppercase;"
         >
     `;
 
@@ -2913,25 +2922,25 @@ function saveEditTeacher(teacherName) {
     if(!nameInput || !fatsInput) return false;
 
     const newName = nameInput.value.trim();
-    const newFats = fatsInput.value.trim();
+    const newFats = fatsInput.value.trim().toUpperCase();
     const originalName = nameInput.getAttribute('data-original');
 
     // Valida as entradas
     if(!newName) {
-        alert('Nome do professor não pode estar vazio.');
+        showNotification('Nome do professor não pode estar vazio.', 'warning');
         nameInput.focus();
         return false;
     }
-
+    
     if(!newFats) {
-        alert('FATS não pode estar vazio.');
+        showNotification('FATS não pode estar vazio.', 'warning');
         fatsInput.focus();
         return false;
     }
 
     // Valida se o nome inserido já existe
     if(newName !== originalName && teacherManagerState.teachers[newName]) {
-        alert('Já existe um professor com este nome.');
+        showNotification('Já existe um professor com este nome.', 'warning');
         nameInput.focus();
         return false;
     }
@@ -2956,7 +2965,7 @@ function saveEditTeacher(teacherName) {
         return true;
     } catch(error) {
         console.error('Erro ao salvar professor:', error);
-        alert('Erro ao salvar professor. Tente novamente!');
+        showNotification('Erro ao salvar professor. Tente novamente!', 'danger');
         return false;
     }
 }

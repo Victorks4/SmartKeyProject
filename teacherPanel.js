@@ -1,8 +1,8 @@
 let activeAction = null;
 let activeShift = 'manhã';
 let sortAlphabetically = false;
-let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
-// let selectedDate = "2025-08-31";
+// let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
+let selectedDate = "2025-08-31";
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 
 // Variáveis para seleção múltipla de chaves
@@ -2104,6 +2104,7 @@ function confirmLogin() {
 // ----------- Terceiros modal -----------
 function openThirdPartyForm() { 
     document.getElementById('thirdPartyModal').classList.add('active'); 
+    document.body.style.overflow = 'hidden';
 }
 
 function closeThirdPartyForm() {
@@ -2124,6 +2125,8 @@ function closeThirdPartyForm() {
     };
     
     hideMultipleSelectionSection();
+
+    document.body.style.overflow = '';
     
     // Voltar para a pergunta inicial
     document.getElementById('key-quantity-section').classList.remove('hidden');
