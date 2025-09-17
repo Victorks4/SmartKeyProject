@@ -124,20 +124,21 @@
         <div class="row-actions d-flex items-center justify-between mb-3">
             <div class="tabs" id="shiftTabs"></div>
 
-            <!-- <div class="search-container">
-                <button class="clear-search" id="clearSearch" title="Limpar busca">
-                    <i class="bi bi-x-circle-fill"></i>
-                </button>
-                <i class="bi bi-search search-icon"></i>
-                
+            <!-- Barra de Pesquisas - Tabela dos Professores -->
+            <div id="search-bar" class="search-container position-relative d-none">                
                 <input 
                     type="text" 
                     id="searchInput" 
                     class="form-control search-input" 
-                    placeholder="Digite o início do nome do professor (ex: Ana, João, Maria)..."
+                    placeholder="Pesquisar professor pelo nome"
                     autocomplete="off"
+                    onkeyup="searchTeachers(event)"
                 >
-            </div> -->
+
+                <div class="search-icon-container d-flex justify-content-center align-items-center">
+                    <i class="bi bi-search search-icon"></i>
+                </div>
+            </div>
 
             <div class="toolbar">
                 

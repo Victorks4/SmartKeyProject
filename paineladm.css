@@ -160,8 +160,8 @@ td {
 .table th {
     font-weight: 600;
     color: #495057;
-    border-bottom: 2px solid #dee2e6;
     padding: 1rem 0.75rem;
+    border-bottom: 2px solid #dee2e6;
 }
 
 .table td {
@@ -175,41 +175,56 @@ td {
 
 /* Estilos para o header */
 .page-header {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 0.75rem;
     padding: 2rem;
     margin-bottom: 2rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
 
-/* Estilos para o campo de pesquisa */
-/* .search-container {
-    position: relative;
-    margin-bottom: 2rem;
-}
-
+/* Estilos para o input de pesquisa */
 .search-input {
-    border: 2px solid var(--border-color);
-    border-radius: 50px;
-    padding: 15px 55px 15px 20px;
-    font-size: 1.1rem;
     width: 600px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    font-size: 1rem;
+    color: #6c757d;
+    background-color: #f9fbfd;
+    border: 2px solid #e6eff8;
+    padding: 10px 8px 10px 59px;
+    border-radius: 28px 16px 16px 28px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    background: linear-gradient(90deg, #f8fcff, #f9fbfd);
+    transition: all .3s ease;
 }
 
 .search-input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
-    transform: translateY(-2px);
+    outline: none;
+    transform: translateY(-1px);
+    border-color: rgba(11, 93, 215, 0.304);
+    box-shadow: 0 0 0 0.1rem rgba(0, 102, 204, 0.25);
+}
+
+.search-input:focus+.search-icon-container {
+    transform: translateY(calc((-50%) - 1px));
+    box-shadow: 0 0 0 0.1rem rgba(0, 102, 204, 0.25);
 }
 
 .search-icon {
+    color: #f9fbfd;
+    font-size: 1.25rem;
+}
+
+.search-icon-container {
     position: absolute;
-    right: 20px;
     top: 50%;
+    left: 2px;
+    width: 49px;
+    height: 48px;
+    border-radius: 50%;
     transform: translateY(-50%);
-    color: var(--primary-color);
-    font-size: 1.2rem;
+    box-shadow: 1px 0px 2px rgba(145, 145, 145, 0.789);
+    background: linear-gradient(90deg, #3585FD, #0D6DFD);
+    transition: box-shadow .3s ease-in-out, 
+                transform .5s ease-in-out;
+    z-index: 1000;
 }
 
 .search-stats {
@@ -219,7 +234,7 @@ td {
     padding: 15px;
     margin-bottom: 1.5rem;
     text-align: center;
-} */
+}
 
 /* Modal */
 #registerTeacherModal {

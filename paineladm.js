@@ -2477,6 +2477,66 @@ document.addEventListener('click', function() {
     });
 });
 
+function searchTeachers(e) {
+    const tableContainer = document.getElementById('teachersTable');
+    const valorInput = e.target.value.toLowerCase();
+    const teachers = getStoredTeachers();
+
+    // Verificar se o container existe
+    if(!tableContainer) return;
+
+    // Se o input estiver vazio, exibe a tabela normal
+    if(valorInput.trim() === '') {
+        updateTeacherTable();
+        return;
+    }
+
+    // Filtragem de professores que começam a inicial digitada
+    const filteredTeachers = {};
+    
+    Object.entries(teachers).forEach(([ nome, fats ]) => {
+        if(nome.toLowerCase().startsWith(valorInput)) {
+            filteredTeachers[nome] = fats;
+        }
+    });
+
+    // Valida se há resultados para o valor digitado
+    if(Object.keys(filteredTeachers).length === 0) {
+        // Mostra mensagem caso não tenha nenhum resultado
+        tableContainer.innerHTML = `
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h2 class="card-title mb-0">
+                    <i class="bi bi-person-fill-check "></i>
+                    Professores Cadastrados
+                </h2>
+                <span class="badge bg-secondary">
+                    <i class="bi bi-file-earmark-text-fill"></i>
+                    Total de Resultados: ${0}
+                </span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <div class="text-center py-4">
+                        <i class="bi bi-person-x fs-3 mb-2 text-muted"></i>
+                        <p class="mb-1">Nenhum professor encontrado</p>
+
+                        <small class="text-muted">
+                            Nenhum professor tem nome começando com "<strong>${escapeHtml(e.target.value)}</strong>"
+                        </small>
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    // Gera uma tabela com os resultados
+    tableContainer.innerHTML = generateTeacherTableHTML(filteredTeachers);
+    
+    // Adiciona os event listeners para os botões da tabela com os resultados do search
+    addTeacherEventListeners();
+}
+
 // Formatação de data (AAAA-MM-DD <para> DD/MM/AAAA)
 function formatDate(dateStr) {
     const [year, month, day] = dateStr.split('-');
@@ -3014,7 +3074,11 @@ function showTeacherTable() {
     document.getElementById('show-data-dropdown').style.display = 'none';
     document.getElementById('goBackToKeysTable').style.display = 'flex';
     document.getElementById('dateSelector').classList.add('disabled');
-    document.getElementById('shiftTabs').classList.add('disabled');
+    document.getElementById('shiftTabs').style.display = 'none';
+
+    // Visibilidade da barra de pesquisas
+    document.getElementById('search-bar').classList.add('d-flex');
+    document.getElementById('search-bar').classList.remove('d-none');
 
     teacherManagerState.isActive = true;
 }
@@ -3035,7 +3099,11 @@ function hideTeacherTable() {
     document.getElementById('show-data-dropdown').style.display = 'flex';
     document.getElementById('goBackToKeysTable').style.display = 'none';
     document.getElementById('dateSelector').classList.remove('disabled');
-    document.getElementById('shiftTabs').classList.remove('disabled');
+    document.getElementById('shiftTabs').style.display = 'flex';
+
+    // Visibilidade da barra de pesquisas
+    document.getElementById('search-bar').classList.remove('d-flex');
+    document.getElementById('search-bar').classList.add('d-none');
     
     teacherManagerState.isActive = false;
 }
