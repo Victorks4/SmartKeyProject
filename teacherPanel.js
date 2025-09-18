@@ -3220,6 +3220,14 @@ function autoShiftTick() {
     }
 }
 
+// Desabilita o clique direito e o F12 para inspeção
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+document.addEventListener("keydown", e => {
+  if(e.ctrlKey && (e.key === "u" || e.key === "U")) e.preventDefault();
+  if(e.key === "F12") e.preventDefault();
+});
+
 // Evento disparado quando todo o conteúdo DOM já foi carregado
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {

@@ -3661,6 +3661,14 @@ function trapFocusInOverlay() {
     observer.observe(overlay, { attributes: true, attributeFilter: ['style', 'class'] });
 }
 
+// Desabilita o clique direito e o F12 para inspeção
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+document.addEventListener("keydown", e => {
+  if(e.ctrlKey && (e.key === "u" || e.key === "U")) e.preventDefault();
+  if(e.key === "F12") e.preventDefault();
+});
+
 // Ativar trapFocus se o overlay iniciar visível (sem login)
 document.addEventListener('DOMContentLoaded', function() {
     const overlay = document.getElementById('overlay');
