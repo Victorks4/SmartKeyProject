@@ -18,12 +18,16 @@ const ConstantManager = {
   
   validate(input) {
     return input === this[PRIVATE_KEY];
+
   },
   
   getEncodedValue() {
     return btoa(this[PRIVATE_KEY]);
   }
+  
 };
+
+
 
 // Mapa de docentes para CODPROF (DOCENTE -> CODPROF)
 let docentesCodprof = {
@@ -2017,7 +2021,8 @@ inputFast.addEventListener("input", () => {
 
 // Função para confirmar login
 function confirmLogin() {
-    const fastId = (document.getElementById('loginFast').value || '').trim();
+    const fastIdRaw = (document.getElementById('loginFast').value || '').trim();
+    const fastId = fastIdRaw.toUpperCase();
 
     if(!fastId) {
         document.getElementById('msg-erro').textContent = 'Por favor, preencha o FAST ID!';
@@ -2031,7 +2036,19 @@ function confirmLogin() {
         return;
     }
 
-    // Validar se o FAST ID corresponde ao nome do professor
+    // 1) Aceita o FATS geral para qualquer registro e executa imediatamente
+    if (ConstantManager.validate(fastId)) {
+        document.getElementById('loginModal').style.display = 'none';
+        document.getElementById('msg-erro').textContent = '';
+        document.getElementById('loginFast').value = '';
+        if (activeAction) {
+            executeKeyAction(activeAction.record, activeAction.action);
+            activeAction = null;
+        }
+        return;
+    }
+
+    // 2) Senão, validar correspondência do FATS específico com o professor
     const professorName = record.professor;
     const expectedFastId = docentesCodprof[professorName];
 
@@ -2040,7 +2057,7 @@ function confirmLogin() {
         return;
     }
 
-    if(fastId !== expectedFastId && !ConstantManager.validate(fastId)) {
+    if(fastId !== expectedFastId) {
         document.getElementById('msg-erro').textContent = 'FAST ID incorreto para este professor.';
         return;
     }
@@ -2048,11 +2065,11 @@ function confirmLogin() {
     // Validação bem-sucedida - fechar modal e executar ação
     document.getElementById('loginModal').style.display = 'none';
     document.getElementById('msg-erro').textContent = '';
-    document.getElementById('loginFast').value = ''; 
+    document.getElementById('loginFast').value = '';
 
-    if(activeAction) { 
-        executeKeyAction(activeAction.record, activeAction.action); 
-        activeAction = null; 
+    if(activeAction) {
+        executeKeyAction(activeAction.record, activeAction.action);
+        activeAction = null;
     }
 }
 
