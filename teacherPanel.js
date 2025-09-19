@@ -2190,16 +2190,89 @@ const dropdown = [
   { id: 46, sala: "MOTOCICLETAS",       bloco: "Bloco G", numero: "" },
   { id: 47, sala: "FUNILARIA",          bloco: "Bloco G", numero: "" },
   { id: 48, sala: "PREDIAL II",         bloco: "Bloco G", numero: "" },
+  { id: 49,  sala: "LABORATÓRIO DE SEGURANÇA", bloco: "Bloco G", numero: ""},
 
   // Bloco H
-  { id: 49, sala: "SALA EMPILHADEIRA",  bloco: "Bloco H", numero: "" },
-  { id: 50, sala: "MICROBIOLOGIA",      bloco: "Bloco H", numero: "" },
-  { id: 51, sala: "PANIFICAÇÃO",        bloco: "Bloco H", numero: "" }
+  { id: 50, sala: "SALA EMPILHADEIRA",  bloco: "Bloco H", numero: "" },
+  { id: 51, sala: "MICROBIOLOGIA",      bloco: "Bloco H", numero: "" },
+  { id: 52, sala: "PANIFICAÇÃO",        bloco: "Bloco H", numero: "" }
 ];
 
-if(!localStorage.getItem("rooms")) {
-    localStorage.setItem("rooms", JSON.stringify(dropdown));
+// Adicione novas salas diretamente aqui (não precisa editar o array grande acima).
+// Exemplo de uso:
+// { sala: "LAB DE ROBÓTICA", bloco: "Bloco F", numero: "21" }
+const NEW_ROOMS_SEED = [
+    { sala: "LABORATÓRIO DE SEGURANÇA", bloco: "Bloco G", numero: "" }
+];
+
+function normalizeRoomKey(room) {
+    const sala = (room.sala || '').toString().trim().toUpperCase();
+    const bloco = (room.bloco || '').toString().trim().toUpperCase();
+    const numero = (room.numero ?? '').toString().trim();
+    return `${sala}|${bloco}|${numero}`;
 }
+
+function generateNextRoomId(existingRooms) {
+    const maxId = existingRooms.length > 0 ? Math.max(...existingRooms.map(r => Number(r.id) || 0)) : 0;
+    return maxId + 1;
+}
+
+// Garante que as salas definidas em código (dropdown + NEW_ROOMS_SEED) existam no localStorage sem duplicar
+function ensureRoomsSeeded() {
+    try {
+        const storedRaw = localStorage.getItem('rooms');
+        let existing = [];
+        if (storedRaw) {
+            existing = JSON.parse(storedRaw);
+            if (!Array.isArray(existing)) existing = [];
+        }
+
+        // Índice por chave normalizada
+        const index = new Map(existing.map(r => [normalizeRoomKey(r), r]));
+
+        // Base a mesclar: tudo do dropdown original + novas salas definidas em código
+        const baseSeed = [...dropdown, ...NEW_ROOMS_SEED.map(r => ({ ...r }))];
+        let mutated = false;
+
+        for (const seed of baseSeed) {
+            const seedObj = {
+                id: seed.id, // pode vir definido no dropdown
+                sala: seed.sala,
+                bloco: seed.bloco,
+                numero: seed.numero ?? ''
+            };
+            const key = normalizeRoomKey(seedObj);
+
+            if (!index.has(key)) {
+                // Novo registro – atribuir ID sequencial
+                const nextId = generateNextRoomId(existing);
+                seedObj.id = seedObj.id ?? nextId;
+                existing.push(seedObj);
+                index.set(key, seedObj);
+                mutated = true;
+            } else {
+                // Já existe – manter o existente (não sobrescreve ID/valores do usuário)
+            }
+        }
+
+        if (!storedRaw) {
+            // Não havia nada salvo – salvar tudo
+            localStorage.setItem('rooms', JSON.stringify(existing));
+        } else if (mutated) {
+            // Havia dados e adicionamos novos – persistir merge
+            localStorage.setItem('rooms', JSON.stringify(existing));
+        }
+    } catch (e) {
+        console.error('Erro ao mesclar salas no localStorage:', e);
+        // Fallback mínimo para garantir funcionamento
+        if (!localStorage.getItem('rooms')) {
+            localStorage.setItem('rooms', JSON.stringify(dropdown));
+        }
+    }
+}
+
+// Executa o seed/merge ao carregar o script para refletir mudanças de código
+ensureRoomsSeeded();
 
 // Função para obter os dados do dropdown do localStorage ou usar o padrão
 function getDropdownData() {
