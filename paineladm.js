@@ -1,7 +1,7 @@
 // Variáveis globais
 let teacherModalActive = false;
-let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
-// let selectedDate = "2025-08-31";
+// let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
+let selectedDate = "2025-08-31";
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 let activeShift = getCurrentShiftByTime();
 
@@ -3060,6 +3060,24 @@ function deleteTeacher(teacherName) {
     }
 }
 
+function hiddenDefaultOptions() {
+    document.getElementById('shiftContent').style.display = 'none';
+    document.getElementById('showTeacherBtn').style.display = 'none';
+    document.getElementById('import-files-btn').style.display = 'none';
+    document.getElementById('show-data-dropdown').style.display = 'none';
+    document.getElementById('goBackToKeysTable').style.display = 'flex';
+    document.getElementById('dateSelector').classList.add('disabled');
+}
+
+function showDefaultOptions() {
+    document.getElementById('shiftContent').style.display = 'block';
+    document.getElementById('showTeacherBtn').style.display = 'block';
+    document.getElementById('import-files-btn').style.display = 'block';
+    document.getElementById('show-data-dropdown').style.display = 'flex';
+    document.getElementById('goBackToKeysTable').style.display = 'none';
+    document.getElementById('dateSelector').classList.remove('disabled');
+}
+
 // Função para exibir a tabela de professores
 function showTeacherTable() {
     const tableContainer = document.getElementById('teachersTable');
@@ -3069,18 +3087,14 @@ function showTeacherTable() {
     tableContainer.style.display = 'block';
     tableContainer.classList.remove('d-none');
 
-    document.getElementById('shiftContent').style.display = 'none';
-    document.getElementById('showTeacherBtn').style.display = 'none';
-    document.getElementById('import-files-btn').style.display = 'none';
-    document.getElementById('register-room-option').style.display = 'none';
-    document.getElementById('show-data-dropdown').style.display = 'none';
-    document.getElementById('goBackToKeysTable').style.display = 'flex';
-    document.getElementById('dateSelector').classList.add('disabled');
+    hiddenDefaultOptions()
     document.getElementById('shiftTabs').style.display = 'none';
-
+    document.getElementById('register-room-option').style.display = 'none';
+    
     // Visibilidade da barra de pesquisas
     document.getElementById('search-bar').classList.add('d-flex');
     document.getElementById('search-bar').classList.remove('d-none');
+    
 
     teacherManagerState.isActive = true;
 }
@@ -3094,15 +3108,9 @@ function hideTeacherTable() {
     tableContainer.style.display = 'none';
     tableContainer.classList.add('d-none');
     
-    document.getElementById('shiftContent').style.display = 'block';
-    document.getElementById('showTeacherBtn').style.display = 'block';
-    document.getElementById('import-files-btn').style.display = 'block';
-    document.getElementById('register-room-option').style.display = 'flex';
-    document.getElementById('show-data-dropdown').style.display = 'flex';
-    document.getElementById('goBackToKeysTable').style.display = 'none';
-    document.getElementById('dateSelector').classList.remove('disabled');
+    showDefaultOptions();
     document.getElementById('shiftTabs').style.display = 'flex';
-
+    document.getElementById('register-room-option').style.display = 'flex';
     // Visibilidade da barra de pesquisas
     document.getElementById('search-bar').classList.remove('d-flex');
     document.getElementById('search-bar').classList.add('d-none');
@@ -3437,7 +3445,6 @@ function loadRoomsTable() {
     tbody.innerHTML = rooms.map(room => createRoomRow(room)).join('');
 }
 
-// Vou otimizar!!!
 // Função para exibir a tabela de salas
 function showRoomsTable() {
     const tableContainer = document.getElementById('roomsTable');
@@ -3446,17 +3453,11 @@ function showRoomsTable() {
 
     tableContainer.style.display = 'block';
     tableContainer.classList.remove('d-none');
-
-
-    document.getElementById('shiftContent').style.display = 'none';
-    document.getElementById('showTeacherBtn').style.display = 'none';
-    document.getElementById('import-files-btn').style.display = 'none';
-    document.getElementById('register-teacher-option').style.display = 'none';
-    document.getElementById('show-data-dropdown').style.display = 'none';
-    document.getElementById('goBackToKeysTable').style.display = 'flex';
-    document.getElementById('dateSelector').classList.add('disabled');
+    
+    hiddenDefaultOptions();
     document.getElementById('shiftTabs').classList.add('disabled');
-
+    document.getElementById('register-teacher-option').style.display = 'none';
+    
     teacherManagerState.isActive = true;
 }
 
@@ -3469,15 +3470,9 @@ function hideRoomsTable() {
     tableContainer.style.display = 'none';
     tableContainer.classList.add('d-none');
     
-    document.getElementById('shiftContent').style.display = 'block';
-    document.getElementById('showTeacherBtn').style.display = 'block';
-    document.getElementById('import-files-btn').style.display = 'block';
-    document.getElementById('register-teacher-option').style.display = 'flex';
-    document.getElementById('show-data-dropdown').style.display = 'flex';
-    document.getElementById('goBackToKeysTable').style.display = 'none';
-    document.getElementById('dateSelector').classList.remove('disabled');
+    showDefaultOptions()
     document.getElementById('shiftTabs').classList.remove('disabled');
-    
+    document.getElementById('register-teacher-option').style.display = 'flex';
     teacherManagerState.isActive = false;
 }
 
@@ -3944,6 +3939,11 @@ function showManualAllocationsTable() {
     // Mostrar tabela de alocações manuais
     document.getElementById('manualAllocationsTable').style.display = 'block';
     
+    hiddenDefaultOptions();
+    document.getElementById('shiftTabs').classList.add('disabled');
+    document.getElementById('register-teacher-option').style.display = 'none';
+    document.getElementById('register-room-option').style.display = 'none';
+
     // Carregar dados da tabela
     loadManualAllocationsTable();
 }
@@ -4152,6 +4152,11 @@ function closeManualAllocationModal() {
     document.getElementById('manualProfessorName').value = '';
     document.getElementById('manualObservations').value = '';
     document.getElementById('manualCourseName').value = '';
+
+    showDefaultOptions();
+    document.getElementById('shiftTabs').classList.remove('disabled');
+    document.getElementById('register-teacher-option').style.display = 'flex';
+    document.getElementById('register-room-option').style.display = 'flex';
     
     // Resetar seleções
     manualCurrentSelections = {
