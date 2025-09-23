@@ -2323,6 +2323,7 @@ function updateCurrentDate() {
 function renderTable() {
     console.log('Renderizando dados do turno:', activeShift);
     const container = document.getElementById('shiftContent');
+    const manualAllocationsContainer = document.getElementById('manualAllocationsTableBody');
     
     if(!container) {
         console.error('Elemento shiftContent não encontrado');
@@ -4056,11 +4057,11 @@ function deleteManualAllocation(allocationId, dataAlocacao, periodo) {
     }
 }
 
-// Funções auxiliares
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR');
-}
+// Funções auxiliares 
+// function formatDate(dateString) { // - tava exibindo a data errada
+//     const date = new Date(dateString);
+//     return date.toLocaleDateString('pt-BR');
+// }
 
 function getShiftColor(shift) {
     const colors = {
@@ -4181,7 +4182,7 @@ function handleManualAllocation() {
     const professor = professorInput ? professorInput.value.trim() : '';
     const curso = cursoInput ? cursoInput.value.trim() : '';
     const observacoes = observacoesInput ? observacoesInput.value.trim() : '';
-    
+
     // Validação dos campos obrigatórios
     if(!dataAlocacao || dataAlocacao === '') {
         showNotification('Data da alocação é obrigatória.', 'warning');
