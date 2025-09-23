@@ -1073,6 +1073,13 @@ window.addEventListener('unload', function() {
 
 // Função para carregar dados salvos
 function loadSavedData() {
+    // Limpar IDs duplicados antes de tudo
+    console.log('🧹 [INIT] Limpando IDs duplicados...');
+    const wasCleared = cleanDuplicateIds();
+    if (wasCleared) {
+        console.log('✅ [INIT] IDs duplicados foram limpos');
+    }
+    
     // Tentar carregar dados no novo formato (por data)
     const newFormatData = localStorage.getItem('allDateShiftData');
     if (newFormatData) {
@@ -2645,6 +2652,11 @@ function generateEmptyRow(shiftCapitalized, formattedDate) {
 
 // Geração de linha de tabela com dados
 function generateTableRow(record) {
+    // Debug para alocações manuais
+    if (record.tipo === 'manual_allocation') {
+        console.log('🏷️ [DEBUG] Gerando linha para alocação manual:', { id: record.id, sala: record.sala, professor: record.professor });
+    }
+    
     const room = record.room || record.sala || '-';
     const course = record.course || record.curso || '-';
     const turma = record.turmaNumber || record.turma || '-';
@@ -3122,7 +3134,7 @@ function saveRooms(rooms) {
 // Recupera os dados do dropdown
 function getDropdownData() {
     const data = localStorage.getItem("rooms");
-    return data ? JSON.parse(data) : {};
+    return data ? JSON.parse(data) : []; // Retornar array vazio em vez de objeto vazio
 }
 
 // Generate unique ID for new room
@@ -3130,6 +3142,75 @@ function generateRoomId() {
     const rooms = getRooms();
     const maxId = rooms.length > 0 ? Math.max(...rooms.map(room => room.id)) : 0;
     return maxId + 1;
+}
+
+// Generate unique ID for records (manual allocations, etc)
+function generateUniqueRecordId() {
+    // Obter todos os IDs existentes para garantir unicidade
+    const allData = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
+    const existingIds = new Set();
+    
+    // Coletar todos os IDs existentes
+    for (const date in allData) {
+        for (const shift in allData[date]) {
+            if (Array.isArray(allData[date][shift])) {
+                allData[date][shift].forEach(record => {
+                    if (record.id) existingIds.add(record.id);
+                });
+            }
+        }
+    }
+    
+    // Gerar um ID único que não colida com os existentes
+    let newId;
+    let attempts = 0;
+    do {
+        newId = `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${attempts}`;
+        attempts++;
+    } while (existingIds.has(newId) && attempts < 100);
+    
+    console.log('🆔 [DEBUG] ID gerado para alocação manual:', newId);
+    return newId;
+}
+
+// Função para limpar IDs duplicados (executar uma vez para limpar dados corrompidos)
+function cleanDuplicateIds() {
+    const allData = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
+    let cleaned = false;
+    
+    for (const date in allData) {
+        for (const shift in allData[date]) {
+            if (Array.isArray(allData[date][shift])) {
+                const seenIds = new Set();
+                const cleanArray = [];
+                
+                allData[date][shift].forEach(record => {
+                    if (!record.id || !seenIds.has(record.id)) {
+                        if (!record.id) {
+                            record.id = generateUniqueRecordId();
+                            console.log('🔧 [CLEAN] ID criado para registro sem ID:', record.id);
+                        }
+                        seenIds.add(record.id);
+                        cleanArray.push(record);
+                    } else {
+                        console.log('🗑️ [CLEAN] Registro duplicado removido:', record.id);
+                        cleaned = true;
+                    }
+                });
+                
+                allData[date][shift] = cleanArray;
+            }
+        }
+    }
+    
+    if (cleaned) {
+        localStorage.setItem('allDateShiftData', JSON.stringify(allData));
+        dataByDateAndShift = allData;
+        console.log('✅ [CLEAN] Dados limpos e salvos');
+        return true;
+    }
+    
+    return false;
 }
 
 // Cria a linha da sala no modo padrão de exibição
@@ -3417,10 +3498,54 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Função para lidar com ações de chave
 function handleKeyAction(recordId, currentStatus) {
+    console.log('🔍 [DEBUG] Procurando registro ID:', recordId, 'Status:', currentStatus);
+    
     // Encontrar o registro no turno atual da data selecionada
-    const currentData = getCurrentShiftData();
-    const record = currentData.find(r => r.id === recordId);
-    if (!record) return;
+    let currentData = getCurrentShiftData();
+    
+    // Garantir que currentData é um array
+    if (!Array.isArray(currentData)) {
+        currentData = [];
+    }
+    
+    console.log('🔍 [DEBUG] Dados do turno atual:', currentData.length, 'registros');
+    currentData.forEach((r, index) => {
+        console.log(`🔍 [DEBUG] Registro ${index}:`, { id: r.id, sala: r.sala, professor: r.professor, status: r.status });
+    });
+    
+    // Buscar com comparação estrita de string
+    let record = currentData.find(r => String(r.id) === String(recordId));
+    let targetData = currentData; // Array onde o registro foi encontrado
+    
+    // Se não encontrou no turno atual, procurar em todos os dados da variável global
+    if (!record) {
+        console.log('🔍 [DEBUG] Não encontrado no turno atual, procurando globalmente...');
+        // Garantir que dataByDateAndShift está atualizada
+        dataByDateAndShift = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
+        
+        for (const date in dataByDateAndShift) {
+            for (const shift in dataByDateAndShift[date]) {
+                const shiftData = dataByDateAndShift[date][shift];
+                if (Array.isArray(shiftData)) {
+                    const foundRecord = shiftData.find(r => String(r.id) === String(recordId));
+                    if (foundRecord) {
+                        console.log('✅ [DEBUG] Registro encontrado em', date, shift, ':', foundRecord);
+                        record = foundRecord;
+                        targetData = shiftData;
+                        break;
+                    }
+                }
+            }
+            if (record) break;
+        }
+    }
+    
+    if (!record) {
+        console.error('❌ [DEBUG] Registro não encontrado:', recordId);
+        return;
+    }
+    
+    console.log('✅ [DEBUG] Registro encontrado, processando ação...');
 
     const now = new Date();
     const timeString = now.toLocaleTimeString('pt-BR', { 
@@ -3454,34 +3579,39 @@ function handleKeyAction(recordId, currentStatus) {
 
     // Salvar no Firebase para sincronização em tempo real
     if (typeof saveDataToFirebase === 'function') {
-        // DEBUG: Verificar dados antes de enviar ao Firebase
-        console.log('🔍 [ADMIN] Ação de chave - Dados antes de enviar ao Firebase:');
-        console.log('🔍 [ADMIN] - selectedDate:', selectedDate);
-        console.log('🔍 [ADMIN] - activeShift:', activeShift);
-        console.log('🔍 [ADMIN] - currentData length:', currentData.length);
+        // Encontrar a data e turno corretos para salvar no Firebase
+        let saveDate = selectedDate;
+        let saveShift = activeShift;
         
-        // Validar se há dados para salvar
-        if (currentData && Array.isArray(currentData) && currentData.length > 0) {
-            saveDataToFirebase(selectedDate, activeShift, currentData).then(() => {
-                console.log('✅ [ADMIN] Dados salvos no Firebase após ação de chave no painel administrativo');
+        // Se o registro foi encontrado em outra data/turno, usar essa informação
+        for (const date in dataByDateAndShift) {
+            for (const shift in dataByDateAndShift[date]) {
+                if (dataByDateAndShift[date][shift] === targetData) {
+                    saveDate = date;
+                    saveShift = shift;
+                    break;
+                }
+            }
+        }
+        
+        if (targetData && Array.isArray(targetData) && targetData.length > 0) {
+            saveDataToFirebase(saveDate, saveShift, targetData).then(() => {
+                console.log('✅ [ADMIN] Dados salvos no Firebase após ação de chave');
             }).catch(error => {
                 console.error('❌ [ADMIN] Erro ao salvar no Firebase:', error);
             });
-        } else {
-            console.warn('⚠️ [ADMIN] Dados vazios ou inválidos - não salvando no Firebase após ação de chave');
-            console.warn('⚠️ [ADMIN] - currentData:', currentData);
         }
     }
 
     // Atualizar os dados no localStorage
     localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
+    localStorage.setItem('dataUpdateTimestamp', Date.now().toString());
     
     // Também salvar no formato antigo para compatibilidade
     const currentDateData = getDataForDate(selectedDate);
     localStorage.setItem('allShiftData', JSON.stringify(currentDateData));
     
     // Emitir evento de atualização para sincronizar com o painel do professor
-    // Não incluir date para não forçar mudança de data no professor
     const updateEvent = new CustomEvent('shiftDataUpdated', { 
         detail: { shift: activeShift, data: dataByDateAndShift }
     });
@@ -3668,3 +3798,571 @@ document.addEventListener('DOMContentLoaded', function() {
         trapFocusInOverlay();
     }
 });
+
+// ==================== MANUAL ALLOCATION FUNCTIONS ====================
+
+// Seleções atuais para alocação manual
+let manualCurrentSelections = {
+    block: null,
+    room: null,
+    roomNumber: null
+};
+
+// Função para obter dados dos dropdowns (reutiliza a função existente)
+function getDropdownData() {
+    const rooms = getRooms(); // Função existente que obtém as salas
+    return rooms;
+}
+
+// Função para obter blocos únicos
+function getUniqueBlocks(rooms) {
+    const blocks = [...new Set(rooms.map(room => room.bloco))];
+    return blocks.sort();
+}
+
+// Função para obter salas únicas para um bloco
+function getUniqueRoomsForBlock(rooms, selectedBlock) {
+    const roomsInBlock = rooms.filter(room => room.bloco === selectedBlock);
+    const uniqueRooms = [...new Set(roomsInBlock.map(room => room.sala))];
+    return uniqueRooms.sort();
+}
+
+// Função para obter números de sala únicos para um bloco e sala
+function getUniqueRoomNumbersForRoom(rooms, selectedBlock, selectedRoom) {
+    const roomNumbers = rooms
+        .filter(room => room.bloco === selectedBlock && room.sala === selectedRoom)
+        .map(room => room.numero)
+        .filter(num => num && num.trim() !== '');
+    return [...new Set(roomNumbers)].sort();
+}
+
+// Função que preenche o dropdown de blocos para alocação manual
+function populateManualBlockDropdown() {
+    const blockOptions = document.getElementById('manual-block-options');
+    
+    if(!blockOptions) return;
+
+    const rooms = getDropdownData();
+    const blocks = getUniqueBlocks(rooms);
+
+    blockOptions.innerHTML = blocks.map(block => `
+        <li class="option" data-value="${block}">${block}</li>
+    `).join('');
+
+    blockOptions.querySelectorAll('.option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const selectedBlock = this.getAttribute('data-value');
+            
+            // Atualiza as seleções
+            manualCurrentSelections.block = selectedBlock;
+            manualCurrentSelections.room = null;
+            manualCurrentSelections.roomNumber = null;
+            
+            // Atualiza a UI
+            document.getElementById('manualValueBlock').textContent = selectedBlock;
+            document.querySelector('#manual-block-dropdown .selected').classList.remove('active');
+            document.querySelector('#manual-block-dropdown .options').classList.remove('show');
+            
+            // Mostra o dropdown de salas e popula
+            document.getElementById('manual-room-dropdown').classList.remove('hidden');
+            populateManualRoomDropdown(selectedBlock);
+            
+            // Esconde o dropdown de números de sala
+            document.getElementById('manual-room-number-dropdown').classList.add('invisible');
+            document.getElementById('manualValueRoomNumber').textContent = 'Selecione o número da sala';
+        });
+    });
+}
+
+// Função que preenche o dropdown de salas para alocação manual
+function populateManualRoomDropdown(selectedBlock) {
+    const roomOptions = document.getElementById('manual-room-dropdown-op');
+    
+    if(!roomOptions) return;
+
+    const rooms = getDropdownData();
+    const roomsInBlock = getUniqueRoomsForBlock(rooms, selectedBlock);
+
+    roomOptions.innerHTML = roomsInBlock.map(room => `
+        <li class="option" data-value="${room}">${room}</li>
+    `).join('');
+
+    roomOptions.querySelectorAll('.option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const selectedRoom = this.getAttribute('data-value');
+            
+            // Atualiza as seleções
+            manualCurrentSelections.room = selectedRoom;
+            manualCurrentSelections.roomNumber = null;
+            
+            // Atualiza a UI
+            document.getElementById('manualValueRoom').textContent = selectedRoom;
+            document.querySelector('#manual-room-dropdown .selected').classList.remove('active');
+            document.querySelector('#manual-room-dropdown .options').classList.remove('show');
+            
+            // Mostra o dropdown de números de sala e popula
+            document.getElementById('manual-room-number-dropdown').classList.remove('invisible');
+            populateManualRoomNumberDropdown(selectedBlock, selectedRoom);
+        });
+    });
+}
+
+// Função que preenche o dropdown de números de sala para alocação manual
+function populateManualRoomNumberDropdown(selectedBlock, selectedRoom) {
+    const roomNumberOptions = document.getElementById('manual-room-number-op');
+    
+    if(!roomNumberOptions) return;
+
+    const rooms = getDropdownData();
+    const roomNumbers = getUniqueRoomNumbersForRoom(rooms, selectedBlock, selectedRoom);
+
+    if(roomNumbers.length === 0) {
+        roomNumberOptions.innerHTML = '<li class="option disabled">Nenhum número disponível</li>';
+        return;
+    }
+
+    roomNumberOptions.innerHTML = roomNumbers.map(number => `
+        <li class="option" data-value="${number}">${number}</li>
+    `).join('');
+
+    roomNumberOptions.querySelectorAll('.option:not(.disabled)').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const selectedRoomNumber = this.getAttribute('data-value');
+            
+            // Atualiza as seleções
+            manualCurrentSelections.roomNumber = selectedRoomNumber;
+            
+            // Atualiza a UI
+            document.getElementById('manualValueRoomNumber').textContent = selectedRoomNumber;
+            document.querySelector('#manual-room-number-dropdown .selected').classList.remove('active');
+            document.querySelector('#manual-room-number-dropdown .options').classList.remove('show');
+        });
+    });
+}
+
+// Função para exibir a tabela de alocações manuais
+function showManualAllocationsTable() {
+    // Ocultar outras tabelas
+    document.getElementById('shiftContent').style.display = 'none';
+    document.getElementById('teachersTable').style.display = 'none';
+    document.getElementById('roomsTable').style.display = 'none';
+    
+    // Mostrar tabela de alocações manuais
+    document.getElementById('manualAllocationsTable').style.display = 'block';
+    
+    // Carregar dados da tabela
+    loadManualAllocationsTable();
+}
+
+// Função para carregar e exibir dados na tabela de alocações manuais
+function loadManualAllocationsTable() {
+    const tableBody = document.getElementById('manualAllocationsTableBody');
+    const totalSpan = document.getElementById('total-manual-allocations');
+    
+    if(!tableBody || !totalSpan) return;
+
+    try {
+        // Buscar todas alocações manuais do allDateShiftData
+        const allDateShiftData = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
+        let manualAllocations = [];
+        Object.keys(allDateShiftData).forEach(date => {
+            Object.keys(allDateShiftData[date]).forEach(shift => {
+                allDateShiftData[date][shift].forEach(record => {
+                    if (record.tipo === 'manual_allocation') {
+                        manualAllocations.push(record);
+                    }
+                });
+            });
+        });
+
+        // Ordenar por data e depois por turno
+        manualAllocations.sort((a, b) => {
+            if(a.dataAlocacao !== b.dataAlocacao) {
+                return new Date(a.dataAlocacao) - new Date(b.dataAlocacao);
+            }
+            const shiftOrder = { 'manhã': 1, 'tarde': 2, 'noite': 3 };
+            return (shiftOrder[a.periodo] || 4) - (shiftOrder[b.periodo] || 4);
+        });
+
+        totalSpan.textContent = manualAllocations.length;
+
+        if(manualAllocations.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-4">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Nenhuma alocação manual encontrada
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tableBody.innerHTML = manualAllocations.map(allocation => `
+            <tr>
+                <td>${formatDate(allocation.dataAlocacao)}</td>
+                <td><span class="badge bg-${getShiftColor(allocation.periodo)}">${capitalizeFirst(allocation.periodo)}</span></td>
+                <td>${allocation.sala || '-'}</td>
+                <td><span class="badge bg-secondary">${allocation.bloco || '-'}</span></td>
+                <td>${allocation.numero || '-'}</td>
+                <td>${allocation.professor || '-'}</td>
+                <td>${allocation.curso || '-'}</td>
+                <td>${allocation.observacoes || '-'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteManualAllocation('${allocation.id}', '${allocation.dataAlocacao}', '${allocation.periodo}')" title="Excluir alocação">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (error) {
+        console.error('Erro ao carregar alocações manuais:', error);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center text-danger py-4">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Erro ao carregar alocações manuais
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Função para deletar uma alocação manual
+function deleteManualAllocation(allocationId, dataAlocacao, periodo) {
+    if(!confirm('Tem certeza que deseja excluir esta alocação manual?')) {
+        return;
+    }
+
+    try {
+        // Atualizar a variável global dataByDateAndShift
+        dataByDateAndShift = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
+        
+        if (dataByDateAndShift[dataAlocacao] && dataByDateAndShift[dataAlocacao][periodo]) {
+            dataByDateAndShift[dataAlocacao][periodo] = dataByDateAndShift[dataAlocacao][periodo].filter(record => record.id !== allocationId);
+            
+            // Salvar na estrutura global e localStorage
+            localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
+            localStorage.setItem('dataUpdateTimestamp', Date.now().toString());
+            
+            // Se for a data atual sendo visualizada, atualizar a tabela principal
+            if (dataAlocacao === selectedDate) {
+                renderTable();
+            }
+        }
+        
+        // Recarregar a tabela de alocações manuais
+        loadManualAllocationsTable();
+        showNotification('Alocação manual excluída com sucesso!', 'success');
+        
+    } catch (error) {
+        console.error('Erro ao excluir alocação manual:', error);
+        showNotification('Erro ao excluir alocação manual.', 'error');
+    }
+}
+
+// Funções auxiliares
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+}
+
+function getShiftColor(shift) {
+    const colors = {
+        'manhã': 'warning',
+        'tarde': 'info', 
+        'noite': 'dark'
+    };
+    return colors[shift] || 'secondary';
+}
+
+function capitalizeFirst(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// Função que exibe o modal de alocação manual
+function openManualAllocationModal() {
+    document.getElementById('manualAllocationModal').style.display = 'flex';
+    // Inicializar os dropdowns quando o modal abre
+    populateManualBlockDropdown();
+    setupManualDropdownInteractions();
+}
+
+// Função para configurar as interações dos dropdowns do modal manual
+function setupManualDropdownInteractions() {
+    // Dropdown de blocos
+    const blockDropdown = document.querySelector('#manual-block-dropdown .selected');
+    const blockOptions = document.querySelector('#manual-block-dropdown .options');
+    
+    if(blockDropdown && blockOptions) {
+        blockDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+            this.classList.toggle('active');
+            blockOptions.classList.toggle('show');
+        });
+    }
+    
+    // Dropdown de salas
+    const roomDropdown = document.querySelector('#manual-room-dropdown .selected');
+    const roomOptions = document.querySelector('#manual-room-dropdown .options');
+    
+    if(roomDropdown && roomOptions) {
+        roomDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+            this.classList.toggle('active');
+            roomOptions.classList.toggle('show');
+        });
+    }
+    
+    // Dropdown de números de sala
+    const roomNumberDropdown = document.querySelector('#manual-room-number-dropdown .selected');
+    const roomNumberOptions = document.querySelector('#manual-room-number-dropdown .options');
+    
+    if(roomNumberDropdown && roomNumberOptions) {
+        roomNumberDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+            this.classList.toggle('active');
+            roomNumberOptions.classList.toggle('show');
+        });
+    }
+    
+    // Fechar dropdowns quando clicar fora
+    document.addEventListener('click', function() {
+        document.querySelectorAll('#manualAllocationModal .selected').forEach(dropdown => {
+            dropdown.classList.remove('active');
+        });
+        document.querySelectorAll('#manualAllocationModal .options').forEach(options => {
+            options.classList.remove('show');
+        });
+    });
+}
+
+// Função que oculta e limpa o modal de alocação manual
+function closeManualAllocationModal() {
+    document.getElementById('manualAllocationModal').style.display = 'none';
+    document.getElementById('manualAllocationDate').value = '';
+    document.getElementById('manualAllocationShift').value = '';
+    
+    // Resetar dropdowns
+    document.getElementById('manualValueBlock').textContent = 'Selecione o bloco';
+    document.getElementById('manualValueRoom').textContent = 'Selecione a sala';
+    document.getElementById('manualValueRoomNumber').textContent = 'Selecione o número da sala';
+    
+    // Ocultar dropdowns dependentes
+    document.getElementById('manual-room-dropdown').classList.add('hidden');
+    document.getElementById('manual-room-number-dropdown').classList.add('invisible');
+    
+    // Limpar campos opcionais
+    document.getElementById('manualProfessorName').value = '';
+    document.getElementById('manualCourseName').value = '';
+    document.getElementById('manualObservations').value = '';
+    
+    // Resetar seleções
+    manualCurrentSelections = {
+        block: null,
+        room: null,
+        roomNumber: null
+    };
+}
+
+// Função para o processamento da alocação manual
+function handleManualAllocation() {
+    const dataInput = document.getElementById('manualAllocationDate');
+    const turnoInput = document.getElementById('manualAllocationShift');
+    const professorInput = document.getElementById('manualProfessorName');
+    const cursoInput = document.getElementById('manualCourseName');
+    const observacoesInput = document.getElementById('manualObservations');
+
+    if(!dataInput || !turnoInput) {
+        console.error('Required form elements not found');
+        return;
+    }
+
+    const dataAlocacao = dataInput.value.trim();
+    const turno = turnoInput.value.trim();
+    const sala = manualCurrentSelections.room;
+    const bloco = manualCurrentSelections.block;
+    const numero = manualCurrentSelections.roomNumber || '';
+    const professor = professorInput ? professorInput.value.trim() : '';
+    const curso = cursoInput ? cursoInput.value.trim() : '';
+    const observacoes = observacoesInput ? observacoesInput.value.trim() : '';
+    
+    // Validação dos campos obrigatórios
+    if(!dataAlocacao || dataAlocacao === '') {
+        showNotification('Data da alocação é obrigatória.', 'warning');
+        return;
+    }
+    
+    if(!turno || turno === '') {
+        showNotification('Turno é obrigatório.', 'warning');
+        return;
+    }
+    
+    if(!bloco || bloco === '') {
+        showNotification('Bloco é obrigatório.', 'warning');
+        return;
+    }
+    
+    if(!sala || sala === '') {
+        showNotification('Sala é obrigatória.', 'warning');
+        return;
+    }
+    
+    // Validação da data (deve ser futura)
+    const today = new Date();
+    const selectedDate = new Date(dataAlocacao);
+    
+    // Resetar as horas para comparar apenas as datas
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    if(selectedDate <= today) {
+        showNotification('A data da alocação deve ser uma data futura.', 'warning');
+        return;
+    }
+    
+    // Validação do turno
+    const turnosValidos = ['manhã', 'tarde', 'noite'];
+    if(!turnosValidos.includes(turno)) {
+        showNotification('Turno inválido. Selecione Manhã, Tarde ou Noite.', 'warning');
+        return;
+    }
+    
+    // Validação do tamanho dos campos
+    if(sala && sala.length > 50) {
+        showNotification('Nome da sala não pode ter mais de 50 caracteres.', 'warning');
+        return;
+    }
+    
+    // Removida validação de 1 caractere para bloco pois agora usa dropdown com dados existentes
+    
+    if(numero && numero.length > 10) {
+        showNotification('Número da sala não pode ter mais de 10 caracteres.', 'warning');
+        return;
+    }
+    
+    if(professor && professor.length > 100) {
+        showNotification('Nome do professor não pode ter mais de 100 caracteres.', 'warning');
+        return;
+    }
+    
+    if(curso && curso.length > 100) {
+        showNotification('Nome do curso não pode ter mais de 100 caracteres.', 'warning');
+        return;
+    }
+    
+    if(observacoes && observacoes.length > 200) {
+        showNotification('Observações não podem ter mais de 200 caracteres.', 'warning');
+        return;
+    }
+    
+    // Cria um objeto de alocação manual no mesmo formato dos registros normais
+    const manualAllocation = {
+        id: generateUniqueRecordId(), // Usar função específica para registros
+        
+        // Campos principais para compatibilidade com o sistema
+        sala: sala,
+        professor: professor || 'Alocação Manual',
+        curso: curso || 'Alocação Manual',
+        disciplina: observacoes || 'Alocação manual de sala',
+        turma: '-',
+        horaRetirada: null, // Não há horário de retirada ainda - será preenchido quando o professor retirar
+        horaDevolucao: null,
+        status: 'disponivel', // Status disponível para que o professor possa "retirar" a chave
+        
+        // Campos adicionais para o formato admin (compatibilidade dupla)
+        room: sala,
+        professorName: professor || 'Alocação Manual',
+        course: curso || 'Alocação Manual',
+        subject: observacoes || 'Alocação manual de sala',
+        turmaNumber: '-',
+        withdrawalTime: null, // Não há horário de retirada ainda
+        returnTime: null,
+        
+        // Campos específicos de alocação manual
+        bloco: bloco,
+        numero: numero,
+        tipo: 'manual_allocation',
+        dataAlocacao: dataAlocacao,
+        periodo: turno,
+        motivo: observacoes || 'Alocação manual de sala',
+        observacoes: observacoes || 'Alocação manual de sala',
+        dataRegistro: new Date().toISOString(),
+        timestamp: Date.now()
+    };
+    
+    console.log('🏷️ [DEBUG] Alocação manual criada com ID:', manualAllocation.id, 'para sala:', manualAllocation.sala);
+    
+    // Integrar com o sistema principal de dados por data/turno
+    try {
+        // Obter dados existentes por data e turno
+        try {
+            dataByDateAndShift = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
+        } catch (e) {
+            console.warn('Erro ao ler allDateShiftData, criando novo objeto:', e);
+            dataByDateAndShift = {};
+        }
+        
+        // Garantir que a estrutura da data existe
+        if (!dataByDateAndShift[dataAlocacao]) {
+            dataByDateAndShift[dataAlocacao] = {};
+        }
+        
+        // Garantir que a estrutura do turno existe
+        if (!dataByDateAndShift[dataAlocacao][turno]) {
+            dataByDateAndShift[dataAlocacao][turno] = [];
+        }
+        
+        // Adicionar a alocação manual ao turno específico da data específica
+        dataByDateAndShift[dataAlocacao][turno].push(manualAllocation);
+        
+        // Salvar no localStorage principal
+        localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
+        localStorage.setItem('dataUpdateTimestamp', Date.now().toString());
+        
+        console.log('📝 [ALOCAÇÃO MANUAL] Dados salvos na estrutura principal:');
+        console.log('   - Data:', dataAlocacao);
+        console.log('   - Turno:', turno);
+        console.log('   - Total de registros no turno:', dataByDateAndShift[dataAlocacao][turno].length);
+        console.log('   - Alocação adicionada:', manualAllocation);
+        
+        // Salvar no Firebase se disponível
+        if(typeof saveDataToFirebase === 'function') {
+            console.log('🔥 [ALOCAÇÃO MANUAL]: Salvando no Firebase...');
+            saveDataToFirebase(dataAlocacao, turno, dataByDateAndShift[dataAlocacao][turno]).then(() => {
+                console.log('✅ [ALOCAÇÃO MANUAL]: Dados salvos no Firebase com sucesso!');
+            }).catch(error => {
+                console.error('❌ [ALOCAÇÃO MANUAL]: Erro ao salvar no Firebase:', error);
+            });
+        }
+        
+        // Disparar evento para atualizar outras interfaces
+        window.dispatchEvent(new CustomEvent('shiftDataUpdated', { 
+            detail: { 
+                shift: turno, 
+                data: dataByDateAndShift 
+            } 
+        }));
+        
+        closeManualAllocationModal();
+        showNotification(`Alocação manual registrada com sucesso para ${formatDate(dataAlocacao)} - ${capitalizeFirst(turno)}!`, 'success');
+        
+        // Se a alocação foi feita para a data atual sendo visualizada, atualizar a tabela
+        if (dataAlocacao === selectedDate) {
+            console.log('🔄 [ALOCAÇÃO MANUAL] Atualizando tabela pois a alocação foi feita para a data atual');
+            renderTable();
+        } else {
+            console.log('📅 [ALOCAÇÃO MANUAL] Alocação feita para data diferente da atual. Visualize a data', dataAlocacao, 'para ver a alocação');
+        }
+        
+        console.log('📝 Alocação Manual Integrada:', manualAllocation);
+        
+    } catch (error) {
+        console.error('Erro ao salvar alocação manual:', error);
+        showNotification('Erro ao salvar alocação manual. Tente novamente.', 'error');
+    }
+}
