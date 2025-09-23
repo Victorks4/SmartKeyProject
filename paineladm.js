@@ -1,4 +1,10 @@
 // Variáveis globais
+
+// let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
+let teacherModalActive = false;
+// let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
+let selectedDate = "2025-08-31";
+let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 let activeShift = getCurrentShiftByTime();
 
 // Função para determinar o turno atual com base no horário
@@ -14,12 +20,6 @@ function getCurrentShiftByTime() {
         return 'noite';
     }
 }
-
-// let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
-let teacherModalActive = false;
-let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
-// let selectedDate = "2025-08-31";
-let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 
 // Função para obter ou criar estrutura de dados para uma data
 function getDataForDate(date) {
@@ -1382,11 +1382,6 @@ function saveNewTeacher() {
 
     // Tenta adicionar ao sistema de nomes de professores
     try {
-        const teacherNames = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
-        
-        teacherNames[name] = "TEACHER";
-        localStorage.setItem('teacherNames', JSON.stringify(teacherNames));
-        
         const currentMapping = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
 
         currentMapping[name] = fats;
@@ -3164,6 +3159,7 @@ function generateUniqueRecordId() {
     // Gerar um ID único que não colida com os existentes
     let newId;
     let attempts = 0;
+
     do {
         newId = `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${attempts}`;
         attempts++;
@@ -3284,11 +3280,11 @@ function handleRoomRegistration() {
     // Valida se a sala já existe
     const registredRooms = getRooms();
 
-    const roomExists = registredRooms.some(room => 
-        room.sala.toLowerCase().trim() === sala.toLowerCase() &&
-        room.bloco.toLowerCase().trim() === bloco.toLowerCase() &&
-        room.numero.toLowerCase().trim() === (numero || '').toLowerCase()
-    );
+    const roomExists = registredRooms.some(room => {
+        return room.sala.toLowerCase().trim() === sala.toLowerCase() &&
+               room.bloco.toLowerCase().trim() === "bloco " + bloco.toLowerCase().trim() &&
+               room.numero.toLowerCase().trim() === (numero || '').toLowerCase()
+    });
     
     if(roomExists) {
         showNotification('Essa sala já foi cadastrada.', 'warning');
@@ -3299,7 +3295,7 @@ function handleRoomRegistration() {
     const newRoom = {
         id: generateRoomId(),
         sala: sala,
-        bloco: bloco,
+        bloco: "Bloco " + bloco,
         numero: numero
     };
     
