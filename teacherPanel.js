@@ -1,8 +1,8 @@
 let activeAction = null;
 let activeShift = 'manhã';
 let sortAlphabetically = false;
-// let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
-let selectedDate = "2025-08-31";
+let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
+// let selectedDate = "2025-08-31";
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 
 // Variáveis para seleção múltipla de chaves
