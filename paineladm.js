@@ -1,6 +1,4 @@
 // Variáveis globais
-
-// let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
 let teacherModalActive = false;
 let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
 // let selectedDate = "2025-08-31";
@@ -1017,8 +1015,6 @@ function isValidDataFormat(data) {
     return data.every(row => row && row.length >= 5);
 }
 
-
-
 // Configuração dos turnos
 const shifts = [
     { id: 'manhã', label: 'Manhã' },
@@ -1058,8 +1054,6 @@ function updateTable() {
     
     console.log('📊 [ADMIN] updateTable executada - tabela renderizada');
 }
-
-// Dados mock (equivalente ao mockData do React)
 
 // Variável global para o intervalo de atualização da data
 let dateUpdateInterval;
@@ -3964,10 +3958,12 @@ function loadManualAllocationsTable() {
         // Buscar todas alocações manuais do allDateShiftData
         const allDateShiftData = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
         let manualAllocations = [];
+        
         Object.keys(allDateShiftData).forEach(date => {
             Object.keys(allDateShiftData[date]).forEach(shift => {
-                allDateShiftData[date][shift].forEach(record => {
-                    if (record.tipo === 'manual_allocation') {
+                Object.keys(allDateShiftData[date][shift]).forEach(recordKey => {
+                    const record = allDateShiftData[date][shift][recordKey];
+                    if(record.tipo === 'manual_allocation') {
                         manualAllocations.push(record);
                     }
                 });
@@ -4014,8 +4010,7 @@ function loadManualAllocationsTable() {
                 </td>
             </tr>
         `).join('');
-
-    } catch (error) {
+    } catch(error) {
         console.error('Erro ao carregar alocações manuais:', error);
         tableBody.innerHTML = `
             <tr>
@@ -4154,8 +4149,8 @@ function closeManualAllocationModal() {
     
     // Limpar campos opcionais
     document.getElementById('manualProfessorName').value = '';
-    document.getElementById('manualCourseName').value = '';
     document.getElementById('manualObservations').value = '';
+    document.getElementById('manualCourseName').value = '';
     
     // Resetar seleções
     manualCurrentSelections = {
@@ -4179,7 +4174,7 @@ function handleManualAllocation() {
     }
 
     const dataAlocacao = dataInput.value.trim();
-    const turno = turnoInput.value.trim();
+    const turno = turnoInput.value.toLowerCase().trim();
     const sala = manualCurrentSelections.room;
     const bloco = manualCurrentSelections.block;
     const numero = manualCurrentSelections.roomNumber || '';
