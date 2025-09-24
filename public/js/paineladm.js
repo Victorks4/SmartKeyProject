@@ -2701,6 +2701,7 @@ function generateTableRow(record) {
 document.getElementById('goBackToKeysTable').addEventListener('click', () => {
     hideRoomsTable();
     hideTeacherTable();
+    hideManualAllocationsTable();
 })
 
 function generateErrorRow(message) {
@@ -3939,7 +3940,7 @@ function populateManualRoomNumberDropdown(selectedBlock, selectedRoom) {
     });
 }
 
-// Função para exibir a tabela de alocações manuais
+// Função que exibe a tabela de alocações manuais
 function showManualAllocationsTable() {
     // Ocultar outras tabelas
     document.getElementById('shiftContent').style.display = 'none';
@@ -3956,6 +3957,20 @@ function showManualAllocationsTable() {
 
     // Carregar dados da tabela
     loadManualAllocationsTable();
+}
+
+// Função para ocultar a tabela de alocações manuais
+function hideManualAllocationsTable() {
+    document.getElementById('manualAllocationsTable').style.display = 'none';
+    document.getElementById('shiftContent').style.display = 'block';
+    document.getElementById('shiftTabs').classList.remove('disabled');
+    
+    // Mostra as opções de registro que foram ocultadas
+    document.getElementById('register-teacher-option').style.display = 'flex';
+    document.getElementById('register-room-option').style.display = 'flex';
+    
+    // Mostra as opções padrão
+    showDefaultOptions();
 }
 
 // Função para carregar e exibir dados na tabela de alocações manuais
