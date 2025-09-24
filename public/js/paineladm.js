@@ -1,7 +1,7 @@
 // Variáveis globais
 let teacherModalActive = false;
-// let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
-let selectedDate = "2025-08-31";
+let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
+// let selectedDate = "2025-08-31";
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
 let activeShift = getCurrentShiftByTime();
 
@@ -3848,7 +3848,9 @@ function populateManualBlockDropdown() {
             // Atualiza a UI
             document.getElementById('manualValueBlock').textContent = selectedBlock;
             document.querySelector('#manual-block-dropdown .selected').classList.remove('active');
+            document.querySelector('#manual-block-dropdown .selected').classList.add('gradient');
             document.querySelector('#manual-block-dropdown .options').classList.remove('show');
+            document.querySelector('#manual-block-dropdown').classList.add('selectedOption');
             
             // Mostra o dropdown de salas e popula
             document.getElementById('manual-room-dropdown').classList.remove('hidden');
@@ -3886,7 +3888,9 @@ function populateManualRoomDropdown(selectedBlock) {
             // Atualiza a UI
             document.getElementById('manualValueRoom').textContent = selectedRoom;
             document.querySelector('#manual-room-dropdown .selected').classList.remove('active');
+            document.querySelector('#manual-room-dropdown .selected').classList.add('gradient');
             document.querySelector('#manual-room-dropdown .options').classList.remove('show');
+            document.querySelector('#manual-room-dropdown').classList.add('selectedOption');
             
             // Mostra o dropdown de números de sala e popula
             document.getElementById('manual-room-number-dropdown').classList.remove('invisible');
@@ -3898,6 +3902,8 @@ function populateManualRoomDropdown(selectedBlock) {
 // Função que preenche o dropdown de números de sala para alocação manual
 function populateManualRoomNumberDropdown(selectedBlock, selectedRoom) {
     const roomNumberOptions = document.getElementById('manual-room-number-op');
+    const roomNumberDropdown = document.getElementById('manual-room-number-dropdown');
+    const roomNumberValue = document.getElementById('manualValueRoomNumber');
     
     if(!roomNumberOptions) return;
 
@@ -3905,7 +3911,11 @@ function populateManualRoomNumberDropdown(selectedBlock, selectedRoom) {
     const roomNumbers = getUniqueRoomNumbersForRoom(rooms, selectedBlock, selectedRoom);
 
     if(roomNumbers.length === 0) {
-        roomNumberOptions.innerHTML = '<li class="option disabled">Nenhum número disponível</li>';
+        roomNumberDropdown.classList.add('noOptions');
+        roomNumberDropdown.classList.add('selectedOption');
+        roomNumberDropdown.classList.remove('hidden');
+        roomNumberValue.innerText = 'Sem numeração';
+        // roomNumberOptions.innerHTML = '<li class="option disabled">Nenhum número disponível</li>';
         return;
     }
 
@@ -4057,12 +4067,6 @@ function deleteManualAllocation(allocationId, dataAlocacao, periodo) {
     }
 }
 
-// Funções auxiliares 
-// function formatDate(dateString) { // - tava exibindo a data errada
-//     const date = new Date(dateString);
-//     return date.toLocaleDateString('pt-BR');
-// }
-
 function getShiftColor(shift) {
     const colors = {
         'manhã': 'warning',
@@ -4121,6 +4125,8 @@ function setupManualDropdownInteractions() {
             roomNumberOptions.classList.toggle('show');
         });
     }
+
+    
     
     // Fechar dropdowns quando clicar fora
     document.addEventListener('click', function() {
@@ -4154,9 +4160,9 @@ function closeManualAllocationModal() {
     document.getElementById('manualCourseName').value = '';
 
     showDefaultOptions();
-    document.getElementById('shiftTabs').classList.remove('disabled');
     document.getElementById('register-teacher-option').style.display = 'flex';
     document.getElementById('register-room-option').style.display = 'flex';
+    document.getElementById('shiftTabs').classList.remove('disabled');
     
     // Resetar seleções
     manualCurrentSelections = {
