@@ -18,7 +18,6 @@ const ConstantManager = {
   
   validate(input) {
     return input === this[PRIVATE_KEY];
-
   },
   
   getEncodedValue() {
@@ -26,8 +25,6 @@ const ConstantManager = {
   }
   
 };
-
-
 
 // Mapa de docentes para CODPROF (DOCENTE -> CODPROF)
 let docentesCodprof = {

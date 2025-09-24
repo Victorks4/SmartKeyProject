@@ -12,14 +12,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="paineladm.css">
+    <link rel="stylesheet" href="css/pages-styles.css">
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     
     <!-- Firebase Config -->
-    <script src="firebase-config.js"></script>
+    <script src="js/firebase-config.js"></script>
     
     <!-- SheetJS for Excel/CSV -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -71,11 +71,11 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
         <div class="container-fluid align-items-center">
             <a class="navbar-brand d-flex align-items-center" href="#">
-                <img src="public/senailogo.png" 
+                <img src="imgs/senailogo.png" 
                      alt="Logo SENAI" class="me-2" style="height: 40px;">
             </a>
             <div class="navbar-center">
-                <img src="public/chave-unscreen.gif" alt="Chave animada" 
+                <img src="imgs/chave-unscreen.gif" alt="Chave animada" 
                      class="me-2 navbar-key-gif">
                 <h1 class="h2 mb-0 fw-bold text-white text-center">
                     Sistema de Controle de Chaves
@@ -88,7 +88,7 @@
                         Administrador
                     </span>
                 </span>
-                <button onclick="logout()" class="btn btn-outline-light btn-sm" aria-label="Sair do sistema">
+                <button onclick="logout()" class="btn btn-outline-light btn-sm text-white" aria-label="Sair do sistema">
                     <i class="bi bi-box-arrow-right me-1"></i> Sair
                 </button>
             </div>
@@ -155,9 +155,13 @@
                                 <i class="bi bi-plus-lg me-2"></i>
                                 Cadastrar Professor
                             </li>
-                            <li onclick="openRoomRegistrationModal()" type="button" id="register-room-option" class="option" title="Cadastrar novo Professor">
+                            <li onclick="openRoomRegistrationModal()" type="button" id="register-room-option" class="option" title="Cadastrar nova Sala">
                                 <i class="bi bi-plus-lg me-2"></i>
                                 Cadastrar Sala
+                            </li>
+                            <li onclick="openManualAllocationModal()" type="button" id="manual-allocation-option" class="option" title="Alocação Manual de Sala">
+                                <i class="bi bi-plus-lg me-2"></i>
+                                Alocação Manual
                             </li>
                         </ul>
                     </div>
@@ -178,6 +182,10 @@
                             <li onclick="showRoomsTable()" id="showRoomBtn" type="button" class="option" title="Visualizar Salas Cadastradas">
                                 <i class="bi bi-eye me-1"></i>
                                 Ver Salas
+                            </li>
+                            <li onclick="showManualAllocationsTable()" id="showManualAllocationsBtn" type="button" class="option" title="Visualizar Alocações Manuais">
+                                <i class="bi bi-eye me-1"></i>
+                                Ver Alocações Manuais
                             </li>
                         </ul>
                     </div>
@@ -278,6 +286,41 @@
                             </tr>
                         </thead>
                         <tbody id="roomsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela das Alocações Manuais -->
+        <div class="card shadow-sm border-0 p-4" id="manualAllocationsTable" style="display: none;">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h2 class="card-title">
+                    <i class="bi bi-calendar-check me-2"></i>
+                    Alocações Manuais
+                </h2>
+                <div class="badge bg-info">
+                    <i class="bi bi-clock-fill"></i>
+                    Total de Alocações: <span id="total-manual-allocations"></span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="border-0" style="width: 12%;">Data</th>
+                                <th class="border-0" style="width: 10%;">Turno</th>
+                                <th class="border-0" style="width: 15%;">Sala</th>
+                                <th class="border-0" style="width: 8%;">Bloco</th>
+                                <th class="border-0" style="width: 10%;">Número</th>
+                                <th class="border-0" style="width: 15%;">Professor</th>
+                                <th class="border-0" style="width: 12%;">Curso</th>
+                                <th class="border-0" style="width: 13%;">Observações</th>
+                                <th class="border-0 text-center" style="width: 5%;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="manualAllocationsTableBody">
                         </tbody>
                     </table>
                 </div>
@@ -395,7 +438,7 @@
 
             <label class="text-sm font-medium">Nome da Sala *
                 <div class="input-item">
-                    <i class="bi bi-building"></i>
+                    <i class="bi bi-columns-gap"></i>
                     <input 
                         type="text" 
                         id="roomName" 
@@ -409,7 +452,7 @@
 
             <label class="text-sm font-medium">Nome do Bloco *
                 <div class="input-item">
-                    <i class="bi bi-columns-gap"></i>
+                    <i class="bi bi-building"></i>
                     <input 
                         type="text" 
                         id="blockName" 
@@ -445,8 +488,149 @@
         </div>
     </div> <!-- Fim do Modal: Cadastrar nova Sala -->
 
+    <!-- Modal: Alocação Manual -->
+    <div class="form-modal" id="manualAllocationModal" role="dialog" aria-modal="true" aria-labelledby="manualAllocationTitle">
+        <div class="form-modal-content">
+            <div class="form-modal-header">
+                <div class="form-modal-title" id="manualAllocationTitle">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <h2>Alocação Manual de Sala</h2>
+                </div>
+                <button class="btn-close-popup" onclick="closeManualAllocationModal()" aria-label="Fechar">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+
+            <label class="text-sm font-medium">Data da Alocação *
+                <div class="input-item">
+                    <i class="bi bi-calendar-date"></i>
+                    <input 
+                        type="date" 
+                        id="manualAllocationDate" 
+                        required 
+                        autocomplete="off"
+                    >
+                </div>
+            </label>
+
+            <label class="text-sm font-medium">Turno *
+                <div class="input-item">
+                    <i class="bi bi-clock"></i>
+                    <select 
+                        id="manualAllocationShift" 
+                        required 
+                        class="form-control"
+                    >
+                        <option value="">Selecione o turno</option>
+                        <option value="manhã">Manhã</option>
+                        <option value="tarde">Tarde</option>
+                        <option value="noite">Noite</option>
+                    </select>
+                </div>
+            </label>
+
+            <div class="drop-down-list d-flex flex-column">
+                <!-- Seleção de bloco -->
+                <div id="manual-block-dropdown" class="drop-down-item mb-3">
+                    <label class="dropdown-header">
+                        Selecione o Bloco *
+                    </label>
+                    
+                    <div class="dropdown">
+                        <div class="selected d-flex justify-content-between align-items-center">
+                            <p id="manualValueBlock">Selecione o bloco</p>
+                            <i class="arrow-icon bi bi-caret-down-fill"></i>
+                        </div>
+                        
+                        <ul id="manual-block-options" class="options"></ul>
+                    </div>
+                </div>
+                
+                <!-- Seleção de sala -->
+                <div id="manual-room-dropdown" class="drop-down-item hidden">
+                    <label class="dropdown-header">
+                        Sala *
+                    </label>
+
+                    <div class="dropdown">
+                        <div onclick="" id="manual-room-drop-list" class="selected d-flex justify-content-between align-items-center">
+                            <p id="manualValueRoom">Selecione a sala</p>
+                            <i class="arrow-icon bi bi-caret-down-fill"></i>
+                        </div>                     
+                        
+                        <ul id="manual-room-dropdown-op" class="options"></ul>
+                    </div>
+                </div>
+
+                <!-- Seleção de número da sala -->
+                <div id="manual-room-number-dropdown" class="drop-down-item invisible my-3">
+                    <label class="text-sm font-medium">
+                        Número da Sala <span class="text-muted">(opcional)</span>
+                    </label>
+                    
+                    <div class="dropdown">
+                        <div id="manual-selected-room-number" class="selected d-flex justify-content-between align-items-center">
+                            <p id="manualValueRoomNumber">Selecione o número da sala</p>
+                            <i class="arrow-icon bi bi-caret-down-fill"></i>
+                        </div>
+                        
+                        <ul id="manual-room-number-op" class="options"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <label class="text-sm font-medium">Professor Responsável <span class="text-muted">(opcional)</span>
+                <div class="input-item">
+                    <i class="bi bi-person"></i>
+                    <input 
+                        type="text" 
+                        id="manualProfessorName" 
+                        maxlength="100" 
+                        autocomplete="off"
+                        placeholder="Nome do professor responsável" 
+                    >
+                </div>
+            </label>
+
+            <label class="text-sm font-medium">Curso/Disciplina <span class="text-muted">(opcional)</span>
+                <div class="input-item">
+                    <i class="bi bi-book"></i>
+                    <input 
+                        type="text" 
+                        id="manualCourseName" 
+                        maxlength="100" 
+                        autocomplete="off"
+                        placeholder="Ex: Informática, Mecânica..." 
+                    >
+                </div>
+            </label>
+
+            <label class="text-sm font-medium">Observações <span class="text-muted">(opcional)</span>
+                <div class="input-item">
+                    <i class="bi bi-chat-text"></i>
+                    <input 
+                        type="text" 
+                        id="manualObservations" 
+                        maxlength="200" 
+                        autocomplete="off"
+                        placeholder="Observações adicionais..." 
+                    >
+                </div>
+            </label>
+
+            <div class="form-modal-actions">
+                <button id="cancel-manual-btn" class="btn form-cancel-btn" onclick="closeManualAllocationModal()" aria-label="Cancelar alocação manual">
+                    Cancelar
+                </button>
+                <button id="saveManualAllocationBtn" class="btn form-btn-register" onclick="handleManualAllocation()" aria-label="Salvar alocação manual">
+                    Confirmar Alocação
+                </button>
+            </div>
+        </div>
+    </div> <!-- Fim do Modal: Alocação Manual -->
+
     <!-- Custom JS -->
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="paineladm.js"></script>
+    <script src="js/paineladm.js"></script>
 </body>
 </html>
