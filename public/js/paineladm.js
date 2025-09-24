@@ -4162,8 +4162,6 @@ function openManualAllocationModal() {
     setupManualDropdownInteractions();
 }
 
-openManualAllocationModal();
-
 // Função para configurar as interações dos dropdowns do modal manual
 function setupManualDropdownInteractions() {
     // Dropdown de blocos
