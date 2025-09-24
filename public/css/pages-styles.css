@@ -557,8 +557,8 @@ td {
 }
 
 .form-modal input:focus,
-.form-modal textarea:focus,
-.form-modal select:focus {
+.form-modal select:focus,
+.form-modal textarea:focus {
     outline: none;
     border-bottom: 1px solid var(--bs-primary);
 }
@@ -595,18 +595,18 @@ td {
     justify-content: space-between;
 }
 
+#confirmMessageBtn,
 .modal-actions button,
-.form-modal-actions button,
-#confirmMessageBtn {
+.form-modal-actions button {
     flex: 1;
     padding: .8rem 0;
 }
 
+#btn-login,
 #btn-register,
 #btn-retirar-chave,
 #confirmMessageBtn,
-.form-modal-actions .form-btn-register,
-#btn-login {
+.form-modal-actions .form-btn-register {
     background-color: var(--bs-primary);
     color: #fff;
     border: none;
@@ -614,11 +614,11 @@ td {
     transition: background 0.2s, transform 0.2s;
 }
 
+#btn-login:hover,
 #btn-register:hover,
 #btn-retirar-chave:hover,
 #confirmMessageBtn:hover,
-.form-modal-actions .form-btn-register:hover,
-#btn-login:hover {
+.form-modal-actions .form-btn-register:hover {
     background-color: #0b5ed7;
     color: #fff;
     transform: scale(1.01);
@@ -1144,12 +1144,16 @@ td {
     gap: 0.25rem;
 }
 
+#single-key-mode    { color: var(--bs-primary); }
+#multiple-keys-mode { color: var(--bs-success); }
+
 #key-quantity-section .btn i {
     font-size: 1.25rem;
     margin-bottom: 0.25rem;
 }
 
 #key-quantity-section .btn:hover {
+    color: #fff;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }

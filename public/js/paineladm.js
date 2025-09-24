@@ -3814,6 +3814,53 @@ function getUniqueRoomsForBlock(rooms, selectedBlock) {
     return uniqueRooms.sort();
 }
 
+// Reseta todos os dropdowns para o estado inicial
+function resetAllDropdowns() { 
+    // Reseta os selecionados
+    manualCurrentSelections = {
+        block: null,
+        room: null,
+        roomNumber: null
+    };
+    
+    // Reseta os "placeholders" do dropdown e os estados
+    document.getElementById('manualValueBlock').innerText = 'Selecione o bloco';
+    document.getElementById('manualValueRoom').innerText = 'Selecione a sala';
+    document.getElementById('manualValueRoomNumber').innerText = 'Selecione o número da sala';
+
+    // Reseta o gradiente do dropdown selecionado
+    const blockSelected = document.querySelector('#manual-block-dropdown .selected');
+    const roomSelected = document.querySelector('#manual-room-dropdown .selected');
+    const roomNumberSelected = document.querySelector('#manual-room-number-dropdown .selected');
+    
+    if(blockSelected) blockSelected.classList.remove('gradient');
+    if(roomSelected) roomSelected.classList.remove('gradient');
+    if(roomNumberSelected) roomNumberSelected.classList.remove('gradient');
+
+    // Remove all dropdown-active classes
+    document.querySelectorAll('.drop-down-item').forEach(item => {
+        item.classList.remove('dropdown-active');
+        item.classList.remove('selectedOption');
+    });
+
+    const roomNumberDropdown = document.getElementById('manual-room-number-dropdown');
+    roomNumberDropdown.classList.remove('hidden');
+    roomNumberDropdown.classList.remove('noOptions');
+    roomNumberDropdown.classList.add('invisible');
+
+    // Limpar conteúdo das opções
+    const blockOptions = document.querySelector('#manual-block-dropdown .options');
+    const roomOptions = document.querySelector('#manual-room-dropdown .options');
+    const roomNumberOptions = document.querySelector('#room-number-dropdown .options');
+    
+    if(blockOptions) blockOptions.innerHTML = '';
+    if(roomOptions) roomOptions.innerHTML = '';
+    if(roomNumberOptions) roomNumberOptions.innerHTML = '';
+
+    // Preenche novamente o primeiro dropdown
+    populateManualBlockDropdown();
+}
+
 // Função para obter números de sala únicos para um bloco e sala
 function getUniqueRoomNumbersForRoom(rooms, selectedBlock, selectedRoom) {
     const roomNumbers = rooms
@@ -3840,6 +3887,10 @@ function populateManualBlockDropdown() {
         option.addEventListener('click', function(e) {
             e.stopPropagation();
             const selectedBlock = this.getAttribute('data-value');
+
+            if(selectedBlock !== manualCurrentSelections.block) {
+                resetAllDropdowns();
+            }
             
             // Atualiza as seleções
             manualCurrentSelections.block = selectedBlock;
@@ -3881,6 +3932,12 @@ function populateManualRoomDropdown(selectedBlock) {
         option.addEventListener('click', function(e) {
             e.stopPropagation();
             const selectedRoom = this.getAttribute('data-value');
+
+            if(selectedRoom !== manualCurrentSelections.room) {
+                document.getElementById('manual-room-number-dropdown').classList.add('active');
+                document.getElementById('manual-room-number-dropdown').classList.remove('noOptions');
+                document.getElementById('manual-selected-room-number').classList.remove('gradient');
+            }
             
             // Atualiza as seleções
             manualCurrentSelections.room = selectedRoom;
@@ -3933,9 +3990,11 @@ function populateManualRoomNumberDropdown(selectedBlock, selectedRoom) {
             manualCurrentSelections.roomNumber = selectedRoomNumber;
             
             // Atualiza a UI
+            roomNumberDropdown.classList.add('selectedOption');
             document.getElementById('manualValueRoomNumber').textContent = selectedRoomNumber;
-            document.querySelector('#manual-room-number-dropdown .selected').classList.remove('active');
             document.querySelector('#manual-room-number-dropdown .options').classList.remove('show');
+            document.querySelector('#manual-room-number-dropdown .selected').classList.add('gradient');
+            document.querySelector('#manual-room-number-dropdown .selected').classList.remove('active');
         });
     });
 }
@@ -4102,6 +4161,8 @@ function openManualAllocationModal() {
     populateManualBlockDropdown();
     setupManualDropdownInteractions();
 }
+
+openManualAllocationModal();
 
 // Função para configurar as interações dos dropdowns do modal manual
 function setupManualDropdownInteractions() {
