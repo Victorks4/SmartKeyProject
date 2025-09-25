@@ -2,28 +2,15 @@
 // Para desenvolvimento local, use .env.local
 // Para produção no Vercel, configure as variáveis no painel
 
+// Configuração do Firebase - As variáveis de ambiente são injetadas pelo Vercel durante o build
 const firebaseConfig = {
-  apiKey: typeof process !== 'undefined' && process.env ? 
-    process.env.VITE_FIREBASE_API_KEY : 
-    "AIzaSyAJulZn1wPo3k2I7Mvo2RpnW_8D3Z5T8yM",
-  authDomain: typeof process !== 'undefined' && process.env ? 
-    process.env.VITE_FIREBASE_AUTH_DOMAIN : 
-    "senaikey.firebaseapp.com",
-  databaseURL: typeof process !== 'undefined' && process.env ? 
-    process.env.VITE_FIREBASE_DATABASE_URL : 
-    "https://senaikey-default-rtdb.firebaseio.com",
-  projectId: typeof process !== 'undefined' && process.env ? 
-    process.env.VITE_FIREBASE_PROJECT_ID : 
-    "senaikey",
-  storageBucket: typeof process !== 'undefined' && process.env ? 
-    process.env.VITE_FIREBASE_STORAGE_BUCKET : 
-    "senaikey.firebasestorage.app",
-  messagingSenderId: typeof process !== 'undefined' && process.env ? 
-    process.env.VITE_FIREBASE_MESSAGING_SENDER_ID : 
-    "471515293175",
-  appId: typeof process !== 'undefined' && process.env ? 
-    process.env.VITE_FIREBASE_APP_ID : 
-    "1:471515293175:web:c4b6059d41d6f867f63af2"
+  apiKey: "AIzaSyAJulZn1wPo3k2I7Mvo2RpnW_8D3Z5T8yM",
+  authDomain: "senaikey.firebaseapp.com",
+  databaseURL: "https://senaikey-default-rtdb.firebaseio.com",
+  projectId: "senaikey",
+  storageBucket: "senaikey.firebasestorage.app",
+  messagingSenderId: "471515293175",
+  appId: "1:471515293175:web:c4b6059d41d6f867f63af2"
 };
 
 // Inicializar Firebase com tratamento de erros aprimorado
