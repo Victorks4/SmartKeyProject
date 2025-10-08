@@ -59,6 +59,7 @@ let docentesCodprof = {
     "Aline de Cerqueira dos Santos": "FATS5010",
     "Alisson Cleisson Carvalho Silva": "FATS5060",
     "Allan Jackson Alves da Silva": "FATS3546",
+    "Alleson Silva Sousa": "FATS4637",
     "Alvaro Tadeu Paes Fiuza Filho": "FATS4732",
     "Amanda de Almeida Santana": "FATS4819",
     "Amanda Moreira Santiago Pereira": "FATS5158",
@@ -103,6 +104,7 @@ let docentesCodprof = {
     "Áurea Pereira da Costa": "FATS5028",
     "Bárbara da Marilia Madureira Conceição": "FATS5099",
     "Bárbara Daiana da Anunciação Nascimento": "FATS5029",
+    "Brenda Souza dos Santos": "FATS4812",
     "BRUNO CHAVES SILVA": "ALA0074",
     "Bruno de Almeida Borges": "FATS4777",
     "Bruno de Menezes Moreira": "FATS5193",
@@ -422,6 +424,7 @@ let docentesCodprof = {
     "Kelly Dourado Rodrigues": "FATS72479",
     "Kleber Bomfim de Oliveira": "FATS4761",
     "Laecio dos Santos Teixeira": "FATS4989",
+    "Laize Lourene Reis Bispo Silva": "FATS5230",
     "Laís Leão Sampaio Leite": "FATS5165",
     "Lais Lorena Ribeiro": "ALA210",
     "Layla de Oliveira Pires Aquino": "CAM469",
@@ -698,6 +701,7 @@ let docentesCodprof = {
     "Vanessa de Oliveira Debiasi": "FATS072",
     "Vanessa Silva Lima": "FATS4817",
     "Vanessa Vilanova Fraga Vieira": "CAM 267",
+    "Valdiney Justiniano dos Santos": "FATS5228",
     "Vânia Lago Guimarães Correia": "FATS3925",
     "Velluma Cerqueira Invenção de Oliveira": "FATS5167",
     "Victor da Silva Pimenta": "FATS4973",
@@ -851,6 +855,12 @@ window.addEventListener('storage', function(e) {
         console.log('🔄 Detectada atualização no allShiftData de outra página');
         loadSharedData();
     }
+});
+
+// Evento para escutar cadastro de novos professores no painel administrativo (mesma aba)
+window.addEventListener('teacherAdded', function(e) {
+    console.log('👨‍🏫 Novo professor adicionado no painel administrativo:', e.detail);
+    loadDocentesCodprofFromStorage();
 });
 
 // Evento para escutar mudanças específicas de registros do painel administrativo

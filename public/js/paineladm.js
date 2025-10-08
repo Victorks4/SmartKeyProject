@@ -1381,6 +1381,17 @@ function saveNewTeacher() {
         currentMapping[name] = fats;
         localStorage.setItem('docentesCodprof', JSON.stringify(currentMapping));
         
+        // Disparar evento customizado para notificar outras partes do sistema
+        window.dispatchEvent(new CustomEvent('teacherAdded', {
+            detail: { name: name, fats: fats }
+        }));
+        
+        // Atualizar a tabela de professores na interface
+        updateTeacherTable();
+        
+        // Fechar o modal e limpar os campos
+        closeRegisterTeacherModal();
+        
         showNotification(`Professor '<strong>${name}</strong>' cadastrado(a) com sucesso!`, 'success');
         return true;
     } catch(error) {
