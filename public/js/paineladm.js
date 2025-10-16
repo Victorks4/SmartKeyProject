@@ -1,4 +1,4 @@
-// Variáveis globais
+﻿// Variáveis globais
 let teacherModalActive = false;
 let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
 // let selectedDate = "2025-08-31";
@@ -100,29 +100,29 @@ function showShiftSelectionModal(file) {
 async function handleFileImport(file) {
     if (!file) return;
     
-    console.log('📁 Iniciando importação de arquivo:', file.name);
+    console.log('� Iniciando importação de arquivo:', file.name);
     
     // Mostrar modal de seleção de turno
     selectedFileForImport = file;
     
     const modalElement = document.getElementById('shiftSelectionModal');
     if (!modalElement) {
-        console.error('❌ Modal shiftSelectionModal não encontrado!');
+        console.error('Modal shiftSelectionModal não encontrado!');
         return;
     }
     
     // Verificar se já existe uma instância do modal e destruí-la
     const existingModal = bootstrap.Modal.getInstance(modalElement);
     if (existingModal) {
-        console.log('🔄 Removendo instância anterior do modal');
+        console.log('Removendo instância anterior do modal');
         existingModal.dispose();
     }
     
     // Criar nova instância e mostrar
-    console.log('✨ Criando nova instância do modal');
+    console.log(' Criando nova instância do modal');
     const modal = new bootstrap.Modal(modalElement);
     modal.show();
-    console.log('📱 Modal exibido');
+    console.log(' Modal exibido');
 }
 
 // Função para processar o arquivo após seleção do turno
@@ -236,9 +236,9 @@ async function processFileImport(file, selectedShift) {
                         
                         // Debug: verificar campos de disciplina
                         if (!item.subject && !item.disciplina) {
-                            console.warn('⚠️ Registro sem disciplina:', item);
+                            console.warn(' Registro sem disciplina:', item);
                         } else {
-                            console.log('✅ Disciplina encontrada:', { subject: item.subject, disciplina: item.disciplina });
+                            console.log(' Disciplina encontrada:', { subject: item.subject, disciplina: item.disciplina });
                         }
                     }
 
@@ -265,11 +265,11 @@ async function processFileImport(file, selectedShift) {
             
                 // Salvar no Firebase imediatamente após importação
                 if (typeof saveDataToFirebase === 'function') {
-                    console.log('🔥 Salvando dados importados no Firebase...');
+                    console.log(' Salvando dados importados no Firebase...');
                     saveDataToFirebase(selectedDate, selectedShift, sortedData).then(() => {
-                        console.log('✅ Dados importados salvos no Firebase com sucesso!');
+                        console.log(' Dados importados salvos no Firebase com sucesso!');
                     }).catch(error => {
-                        console.error('❌ Erro ao salvar dados importados no Firebase:', error);
+                        console.error(' Erro ao salvar dados importados no Firebase:', error);
                     });
                 }
             
@@ -551,7 +551,7 @@ function readFileData(file) {
 
                 // Processar células mescladas - propagar valores das células mescladas
                 if (firstSheet['!merges']) {
-                    console.log('📊 Detectadas células mescladas:', firstSheet['!merges']);
+                    console.log(' Detectadas células mescladas:', firstSheet['!merges']);
                     
                     // Para cada região mesclada, propagar o valor da primeira célula para todas as células da região
                     firstSheet['!merges'].forEach(merge => {
@@ -565,7 +565,7 @@ function readFileData(file) {
                         const firstCellValue = firstSheet[firstCellRef] ? firstSheet[firstCellRef].v : '';
                         
                         if (firstCellValue) {
-                            console.log(`🔗 Propagando valor "${firstCellValue}" da célula mesclada ${firstCellRef}`);
+                            console.log(`� Propagando valor "${firstCellValue}" da célula mesclada ${firstCellRef}`);
                             
                             // Propagar para todas as linhas e colunas afetadas no array allData
                             for (let row = startRow; row <= endRow; row++) {
@@ -637,9 +637,9 @@ function readFileData(file) {
                         // Incluir linhas que tenham pelo menos uma célula com conteúdo
                         const hasContent = Array.isArray(row) && row.some(cell => cell && String(cell).trim() !== '');
                         if (!hasContent && dataRows.indexOf(row) < 5) {
-                            console.log(`❌ Linha ${dataRows.indexOf(row) + 1} filtrada (sem conteúdo):`, row);
+                            console.log(` Linha ${dataRows.indexOf(row) + 1} filtrada (sem conteúdo):`, row);
                         } else if (hasContent && dataRows.indexOf(row) < 5) {
-                            console.log(`✅ Linha ${dataRows.indexOf(row) + 1} aprovada:`, row);
+                            console.log(` Linha ${dataRows.indexOf(row) + 1} aprovada:`, row);
                         }
                         return hasContent;
                     })
@@ -673,7 +673,7 @@ function readFileData(file) {
                 console.log('Primeiros 5 registros mapeados:', mappedData.slice(0, 5));
 
                 // Debug adicional: mostrar estrutura completa dos primeiros registros
-                console.log('🔍 ANÁLISE DETALHADA DA ESTRUTURA:');
+                console.log(' ANÁLISE DETALHADA DA ESTRUTURA:');
                 console.log('Headers detectados:', headers);
                 if (mappedData.length > 0) {
                     console.log('Primeiro registro completo:', mappedData[0]);
@@ -685,7 +685,7 @@ function readFileData(file) {
                 }
 
                 // Processar dados para preencher campos vazios com valores das linhas anteriores (células mescladas)
-                console.log('📋 Processando dados para preencher campos de células mescladas...');
+                console.log(' Processando dados para preencher campos de células mescladas...');
                 for (let i = 1; i < mappedData.length; i++) {
                     const currentRow = mappedData[i];
                     const previousRow = mappedData[i - 1];
@@ -695,7 +695,7 @@ function readFileData(file) {
                         if (key !== '_rowIndex' && (!currentRow[key] || currentRow[key] === '')) {
                             if (previousRow[key] && previousRow[key] !== '') {
                                 currentRow[key] = previousRow[key];
-                                if (i < 3) console.log(`🔗 Preenchendo campo vazio "${key}" com valor "${previousRow[key]}" da linha anterior`);
+                                if (i < 3) console.log(`� Preenchendo campo vazio "${key}" com valor "${previousRow[key]}" da linha anterior`);
                             }
                         }
                     });
@@ -708,10 +708,10 @@ function readFileData(file) {
                         const findColumn = (patterns, excludePatterns = []) => {
                             // Debug detalhado apenas para o primeiro registro
                             if (index === 0) {
-                                console.log(`🔍 [Registro ${index + 1}] Procurando coluna para padrões: ${patterns.join(', ')}`);
-                                console.log(`🔍 [Registro ${index + 1}] Excluir padrões: ${excludePatterns.join(', ')}`);
-                                console.log(`🔍 [Registro ${index + 1}] Objeto disponível:`, obj);
-                                console.log(`🔍 [Registro ${index + 1}] Chaves disponíveis:`, Object.keys(obj));
+                                console.log(` [Registro ${index + 1}] Procurando coluna para padrões: ${patterns.join(', ')}`);
+                                console.log(` [Registro ${index + 1}] Excluir padrões: ${excludePatterns.join(', ')}`);
+                                console.log(` [Registro ${index + 1}] Objeto disponível:`, obj);
+                                console.log(` [Registro ${index + 1}] Chaves disponíveis:`, Object.keys(obj));
                             }
                             
                             for (let pattern of patterns) {
@@ -724,7 +724,7 @@ function readFileData(file) {
                                         keyUpper.includes(exclude.toUpperCase())
                                     );
                                     if (shouldExclude) {
-                                        if (index === 0) console.log(`  ❌ Excluindo coluna "${key}" (contém: ${excludePatterns.join(', ')})`);
+                                        if (index === 0) console.log(`   Excluindo coluna "${key}" (contém: ${excludePatterns.join(', ')})`);
                                         continue;
                                     }
                                     
@@ -732,7 +732,7 @@ function readFileData(file) {
                                     if (keyUpper === patternUpper) {
                                         const value = obj[key];
                                         if (value && String(value).trim() !== '') {
-                                            if (index === 0) console.log(`  ✅ Encontrado por correspondência exata: "${key}" = "${value}"`);
+                                            if (index === 0) console.log(`   Encontrado por correspondência exata: "${key}" = "${value}"`);
                                             return String(value).trim();
                                         }
                                     }
@@ -741,21 +741,21 @@ function readFileData(file) {
                                     if (keyUpper.includes(patternUpper)) {
                                         const value = obj[key];
                                         if (value && String(value).trim() !== '') {
-                                            if (index === 0) console.log(`  ✅ Encontrado por inclusão: "${key}" = "${value}"`);
+                                            if (index === 0) console.log(`   Encontrado por inclusão: "${key}" = "${value}"`);
                                             return String(value).trim();
                                         }
                                     }
                                 }
                             }
-                            if (index === 0) console.log(`  ❌ Nenhuma coluna encontrada para: ${patterns.join(', ')}`);
+                            if (index === 0) console.log(`   Nenhuma coluna encontrada para: ${patterns.join(', ')}`);
                             
                             // Debug extra: se for sala e não encontrou nada, mostrar todas as colunas
                             if (index === 0 && patterns.includes('SALA')) {
-                                console.log('🚨 SALA NÃO ENCONTRADA! Analisando todas as colunas disponíveis:');
+                                console.log('� SALA NÃO ENCONTRADA! Analisando todas as colunas disponíveis:');
                                 Object.keys(obj).forEach((key, idx) => {
                                     const value = obj[key];
                                     const hasContent = value && String(value).trim() !== '';
-                                    console.log(`  ${idx}: "${key}" = "${value}" ${hasContent ? '✅' : '❌'}`);
+                                    console.log(`  ${idx}: "${key}" = "${value}" ${hasContent ? '' : ''}`);
                                 });
                             }
                             
@@ -776,7 +776,7 @@ function readFileData(file) {
 
                         // Debug especial: mostrar todos os valores encontrados
                         if (index < 5) {
-                            console.log(`🎯 VALORES ENCONTRADOS ${index + 1}:`, {
+                            console.log(` VALORES ENCONTRADOS ${index + 1}:`, {
                                 sala: `"${sala}" (${typeof sala})`,
                                 curso: `"${curso}" (${typeof curso})`,
                                 turma: `"${turma}" (${typeof turma})`,
@@ -790,7 +790,7 @@ function readFileData(file) {
                         let disciplinaFinal = disciplina;
                         if (!disciplinaFinal) {
                             if (index === 0) {
-                                console.log('🔍 Procurando disciplina manualmente - TODAS as colunas disponíveis:');
+                                console.log(' Procurando disciplina manualmente - TODAS as colunas disponíveis:');
                                 Object.keys(obj).forEach((key, idx) => {
                                     console.log(`  ${idx}: "${key}" = "${obj[key]}"`);
                                 });
@@ -810,7 +810,7 @@ function readFileData(file) {
                                             !valueTrim.match(/^\d+$/) && 
                                             valueTrim.length > 2) {
                                             disciplinaFinal = valueTrim;
-                                            if (index === 0) console.log(`📍 Disciplina encontrada por eliminação na coluna "${key}": "${disciplinaFinal}"`);
+                                            if (index === 0) console.log(`� Disciplina encontrada por eliminação na coluna "${key}": "${disciplinaFinal}"`);
                                             break;
                                         }
                                     }
@@ -836,7 +836,7 @@ function readFileData(file) {
                                             if (!valueTrim.match(/^(G\d+|\d+|SALA|LAB)$/i) && 
                                                 valueTrim.length > 3) {
                                                 disciplinaFinal = valueTrim;
-                                                if (index === 0) console.log(`📍 Disciplina encontrada por tentativa na coluna "${key}": "${disciplinaFinal}"`);
+                                                if (index === 0) console.log(`� Disciplina encontrada por tentativa na coluna "${key}": "${disciplinaFinal}"`);
                                                 break;
                                             }
                                         }
@@ -857,30 +857,30 @@ function readFileData(file) {
                             
                             // Debug específico para disciplina
                             if (!disciplinaFinal) {
-                                console.log('🔍 Debug disciplina vazia - verificando todas as colunas:');
+                                console.log(' Debug disciplina vazia - verificando todas as colunas:');
                                 Object.keys(obj).forEach((key, idx) => {
                                     const keyUpper = key.toUpperCase();
                                     const isDisciplinaCol = keyUpper.includes('DISCIPLINA') || keyUpper.includes('MATERIA') || keyUpper.includes('MATÉRIA');
                                     console.log(`  Coluna ${idx} "${key}": "${obj[key]}" ${isDisciplinaCol ? '← POSSÍVEL DISCIPLINA' : ''}`);
                                 });
                             } else if (disciplinaFinal === professor) {
-                                console.warn('⚠️ Disciplina igual ao professor:', {
+                                console.warn(' Disciplina igual ao professor:', {
                                     disciplina: disciplinaFinal,
                                     professor: professor
                                 });
                             } else if (disciplinaFinal === curso) {
-                                console.warn('⚠️ Disciplina igual ao curso:', {
+                                console.warn(' Disciplina igual ao curso:', {
                                     disciplina: disciplinaFinal,
                                     curso: curso
                                 });
                             } else {
-                                console.log('✅ Disciplina válida encontrada:', disciplinaFinal);
+                                console.log(' Disciplina válida encontrada:', disciplinaFinal);
                             }
                         }
 
                         // Debug: mostrar todos os valores de sala para entender o problema
                         if (index < 5) {
-                            console.log(`🔍 Debug Sala ${index + 1}:`, {
+                            console.log(` Debug Sala ${index + 1}:`, {
                                 sala: sala,
                                 salaType: typeof sala,
                                 salaLength: sala ? sala.length : 0,
@@ -902,17 +902,17 @@ function readFileData(file) {
                                            salaStr.startsWith('---');
 
                         if (salaInvalida) {
-                            if (index < 5) console.log(`❌ Registro ${index + 1} rejeitado por sala inválida: "${sala}" (string: "${salaStr}")`);
+                            if (index < 5) console.log(` Registro ${index + 1} rejeitado por sala inválida: "${sala}" (string: "${salaStr}")`);
                             return null;
                         }
 
-                        if (index < 5) console.log(`✅ Registro ${index + 1} aprovado com sala: "${sala}" (string: "${salaStr}")`);
+                        if (index < 5) console.log(` Registro ${index + 1} aprovado com sala: "${sala}" (string: "${salaStr}")`);
 
                         // Validar disciplina: evitar confusão com curso, professor, etc.
                         if (disciplinaFinal) {
                             // Se disciplina for igual ao curso, procurar a verdadeira disciplina
                             if (disciplinaFinal === curso) {
-                                console.warn(`⚠️ Disciplina "${disciplinaFinal}" é igual ao curso, procurando disciplina real...`);
+                                console.warn(` Disciplina "${disciplinaFinal}" é igual ao curso, procurando disciplina real...`);
                                 disciplinaFinal = '';
                                 
                                 // Buscar em outras colunas por uma disciplina válida
@@ -928,7 +928,7 @@ function readFileData(file) {
                                             value !== professor && value !== sala && value !== curso && value !== turma) {
                                             const valorTrim = String(value).trim();
                                             disciplinaFinal = valorTrim;
-                                            console.log(`🔧 Disciplina corrigida: "${disciplinaFinal}" (encontrada na coluna "${key}")`);
+                                            console.log(` Disciplina corrigida: "${disciplinaFinal}" (encontrada na coluna "${key}")`);
                                             break;
                                         }
                                     }
@@ -937,7 +937,7 @@ function readFileData(file) {
                             
                             // Se ainda for igual ao professor, procurar alternativa
                             if (disciplinaFinal === professor) {
-                                console.warn(`⚠️ Disciplina "${disciplinaFinal}" é igual ao professor, procurando disciplina real...`);
+                                console.warn(` Disciplina "${disciplinaFinal}" é igual ao professor, procurando disciplina real...`);
                                 disciplinaFinal = '';
                                 
                                 for (let key in obj) {
@@ -948,7 +948,7 @@ function readFileData(file) {
                                         // Verificar se parece com disciplina (não é número, não é sala)
                                         if (!valorTrim.match(/^(SALA|A\d+|B\d+|C\d+|\d+)$/i) && valorTrim.length > 2) {
                                             disciplinaFinal = valorTrim;
-                                            console.log(`🔧 Disciplina corrigida: "${disciplinaFinal}" (encontrada na coluna "${key}")`);
+                                            console.log(` Disciplina corrigida: "${disciplinaFinal}" (encontrada na coluna "${key}")`);
                                             break;
                                         }
                                     }
@@ -967,14 +967,14 @@ function readFileData(file) {
                     })
                     .filter(row => row !== null);
 
-                console.log(`📊 RESUMO DO PROCESSAMENTO:`);
+                console.log(` RESUMO DO PROCESSAMENTO:`);
                 console.log(`- Linhas brutas após cabeçalho: ${dataRows.length}`);
                 console.log(`- Linhas válidas mapeadas: ${mappedData.length}`);
                 console.log(`- Registros formatados: ${formattedData.length}`);
                 console.log(`- Registros rejeitados: ${mappedData.length - formattedData.length}`);
                 
                 if (formattedData.length === 0) {
-                    console.error('🚨 ERRO: Nenhum registro válido encontrado!');
+                    console.error('� ERRO: Nenhum registro válido encontrado!');
                     console.log('Debug completo das últimas etapas:');
                     console.log('1. Headers detectados:', headers);
                     console.log('2. Primeira linha de dados:', dataRows[0]);
@@ -1052,7 +1052,7 @@ function updateTable() {
     // Renderizar apenas os dados do turno atual
     renderTable();
     
-    console.log('📊 [ADMIN] updateTable executada - tabela renderizada');
+    console.log(' [ADMIN] updateTable executada - tabela renderizada');
 }
 
 // Variável global para o intervalo de atualização da data
@@ -1068,10 +1068,10 @@ window.addEventListener('unload', function() {
 // Função para carregar dados salvos
 function loadSavedData() {
     // Limpar IDs duplicados antes de tudo
-    console.log('🧹 [INIT] Limpando IDs duplicados...');
+    console.log(' [INIT] Limpando IDs duplicados...');
     const wasCleared = cleanDuplicateIds();
     if (wasCleared) {
-        console.log('✅ [INIT] IDs duplicados foram limpos');
+        console.log(' [INIT] IDs duplicados foram limpos');
     }
     
     // Tentar carregar dados no novo formato (por data)
@@ -1244,28 +1244,28 @@ document.addEventListener('DOMContentLoaded', function() {
     if (confirmImportBtn && !confirmImportBtn.hasAttribute('data-listener-added')) {
         confirmImportBtn.setAttribute('data-listener-added', 'true');
         confirmImportBtn.addEventListener('click', async function() {
-            console.log('🎯 Botão de confirmar importação clicado');
+            console.log(' Botão de confirmar importação clicado');
             
             const checkedInput = document.querySelector('input[name="importShift"]:checked');
             if (!checkedInput) {
-                console.warn('⚠️ Nenhum turno selecionado');
+                console.warn(' Nenhum turno selecionado');
                 return;
             }
             
             const selectedShift = checkedInput.value;
-            console.log('📅 Turno selecionado:', selectedShift);
+            console.log('� Turno selecionado:', selectedShift);
             
             const modalElement = document.getElementById('shiftSelectionModal');
             if (modalElement && typeof bootstrap !== 'undefined') {
                 const modal = bootstrap.Modal.getInstance(modalElement);
                 if (modal) {
-                    console.log('🚪 Fechando modal');
+                    console.log('� Fechando modal');
                     modal.hide();
                 }
             }
             
             if (selectedFileForImport) {
-                console.log('📁 Processando arquivo:', selectedFileForImport.name);
+                console.log('� Processando arquivo:', selectedFileForImport.name);
                 await processFileImport(selectedFileForImport, selectedShift);
                 selectedFileForImport = null;
                 
@@ -1273,7 +1273,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const fileInput = document.getElementById('fileInput');
                 if (fileInput) {
                     fileInput.value = '';
-                    console.log('🧹 Input de arquivo limpo');
+                    console.log(' Input de arquivo limpo');
                 }
             }
         });
@@ -1404,7 +1404,7 @@ function saveNewTeacher() {
 function initializeAll() {
     // Inicializar mapeamento de professores se não existir
     if (!localStorage.getItem('docentesCodprof')) {
-        console.log('📝 Inicializando mapeamento docentesCodprof no localStorage...');
+        console.log(' Inicializando mapeamento docentesCodprof no localStorage...');
         localStorage.setItem('docentesCodprof', JSON.stringify({}));
     }
 }
@@ -1532,7 +1532,7 @@ function handleSaveButton(e) {
         }
     });
 
-    console.log('📊 Dados capturados para sincronização:', {
+    console.log(' Dados capturados para sincronização:', {
         rowId: rowId,
         updatedData: updatedData,
         hasData: Object.keys(updatedData).length > 0
@@ -1562,7 +1562,7 @@ function handleSaveButton(e) {
 // Função para atualizar um registro específico nos dados compartilhados
 function updateSharedDataRecord(recordId, updatedFields) {
     try {
-        console.log(`🔄 Atualizando registro ${recordId} com:`, updatedFields);
+        console.log(` Atualizando registro ${recordId} com:`, updatedFields);
         
         // Encontrar e atualizar o registro nos dados por data e turno
         let recordFound = false;
@@ -1571,7 +1571,7 @@ function updateSharedDataRecord(recordId, updatedFields) {
             for(const shift in dataByDateAndShift[date]) {
                 const records = dataByDateAndShift[date][shift];
                 
-                console.log(`🔍 Verificando ${date}/${shift}:`, {
+                console.log(` Verificando ${date}/${shift}:`, {
                     recordsType: typeof records,
                     isArray: Array.isArray(records),
                     records: records
@@ -1579,7 +1579,7 @@ function updateSharedDataRecord(recordId, updatedFields) {
                 
                 // Verificar se records é um array
                 if (!Array.isArray(records)) {
-                    console.warn(`⚠️ records não é um array em ${date}/${shift}:`, records);
+                    console.warn(` records não é um array em ${date}/${shift}:`, records);
                     continue;
                 }
                 
@@ -1593,7 +1593,7 @@ function updateSharedDataRecord(recordId, updatedFields) {
                     records[recordIndex].lastEdited = new Date().toISOString();
                     records[recordIndex].editedBy = 'admin';
                     
-                    console.log(`✅ Registro atualizado:`, records[recordIndex]);
+                    console.log(` Registro atualizado:`, records[recordIndex]);
                     recordFound = true;
                     
                     // Sincronizar via localStorage
@@ -1608,23 +1608,29 @@ function updateSharedDataRecord(recordId, updatedFields) {
                     // Sincronizar via Firebase se disponível
                     if (typeof saveDataToFirebase === 'function') {
                         // DEBUG: Verificar dados antes de enviar ao Firebase
-                        console.log('🔍 [ADMIN] Edição de registro - Dados antes de enviar ao Firebase:');
-                        console.log('🔍 [ADMIN] - date:', date);
-                        console.log('🔍 [ADMIN] - shift:', shift);
-                        console.log('🔍 [ADMIN] - records length:', records.length);
+                        console.log(' [ADMIN] Edição de registro - Dados antes de enviar ao Firebase:');
+                        console.log(' [ADMIN] - date:', date);
+                        console.log(' [ADMIN] - shift:', shift);
+                        console.log(' [ADMIN] - records length:', records.length);
                         
-                        // Validar se há dados para salvar
-                        if (records && Array.isArray(records) && records.length > 0) {
+                        // Sempre sincronizar com Firebase após atualização, mesmo se o array ficar vazio
+                        if (records && Array.isArray(records)) {
+                            console.log(' [ADMIN] Sincronizando atualização com Firebase...', {
+                                date,
+                                shift,
+                                recordsLength: records.length,
+                                recordsContent: records
+                            });
+                            
                             saveDataToFirebase(date, shift, records)
                                 .then(() => {
-                                    console.log(`✅ [ADMIN] Dados sincronizados no Firebase para ${date}/${shift}`);
+                                    console.log(` [ADMIN] Dados sincronizados no Firebase para ${date}/${shift}`);
                                 })
                                 .catch(error => {
-                                    console.error('❌ [ADMIN] Erro ao sincronizar no Firebase:', error);
+                                    console.error(' [ADMIN] Erro ao sincronizar no Firebase:', error);
                                 });
                         } else {
-                            console.warn('⚠️ [ADMIN] Dados vazios ou inválidos - não sincronizando no Firebase');
-                            console.warn('⚠️ [ADMIN] - records:', records);
+                            console.error(' [ADMIN] Dados inválidos - records não é um array:', records);
                         }
                     }
                     
@@ -1648,7 +1654,7 @@ function updateSharedDataRecord(recordId, updatedFields) {
         
         // Se não encontrou na estrutura principal, tentar na estrutura legacy
         if (!recordFound) {
-            console.log('🔍 Tentando encontrar na estrutura legacy allShiftData...');
+            console.log(' Tentando encontrar na estrutura legacy allShiftData...');
             
             const allShiftDataStr = localStorage.getItem('allShiftData');
             if (allShiftDataStr) {
@@ -1668,7 +1674,7 @@ function updateSharedDataRecord(recordId, updatedFields) {
                                 
                                 localStorage.setItem('allShiftData', JSON.stringify(allShiftData));
                                 
-                                console.log(`✅ Registro atualizado na estrutura legacy:`, shiftRecords[recordIndex]);
+                                console.log(` Registro atualizado na estrutura legacy:`, shiftRecords[recordIndex]);
                                 recordFound = true;
                                 
                                 // Disparar evento customizado
@@ -1687,19 +1693,19 @@ function updateSharedDataRecord(recordId, updatedFields) {
                         }
                     }
                 } catch (error) {
-                    console.error('❌ Erro ao processar allShiftData:', error);
+                    console.error(' Erro ao processar allShiftData:', error);
                 }
             }
         }
         
         if (!recordFound) {
-            console.warn(`⚠️ Registro com ID ${recordId} não encontrado em nenhuma estrutura`);
+            console.warn(` Registro com ID ${recordId} não encontrado em nenhuma estrutura`);
         }
         
         return recordFound;
         
     } catch (error) {
-        console.error('❌ Erro ao atualizar dados compartilhados:', error);
+        console.error(' Erro ao atualizar dados compartilhados:', error);
         return false;
     }
 }
@@ -2036,19 +2042,27 @@ function deleteSharedDataRecord(recordId) {
                 // Sincroniza com o Firebase 
                 if(typeof saveDataToFirebase === 'function') {
                     // DEBUG: Verificar dados antes de enviar ao Firebase
-                    console.log('🔍 [ADMIN] Exclusão de registro - Dados antes de enviar ao Firebase:');
-                    console.log('🔍 [ADMIN] - date:', date);
-                    console.log('🔍 [ADMIN] - shift:', shift);
-                    console.log('🔍 [ADMIN] - records length:', records.length);
+                    console.log(' [ADMIN] Exclusão de registro - Dados antes de enviar ao Firebase:');
+                    console.log(' [ADMIN] - date:', date);
+                    console.log(' [ADMIN] - shift:', shift);
+                    console.log(' [ADMIN] - records length:', records.length);
                     
-                    // Validar se há dados para salvar
-                    if (records && Array.isArray(records) && records.length > 0) {
-                        saveDataToFirebase(date, shift, records).catch(error => {
-                            console.error('❌ [ADMIN] Erro ao sincronizar exclusão no Firebase:', error);
+                    // Sempre sincronizar com Firebase após exclusão, mesmo se o array ficar vazio
+                    if (records && Array.isArray(records)) {
+                        console.log(' [ADMIN] Sincronizando exclusão com Firebase...', {
+                            date,
+                            shift,
+                            recordsLength: records.length,
+                            recordsContent: records
+                        });
+                        
+                        saveDataToFirebase(date, shift, records).then(() => {
+                            console.log(' [ADMIN] Exclusão sincronizada com Firebase com sucesso!');
+                        }).catch(error => {
+                            console.error(' [ADMIN] Erro ao sincronizar exclusão no Firebase:', error);
                         });
                     } else {
-                        console.warn('⚠️ [ADMIN] Dados vazios ou inválidos - não sincronizando exclusão no Firebase');
-                        console.warn('⚠️ [ADMIN] - records:', records);
+                        console.error(' [ADMIN] Dados inválidos - records não é um array:', records);
                     }
                 }
                 
@@ -2655,7 +2669,7 @@ function generateEmptyRow(shiftCapitalized, formattedDate) {
 function generateTableRow(record) {
     // Debug para alocações manuais
     if (record.tipo === 'manual_allocation') {
-        console.log('🏷️ [DEBUG] Gerando linha para alocação manual:', { id: record.id, sala: record.sala, professor: record.professor });
+        console.log(' [DEBUG] Gerando linha para alocação manual:', { id: record.id, sala: record.sala, professor: record.professor });
     }
     
     const room = record.room || record.sala || '-';
@@ -3180,7 +3194,7 @@ function generateUniqueRecordId() {
         attempts++;
     } while (existingIds.has(newId) && attempts < 100);
     
-    console.log('🆔 [DEBUG] ID gerado para alocação manual:', newId);
+    console.log(' [DEBUG] ID gerado para alocação manual:', newId);
     return newId;
 }
 
@@ -3199,12 +3213,12 @@ function cleanDuplicateIds() {
                     if (!record.id || !seenIds.has(record.id)) {
                         if (!record.id) {
                             record.id = generateUniqueRecordId();
-                            console.log('🔧 [CLEAN] ID criado para registro sem ID:', record.id);
+                            console.log(' [CLEAN] ID criado para registro sem ID:', record.id);
                         }
                         seenIds.add(record.id);
                         cleanArray.push(record);
                     } else {
-                        console.log('🗑️ [CLEAN] Registro duplicado removido:', record.id);
+                        console.log(' [CLEAN] Registro duplicado removido:', record.id);
                         cleaned = true;
                     }
                 });
@@ -3217,7 +3231,7 @@ function cleanDuplicateIds() {
     if (cleaned) {
         localStorage.setItem('allDateShiftData', JSON.stringify(allData));
         dataByDateAndShift = allData;
-        console.log('✅ [CLEAN] Dados limpos e salvos');
+        console.log(' [CLEAN] Dados limpos e salvos');
         return true;
     }
     
@@ -3496,7 +3510,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Função para lidar com ações de chave
 function handleKeyAction(recordId, currentStatus) {
-    console.log('🔍 [DEBUG] Procurando registro ID:', recordId, 'Status:', currentStatus);
+    console.log(' [DEBUG] Procurando registro ID:', recordId, 'Status:', currentStatus);
     
     // Encontrar o registro no turno atual da data selecionada
     let currentData = getCurrentShiftData();
@@ -3506,9 +3520,9 @@ function handleKeyAction(recordId, currentStatus) {
         currentData = [];
     }
     
-    console.log('🔍 [DEBUG] Dados do turno atual:', currentData.length, 'registros');
+    console.log(' [DEBUG] Dados do turno atual:', currentData.length, 'registros');
     currentData.forEach((r, index) => {
-        console.log(`🔍 [DEBUG] Registro ${index}:`, { id: r.id, sala: r.sala, professor: r.professor, status: r.status });
+        console.log(` [DEBUG] Registro ${index}:`, { id: r.id, sala: r.sala, professor: r.professor, status: r.status });
     });
     
     // Buscar com comparação estrita de string
@@ -3517,7 +3531,7 @@ function handleKeyAction(recordId, currentStatus) {
     
     // Se não encontrou no turno atual, procurar em todos os dados da variável global
     if (!record) {
-        console.log('🔍 [DEBUG] Não encontrado no turno atual, procurando globalmente...');
+        console.log(' [DEBUG] Não encontrado no turno atual, procurando globalmente...');
         // Garantir que dataByDateAndShift está atualizada
         dataByDateAndShift = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
         
@@ -3527,7 +3541,7 @@ function handleKeyAction(recordId, currentStatus) {
                 if (Array.isArray(shiftData)) {
                     const foundRecord = shiftData.find(r => String(r.id) === String(recordId));
                     if (foundRecord) {
-                        console.log('✅ [DEBUG] Registro encontrado em', date, shift, ':', foundRecord);
+                        console.log(' [DEBUG] Registro encontrado em', date, shift, ':', foundRecord);
                         record = foundRecord;
                         targetData = shiftData;
                         break;
@@ -3539,11 +3553,11 @@ function handleKeyAction(recordId, currentStatus) {
     }
     
     if (!record) {
-        console.error('❌ [DEBUG] Registro não encontrado:', recordId);
+        console.error(' [DEBUG] Registro não encontrado:', recordId);
         return;
     }
     
-    console.log('✅ [DEBUG] Registro encontrado, processando ação...');
+    console.log(' [DEBUG] Registro encontrado, processando ação...');
 
     const now = new Date();
     const timeString = now.toLocaleTimeString('pt-BR', { 
@@ -3594,9 +3608,9 @@ function handleKeyAction(recordId, currentStatus) {
         
         if (targetData && Array.isArray(targetData) && targetData.length > 0) {
             saveDataToFirebase(saveDate, saveShift, targetData).then(() => {
-                console.log('✅ [ADMIN] Dados salvos no Firebase após ação de chave');
+                console.log(' [ADMIN] Dados salvos no Firebase após ação de chave');
             }).catch(error => {
-                console.error('❌ [ADMIN] Erro ao salvar no Firebase:', error);
+                console.error(' [ADMIN] Erro ao salvar no Firebase:', error);
             });
         }
     }
@@ -4055,16 +4069,37 @@ function loadManualAllocationsTable() {
         const allDateShiftData = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
         let manualAllocations = [];
         
+        console.log(' [DEBUG] Carregando alocações manuais...');
+        console.log(' [DEBUG] allDateShiftData:', allDateShiftData);
+        
         Object.keys(allDateShiftData).forEach(date => {
             Object.keys(allDateShiftData[date]).forEach(shift => {
-                Object.keys(allDateShiftData[date][shift]).forEach(recordKey => {
-                    const record = allDateShiftData[date][shift][recordKey];
-                    if(record.tipo === 'manual_allocation') {
-                        manualAllocations.push(record);
-                    }
-                });
+                const shiftData = allDateShiftData[date][shift];
+                console.log(` [DEBUG] Processando ${date} - ${shift}:`, shiftData);
+                
+                // Verificar se é um array ou objeto
+                if (Array.isArray(shiftData)) {
+                    // Se for array, iterar diretamente
+                    shiftData.forEach(record => {
+                        if(record && record.tipo === 'manual_allocation') {
+                            console.log(' [DEBUG] Alocação manual encontrada:', record);
+                            manualAllocations.push(record);
+                        }
+                    });
+                } else if (shiftData && typeof shiftData === 'object') {
+                    // Se for objeto, iterar pelas chaves
+                    Object.keys(shiftData).forEach(recordKey => {
+                        const record = shiftData[recordKey];
+                        if(record && record.tipo === 'manual_allocation') {
+                            console.log(' [DEBUG] Alocação manual encontrada (objeto):', record);
+                            manualAllocations.push(record);
+                        }
+                    });
+                }
             });
         });
+        
+        console.log(' [DEBUG] Total de alocações manuais encontradas:', manualAllocations.length);
 
         // Ordenar por data e depois por turno
         manualAllocations.sort((a, b) => {
@@ -4129,12 +4164,52 @@ function deleteManualAllocation(allocationId, dataAlocacao, periodo) {
         // Atualizar a variável global dataByDateAndShift
         dataByDateAndShift = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
         
+        console.log(' [DEBUG] Excluindo alocação:', allocationId, 'de', dataAlocacao, periodo);
+        console.log(' [DEBUG] Dados antes da exclusão:', dataByDateAndShift[dataAlocacao]?.[periodo]);
+        
         if (dataByDateAndShift[dataAlocacao] && dataByDateAndShift[dataAlocacao][periodo]) {
-            dataByDateAndShift[dataAlocacao][periodo] = dataByDateAndShift[dataAlocacao][periodo].filter(record => record.id !== allocationId);
+            const shiftData = dataByDateAndShift[dataAlocacao][periodo];
+            
+            // Verificar se é um array ou objeto
+            if (Array.isArray(shiftData)) {
+                // Se for array, filtrar diretamente
+                dataByDateAndShift[dataAlocacao][periodo] = shiftData.filter(record => record.id !== allocationId);
+            } else if (typeof shiftData === 'object') {
+                // Se for objeto, iterar e remover pela chave
+                Object.keys(shiftData).forEach(key => {
+                    if (shiftData[key] && shiftData[key].id === allocationId) {
+                        delete shiftData[key];
+                    }
+                });
+            }
+            
+            console.log(' [DEBUG] Dados após exclusão:', dataByDateAndShift[dataAlocacao][periodo]);
             
             // Salvar na estrutura global e localStorage
             localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
             localStorage.setItem('dataUpdateTimestamp', Date.now().toString());
+            
+            // Sincronizar com o Firebase
+            const updatedShiftData = dataByDateAndShift[dataAlocacao][periodo];
+            console.log(' [ALOCAÇÃO MANUAL] Sincronizando exclusão com Firebase...');
+            console.log(' [DEBUG] Dados para sincronizar:', updatedShiftData);
+            
+            if(typeof saveDataToFirebase === 'function') {
+                // Converter objeto para array se necessário
+                let dataToSync = updatedShiftData;
+                if (!Array.isArray(updatedShiftData) && typeof updatedShiftData === 'object') {
+                    dataToSync = Object.values(updatedShiftData).filter(item => item != null);
+                }
+                
+                saveDataToFirebase(dataAlocacao, periodo, dataToSync).then(() => {
+                    console.log(' [ALOCAÇÃO MANUAL] Exclusão sincronizada com Firebase com sucesso!');
+                }).catch(error => {
+                    console.error(' [ALOCAÇÃO MANUAL] Erro ao sincronizar exclusão no Firebase:', error);
+                    showNotification('Alocação excluída localmente, mas houve erro na sincronização com o servidor.', 'warning');
+                });
+            } else {
+                console.warn(' [ALOCAÇÃO MANUAL] Função saveDataToFirebase não disponível - exclusão apenas local');
+            }
             
             // Se for a data atual sendo visualizada, atualizar a tabela principal
             if (dataAlocacao === selectedDate) {
@@ -4328,10 +4403,10 @@ function handleManualAllocation() {
     selectedDate.setHours(0, 0, 0, 0);
     
     // Debug: verificar os valores das datas
-    console.log('🗓️ [DEBUG] Data string recebida:', dataAlocacao);
-    console.log('🗓️ [DEBUG] Data de hoje:', today.toLocaleDateString('pt-BR'));
-    console.log('🗓️ [DEBUG] Data selecionada:', selectedDate.toLocaleDateString('pt-BR'));
-    console.log('🗓️ [DEBUG] Comparação selectedDate < today:', selectedDate < today);
+    console.log('� [DEBUG] Data string recebida:', dataAlocacao);
+    console.log('� [DEBUG] Data de hoje:', today.toLocaleDateString('pt-BR'));
+    console.log('� [DEBUG] Data selecionada:', selectedDate.toLocaleDateString('pt-BR'));
+    console.log('� [DEBUG] Comparação selectedDate < today:', selectedDate < today);
     
     // Não permitir alocações em datas anteriores à hoje
     if(selectedDate < today) {
@@ -4424,7 +4499,7 @@ function handleManualAllocation() {
         timestamp: Date.now()
     };
     
-    console.log('🏷️ [DEBUG] Alocação manual criada com ID:', manualAllocation.id, 'para sala:', manualAllocation.sala);
+    console.log(' [DEBUG] Alocação manual criada com ID:', manualAllocation.id, 'para sala:', manualAllocation.sala);
     
     // Integrar com o sistema principal de dados por data/turno
     try {
@@ -4453,7 +4528,7 @@ function handleManualAllocation() {
         localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
         localStorage.setItem('dataUpdateTimestamp', Date.now().toString());
         
-        console.log('📝 [ALOCAÇÃO MANUAL] Dados salvos na estrutura principal:');
+        console.log(' [ALOCAÇÃO MANUAL] Dados salvos na estrutura principal:');
         console.log('   - Data:', dataAlocacao);
         console.log('   - Turno:', turno);
         console.log('   - Total de registros no turno:', dataByDateAndShift[dataAlocacao][turno].length);
@@ -4461,11 +4536,11 @@ function handleManualAllocation() {
         
         // Salvar no Firebase se disponível
         if(typeof saveDataToFirebase === 'function') {
-            console.log('🔥 [ALOCAÇÃO MANUAL]: Salvando no Firebase...');
+            console.log(' [ALOCAÇÃO MANUAL]: Salvando no Firebase...');
             saveDataToFirebase(dataAlocacao, turno, dataByDateAndShift[dataAlocacao][turno]).then(() => {
-                console.log('✅ [ALOCAÇÃO MANUAL]: Dados salvos no Firebase com sucesso!');
+                console.log(' [ALOCAÇÃO MANUAL]: Dados salvos no Firebase com sucesso!');
             }).catch(error => {
-                console.error('❌ [ALOCAÇÃO MANUAL]: Erro ao salvar no Firebase:', error);
+                console.error(' [ALOCAÇÃO MANUAL]: Erro ao salvar no Firebase:', error);
             });
         }
         
@@ -4482,16 +4557,18 @@ function handleManualAllocation() {
         
         // Se a alocação foi feita para a data atual sendo visualizada, atualizar a tabela
         if (dataAlocacao === selectedDate) {
-            console.log('🔄 [ALOCAÇÃO MANUAL] Atualizando tabela pois a alocação foi feita para a data atual');
+            console.log(' [ALOCAÇÃO MANUAL] Atualizando tabela pois a alocação foi feita para a data atual');
             renderTable();
         } else {
-            console.log('📅 [ALOCAÇÃO MANUAL] Alocação feita para data diferente da atual. Visualize a data', dataAlocacao, 'para ver a alocação');
+            console.log('� [ALOCAÇÃO MANUAL] Alocação feita para data diferente da atual. Visualize a data', dataAlocacao, 'para ver a alocação');
         }
         
-        console.log('📝 Alocação Manual Integrada:', manualAllocation);
+        console.log(' Alocação Manual Integrada:', manualAllocation);
         
     } catch (error) {
         console.error('Erro ao salvar alocação manual:', error);
         showNotification('Erro ao salvar alocação manual. Tente novamente.', 'error');
     }
 }
+
+

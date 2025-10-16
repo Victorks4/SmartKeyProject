@@ -1,4 +1,4 @@
-let activeAction = null;
+﻿let activeAction = null;
 let activeShift = 'manhã';
 let sortAlphabetically = false;
 let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
@@ -765,7 +765,7 @@ function addProfessorToMapping(professorName, fast) {
     // Salva no localStorage para persistência
     saveDocentesCodprofToStorage();
     
-    console.log(`✅ Professor ${normalizedName} adicionado ao mapeamento com FAST: ${normalizedFast}`);
+    console.log(` Professor ${normalizedName} adicionado ao mapeamento com FAST: ${normalizedFast}`);
     return true;
 }
 
@@ -773,9 +773,9 @@ function addProfessorToMapping(professorName, fast) {
 function saveDocentesCodprofToStorage() {
     try {
         localStorage.setItem('docentesCodprof', JSON.stringify(docentesCodprof));
-        console.log('📁 Mapeamento docentesCodprof salvo no localStorage');
+        console.log('� Mapeamento docentesCodprof salvo no localStorage');
     } catch (error) {
-        console.error('❌ Erro ao salvar mapeamento no localStorage:', error);
+        console.error(' Erro ao salvar mapeamento no localStorage:', error);
     }
 }
 
@@ -787,10 +787,10 @@ function loadDocentesCodprofFromStorage() {
             const savedMapping = JSON.parse(saved);
             // Merge com o mapeamento existente (localStorage tem prioridade)
             Object.assign(docentesCodprof, savedMapping);
-            console.log('📁 Mapeamento docentesCodprof carregado do localStorage');
+            console.log('� Mapeamento docentesCodprof carregado do localStorage');
         }
     } catch (error) {
-        console.error('❌ Erro ao carregar mapeamento do localStorage:', error);
+        console.error(' Erro ao carregar mapeamento do localStorage:', error);
     }
 }
 
@@ -818,15 +818,15 @@ window.exportDocentesCodprof = function() {
     
     const exportCode = `const docentesCodprof = {\n${mappingEntries}\n};`;
     
-    console.log('📋 Código do mapeamento atualizado:');
+    console.log(' Código do mapeamento atualizado:');
     console.log(exportCode);
     
     // Copiar para clipboard se disponível
     if (navigator.clipboard) {
         navigator.clipboard.writeText(exportCode).then(() => {
-            console.log('✅ Código copiado para a área de transferência!');
+            console.log(' Código copiado para a área de transferência!');
         }).catch(err => {
-            console.error('❌ Erro ao copiar para área de transferência:', err);
+            console.error(' Erro ao copiar para área de transferência:', err);
         });
     }
     
@@ -835,44 +835,44 @@ window.exportDocentesCodprof = function() {
 
 // Evento para escutar mudanças no localStorage de outras páginas
 window.addEventListener('storage', function(e) {
-    console.log('📱 Evento storage recebido:', {
+    console.log(' Evento storage recebido:', {
         key: e.key,
         oldValue: e.oldValue ? 'presente' : 'null',
         newValue: e.newValue ? 'presente' : 'null'
     });
     
     if (e.key === 'docentesCodprof') {
-        console.log('🔄 Detectada atualização no mapeamento docentesCodprof de outra página');
+        console.log(' Detectada atualização no mapeamento docentesCodprof de outra página');
         loadDocentesCodprofFromStorage();
     }
     
     if (e.key === 'allDateShiftData') {
-        console.log('🔄 Detectada atualização nos dados de turnos de outra página');
+        console.log(' Detectada atualização nos dados de turnos de outra página');
         loadSharedData();
     }
     
     if (e.key === 'allShiftData') {
-        console.log('🔄 Detectada atualização no allShiftData de outra página');
+        console.log(' Detectada atualização no allShiftData de outra página');
         loadSharedData();
     }
 });
 
 // Evento para escutar cadastro de novos professores no painel administrativo (mesma aba)
 window.addEventListener('teacherAdded', function(e) {
-    console.log('👨‍🏫 Novo professor adicionado no painel administrativo:', e.detail);
+    console.log('�‍� Novo professor adicionado no painel administrativo:', e.detail);
     loadDocentesCodprofFromStorage();
 });
 
 // Evento para escutar mudanças específicas de registros do painel administrativo
 window.addEventListener('dataUpdated', function(e) {
-    console.log('📢 Evento dataUpdated recebido:', e.detail);
+    console.log('� Evento dataUpdated recebido:', e.detail);
     
     if (e.detail && e.detail.type === 'recordUpdated') {
-        console.log('🔄 Detectada atualização de registro específico:', e.detail);
+        console.log(' Detectada atualização de registro específico:', e.detail);
         
         // Recarregar dados e atualizar a tabela
         loadSharedData().then(() => {
-            console.log('✅ Dados atualizados no painel do professor');
+            console.log(' Dados atualizados no painel do professor');
             
             // Mostrar notificação visual da atualização
             showUpdateNotification(e.detail);
@@ -1072,15 +1072,15 @@ async function loadSharedData() {
     // Primeiro, tentar carregar dados do Firebase
     let firebaseLoaded = false;
     if (typeof loadTeacherDataFromFirebase === 'function') {
-        console.log('[PROFESSOR] 🔥 Tentando carregar dados do Firebase...');
+        console.log('[PROFESSOR]  Tentando carregar dados do Firebase...');
         try {
             firebaseLoaded = await loadTeacherDataFromFirebase(selectedDate);
             if (firebaseLoaded) {
-                console.log('[PROFESSOR] ✅ Dados carregados do Firebase com sucesso!');
+                console.log('[PROFESSOR]  Dados carregados do Firebase com sucesso!');
                 
                 // Iniciar sincronização em tempo real para todos os turnos
                 if (typeof syncTeacherDataRealtime === 'function') {
-                    console.log('[PROFESSOR] 🔄 Iniciando sincronização em tempo real...');
+                    console.log('[PROFESSOR]  Iniciando sincronização em tempo real...');
                     syncTeacherDataRealtime(selectedDate, 'manhã');
                     syncTeacherDataRealtime(selectedDate, 'tarde');
                     syncTeacherDataRealtime(selectedDate, 'noite');
@@ -1090,13 +1090,13 @@ async function loadSharedData() {
                 return;
             }
         } catch (error) {
-            console.error('[PROFESSOR] ❌ Erro ao carregar do Firebase:', error);
+            console.error('[PROFESSOR]  Erro ao carregar do Firebase:', error);
         }
     }
     
     // Fallback: tentar carregar dados do localStorage se Firebase falhou
     if (!firebaseLoaded) {
-        console.log('[PROFESSOR] 📁 Carregando dados do localStorage como fallback...');
+        console.log('[PROFESSOR] � Carregando dados do localStorage como fallback...');
         
         const newFormatData = localStorage.getItem('allDateShiftData');
         console.log('[PROFESSOR] Dados brutos do localStorage:', newFormatData);
@@ -1290,7 +1290,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Parar sincronização da data anterior
             if (typeof stopSyncDataRealtime === 'function') {
-                console.log('[PROFESSOR] 🛑 Parando sincronização da data anterior...');
+                console.log('[PROFESSOR]  Parando sincronização da data anterior...');
                 stopSyncDataRealtime(oldDate, 'manhã');
                 stopSyncDataRealtime(oldDate, 'tarde');
                 stopSyncDataRealtime(oldDate, 'noite');
@@ -1299,28 +1299,28 @@ document.addEventListener('DOMContentLoaded', function() {
             // Carregar dados da nova data do Firebase
             let firebaseLoaded = false;
             if (typeof loadTeacherDataFromFirebase === 'function') {
-                console.log(`[PROFESSOR] 🔥 Carregando dados do Firebase para nova data: ${selectedDate}`);
+                console.log(`[PROFESSOR]  Carregando dados do Firebase para nova data: ${selectedDate}`);
                 try {
                     firebaseLoaded = await loadTeacherDataFromFirebase(selectedDate);
                     if (firebaseLoaded) {
-                        console.log('[PROFESSOR] ✅ Dados da nova data carregados do Firebase!');
+                        console.log('[PROFESSOR]  Dados da nova data carregados do Firebase!');
                         
                         // Iniciar sincronização para a nova data
                         if (typeof syncTeacherDataRealtime === 'function') {
-                            console.log('[PROFESSOR] 🔄 Iniciando sincronização para nova data...');
+                            console.log('[PROFESSOR]  Iniciando sincronização para nova data...');
                             syncTeacherDataRealtime(selectedDate, 'manhã');
                             syncTeacherDataRealtime(selectedDate, 'tarde');
                             syncTeacherDataRealtime(selectedDate, 'noite');
                         }
                     }
                 } catch (error) {
-                    console.error('[PROFESSOR] ❌ Erro ao carregar nova data do Firebase:', error);
+                    console.error('[PROFESSOR]  Erro ao carregar nova data do Firebase:', error);
                 }
             }
             
             // Se não conseguiu carregar do Firebase, verificar localStorage
             if (!firebaseLoaded) {
-                console.log('[PROFESSOR] 📁 Verificando localStorage para nova data...');
+                console.log('[PROFESSOR] � Verificando localStorage para nova data...');
                 const dateData = getDataForDate(selectedDate);
                 const shiftData = dateData[activeShift] || [];
                 console.log(`Dados encontrados para ${selectedDate} no turno ${activeShift}:`, shiftData);
@@ -1760,20 +1760,20 @@ function executeKeyAction(record, action) {
     const currentShiftData = getCurrentShiftData();
     
     // DEBUG: Validar dados antes de prosseguir
-    console.log('🔍 [DEBUG] executeKeyAction - Dados iniciais:');
-    console.log('🔍 [DEBUG] - record:', record);
-    console.log('🔍 [DEBUG] - action:', action);
-    console.log('🔍 [DEBUG] - currentShiftData length:', currentShiftData.length);
-    console.log('🔍 [DEBUG] - currentShiftData:', currentShiftData);
+    console.log(' [DEBUG] executeKeyAction - Dados iniciais:');
+    console.log(' [DEBUG] - record:', record);
+    console.log(' [DEBUG] - action:', action);
+    console.log(' [DEBUG] - currentShiftData length:', currentShiftData.length);
+    console.log(' [DEBUG] - currentShiftData:', currentShiftData);
     
     // Validar se currentShiftData é válido
     if (!Array.isArray(currentShiftData)) {
-        console.error('❌ [DEBUG] currentShiftData não é um array válido:', currentShiftData);
+        console.error(' [DEBUG] currentShiftData não é um array válido:', currentShiftData);
         return;
     }
     
     if (currentShiftData.length === 0) {
-        console.warn('⚠️ [DEBUG] currentShiftData está vazio - isso pode causar problemas no Firebase');
+        console.warn(' [DEBUG] currentShiftData está vazio - isso pode causar problemas no Firebase');
     }
     
     // Tentar encontrar por ID primeiro, depois por sala
@@ -1785,7 +1785,7 @@ function executeKeyAction(record, action) {
         recordIndex = currentShiftData.findIndex(r => r.curso === record.curso);
     }
     
-    console.log('🔍 [DEBUG] recordIndex encontrado:', recordIndex);
+    console.log(' [DEBUG] recordIndex encontrado:', recordIndex);
     
     if (recordIndex !== -1) {
         if (action === 'remove') {
@@ -1847,23 +1847,23 @@ function executeKeyAction(record, action) {
         // Salvar TODA A TABELA no Firebase para persistência e sincronização em tempo real
         if(typeof saveDataToFirebase === 'function') {
             // DEBUG: Log detalhado dos dados antes de enviar ao Firebase
-            console.log('🔥 [DEBUG] Dados antes de enviar ao Firebase:');
-            console.log('🔥 [DEBUG] - selectedDate:', selectedDate);
-            console.log('🔥 [DEBUG] - activeShift:', activeShift);
-            console.log('🔥 [DEBUG] - currentShiftData length:', currentShiftData.length);
-            console.log('🔥 [DEBUG] - currentShiftData completo:', currentShiftData);
-            console.log('🔥 [DEBUG] - dataByDateAndShift[selectedDate]:', dataByDateAndShift[selectedDate]);
+            console.log(' [DEBUG] Dados antes de enviar ao Firebase:');
+            console.log(' [DEBUG] - selectedDate:', selectedDate);
+            console.log(' [DEBUG] - activeShift:', activeShift);
+            console.log(' [DEBUG] - currentShiftData length:', currentShiftData.length);
+            console.log(' [DEBUG] - currentShiftData completo:', currentShiftData);
+            console.log(' [DEBUG] - dataByDateAndShift[selectedDate]:', dataByDateAndShift[selectedDate]);
             
             // Garantir que enviamos a tabela completa, não apenas o registro modificado
             saveDataToFirebase(selectedDate, activeShift, currentShiftData).then(() => {                
-                console.log('✅ [DEBUG] Dados salvos no Firebase com sucesso!');
+                console.log(' [DEBUG] Dados salvos no Firebase com sucesso!');
                 // Notificar admin panel que a tabela completa foi atualizada
                 if(typeof notifyAdminPanelUpdate === 'function') {
                     notifyAdminPanelUpdate(completeTableData);
                 }
             }).catch(error => {
-                console.error('❌ [DEBUG] Erro ao salvar TABELA COMPLETA no Firebase:', error);
-                console.error('❌ [DEBUG] Dados que falharam:', {
+                console.error(' [DEBUG] Erro ao salvar TABELA COMPLETA no Firebase:', error);
+                console.error(' [DEBUG] Dados que falharam:', {
                     date: selectedDate,
                     shift: activeShift,
                     recordCount: currentShiftData.length,
@@ -1871,7 +1871,7 @@ function executeKeyAction(record, action) {
                 });
             });
         } else {
-            console.warn('⚠️ [DEBUG] Função saveDataToFirebase não disponível');
+            console.warn(' [DEBUG] Função saveDataToFirebase não disponível');
         }
         
         // Também salvar no formato antigo para compatibilidade
@@ -2797,15 +2797,15 @@ function addRecordToCurrentShift(records) {
     
     // Salvar no Firebase para persistência e sincronização em tempo real
     if(typeof saveDataToFirebase === 'function') {
-        console.log('🔥 [TERCEIROS]: Salvando dados de terceiro no Firebase...');
+        console.log(' [TERCEIROS]: Salvando dados de terceiro no Firebase...');
 
         saveDataToFirebase(selectedDate, activeShift, dateData[activeShift]).then(() => {
-            console.log('✅ [TERCEIROS]: Dados de terceiro salvos no Firebase com sucesso!');
+            console.log(' [TERCEIROS]: Dados de terceiro salvos no Firebase com sucesso!');
         }).catch(error => {
-            console.error('❌ [TERCEIROS]: Erro ao salvar dados de terceiro no Firebase:', error);
+            console.error(' [TERCEIROS]: Erro ao salvar dados de terceiro no Firebase:', error);
         });
     } else {
-        console.warn('⚠️ [TERCEIROS]: Função saveDataToFirebase não disponível');
+        console.warn(' [TERCEIROS]: Função saveDataToFirebase não disponível');
     }
     
     window.dispatchEvent(new CustomEvent('shiftDataUpdated', { 
@@ -3273,10 +3273,10 @@ function initialize() {
     
     // Inicializar sincronização Firebase se estiver disponível
     if(typeof initializeFirebaseSync === 'function') {
-        console.log('🔥 [PROFESSOR]: Inicializando sincronização Firebase...');
+        console.log(' [PROFESSOR]: Inicializando sincronização Firebase...');
         initializeFirebaseSync();
     } else {
-        console.warn('⚠️ [PROFESSOR]: Função initializeFirebaseSync não disponível');
+        console.warn(' [PROFESSOR]: Função initializeFirebaseSync não disponível');
     }
     
     // Inicializar ícones
@@ -3321,3 +3321,5 @@ if(document.readyState === 'loading') {
 } else {
     initialize();
 }
+
+
