@@ -4165,6 +4165,21 @@ function capitalizeFirst(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+// Função para obter texto dos turnos disponíveis
+function getAvailableShiftsText(currentShift) {
+    const allShifts = ['manhã', 'tarde', 'noite'];
+    const shiftOrder = { 'manhã': 1, 'tarde': 2, 'noite': 3 };
+    const currentOrder = shiftOrder[currentShift];
+    
+    const availableShifts = allShifts.filter(shift => shiftOrder[shift] > currentOrder);
+    
+    if (availableShifts.length === 0) {
+        return 'nenhum (todos os turnos já passaram)';
+    }
+    
+    return availableShifts.join(', ');
+}
+
 // Função que exibe o modal de alocação manual
 function openManualAllocationModal() {
     document.getElementById('manualAllocationModal').style.display = 'flex';
@@ -4300,18 +4315,44 @@ function handleManualAllocation() {
         return;
     }
     
-    // Validação da data (deve ser futura)
+    // Validação da data e turno
     const today = new Date();
-    const selectedDate = new Date(dataAlocacao);
+    
+    // Criar data selecionada de forma mais robusta para evitar problemas de fuso horário
+    // O campo de data HTML retorna "YYYY-MM-DD", vamos criar a data localmente
+    const dateParts = dataAlocacao.split('-');
+    const selectedDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
     
     // Resetar as horas para comparar apenas as datas
     today.setHours(0, 0, 0, 0);
     selectedDate.setHours(0, 0, 0, 0);
     
-    if(selectedDate <= today) {
-        showNotification('A data da alocação deve ser uma data futura.', 'warning');
+    // Debug: verificar os valores das datas
+    console.log('🗓️ [DEBUG] Data string recebida:', dataAlocacao);
+    console.log('🗓️ [DEBUG] Data de hoje:', today.toLocaleDateString('pt-BR'));
+    console.log('🗓️ [DEBUG] Data selecionada:', selectedDate.toLocaleDateString('pt-BR'));
+    console.log('🗓️ [DEBUG] Comparação selectedDate < today:', selectedDate < today);
+    
+    // Não permitir alocações em datas anteriores à hoje
+    if(selectedDate < today) {
+        showNotification('Não é possível fazer alocações para datas anteriores à hoje.', 'warning');
         return;
     }
+    
+    // Se for a data atual, verificar se o turno é posterior ao turno atual
+    if(selectedDate.getTime() === today.getTime()) {
+        const currentShift = getCurrentShiftByTime();
+        const shiftOrder = { 'manhã': 1, 'tarde': 2, 'noite': 3 };
+        const currentShiftOrder = shiftOrder[currentShift];
+        const selectedShiftOrder = shiftOrder[turno];
+        
+        if(selectedShiftOrder <= currentShiftOrder) {
+            showNotification(`Para hoje, você só pode alocar para turnos posteriores ao atual (${currentShift}). Turnos disponíveis: ${getAvailableShiftsText(currentShift)}.`, 'warning');
+            return;
+        }
+    }
+    
+    // Para datas futuras, qualquer turno é permitido
     
     // Validação do turno
     const turnosValidos = ['manhã', 'tarde', 'noite'];
