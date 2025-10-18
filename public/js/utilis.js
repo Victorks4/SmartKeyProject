@@ -882,7 +882,7 @@ let docentesCodprof = {
 };
 
 // Salva os dados no localStorage
-// localStorage.setItem("docentesCodprof", JSON.stringify(docentesCodprof));
+localStorage.setItem("docentesCodprof", JSON.stringify(docentesCodprof));
 
 const functions = [
     getRoomNumbers, getUniqueRoomsForBlock, getUniqueBlocks,

@@ -1345,41 +1345,46 @@ if(inputFast) {
 // Função para salvar novo professor
 function saveNewTeacher() {
     const name = document.getElementById('tpFullName').value.trim();
-    const fats = document.getElementById('tpFast').value.trim();
+    const fats = document.getElementById('tpFast').value.trim().toUpperCase();
 
     if(!name || !fats) {
-        showNotification('Preencha todos os campos obrigatórios!!', 'warning');
-        return;
+        showNotification('Preencha todos os campos obrigatórios!', 'warning');
+        return false;
     }
 
     // Validar se o nome tem pelo menos 3 caracteres
     if(name.length < 3) {
         showNotification('O nome do professor deve ter pelo menos 3 caracteres.', 'warning');
-        return;
+        return false;
     }
 
-    // Valida se o professor já existe
-    const currentMapping = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
-
-    if(currentMapping[name]) {
-        showNotification(`O professor "${name}" já está cadastrado no sistema.`, 'warning');
-        return;
-    }
-
-    // Verifica se o FAST já está sendo usado por outro professor
-    for(const [existingName, existingFast] of Object.entries(currentMapping)) {
-        if(existingFast === fats) {
-            showNotification(`O FATS <strong>"${fats}"</strong> já está sendo usado pelo professor: <strong>${existingName}</strong>.`, 'warning');
-            return;
-        }
-    }
-
-    // Tenta adicionar ao sistema de nomes de professores
     try {
-        const currentMapping = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
+        // Obtém os dados atuais do localStorage
+        const docentesCodprof = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
+        
+        // Verifica se o professor já existe pelo nome
+        if(docentesCodprof[name]) {
+            showNotification(`O professor "${name}" já está cadastrado no sistema.`, 'warning');
+            return false;
+        }
 
-        currentMapping[name] = fats;
-        localStorage.setItem('docentesCodprof', JSON.stringify(currentMapping));
+        // Verifica se o código FATS já está sendo usado por outro professor
+        for(const [existingName, existingFats] of Object.entries(docentesCodprof)) {
+            if(existingFats === fats) {
+                showNotification(`O FATS "${fats}" já está sendo usado pelo professor: ${existingName}.`, 'warning');
+                return false;
+            }
+        }
+
+        // Adiciona o novo professor a docentesCodprof
+        docentesCodprof[name] = fats;
+        localStorage.setItem('docentesCodprof', JSON.stringify(docentesCodprof));
+        
+        // Atualiza teacherNames para consistência (garante que ambos os objetos tenham os mesmos dados)
+        // Primeiro obtém os teacherNames existentes e adiciona o novo professor
+        const existingTeacherNames = JSON.parse(localStorage.getItem('teacherNames') || '{}');
+        existingTeacherNames[name] = fats;
+        localStorage.setItem('teacherNames', JSON.stringify(existingTeacherNames));
         
         // Disparar evento customizado para notificar outras partes do sistema
         window.dispatchEvent(new CustomEvent('teacherAdded', {
@@ -1395,8 +1400,8 @@ function saveNewTeacher() {
         showNotification(`Professor '<strong>${name}</strong>' cadastrado(a) com sucesso!`, 'success');
         return true;
     } catch(error) {
-        console.error('Erro ao cadastrar professor: ', error);
-        showNotification('Erro ao cadastrar professor.', 'danger');
+        console.error('Erro ao cadastrar professor:', error);
+        showNotification('Erro ao cadastrar professor. Verifique os dados e tente novamente.', 'danger');
         return false;
     }
 }
@@ -2567,7 +2572,7 @@ function formatDate(dateStr) {
 
 // Constants and Configuration
 const STORAGE_KEYS = {
-    TEACHERS: "docentesCodprof"
+    TEACHERS: "teacherNames"
 };
 
 const TABLE_CONFIG = {
@@ -4569,5 +4574,3 @@ function handleManualAllocation() {
         showNotification('Erro ao salvar alocação manual. Tente novamente.', 'error');
     }
 }
-
-
