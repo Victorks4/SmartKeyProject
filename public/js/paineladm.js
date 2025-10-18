@@ -3994,11 +3994,10 @@ function populateManualRoomNumberDropdown(selectedBlock, selectedRoom) {
     const roomNumbers = getUniqueRoomNumbersForRoom(rooms, selectedBlock, selectedRoom);
 
     if(roomNumbers.length === 0) {
+        roomNumberValue.innerText = 'Sem numeração';
+        roomNumberDropdown.classList.remove('hidden');
         roomNumberDropdown.classList.add('noOptions');
         roomNumberDropdown.classList.add('selectedOption');
-        roomNumberDropdown.classList.remove('hidden');
-        roomNumberValue.innerText = 'Sem numeração';
-        // roomNumberOptions.innerHTML = '<li class="option disabled">Nenhum número disponível</li>';
         return;
     }
 
