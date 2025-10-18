@@ -737,6 +737,7 @@ let docentesCodprof = {
     "Paulo Ferreira da Costa Neto": "ALA258",
     "Paulo Sergio da Silva Oliveira Junior": "FATS5142",
     "Paulo Victor Aragão dos Santos": "FATS5135",
+    "Pedro Carneiro de Oliveira Filho": "FATS5235",
     "Pedro Geraldo Correia da Silva": "3",
     "Pedro Henrique Almeida dos Santos Alves": "NOAVIRT033",
     "Pedro Ivo Santos Furtado": "MAN40106",
