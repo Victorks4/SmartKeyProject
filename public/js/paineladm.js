@@ -4352,7 +4352,7 @@ function closeManualAllocationModal() {
 }
 
 // Função para o processamento da alocação manual
-function handleManualAllocation() {
+async function handleManualAllocation() {
     const dataInput = document.getElementById('manualAllocationDate');
     const turnoInput = document.getElementById('manualAllocationShift');
     const professorInput = document.getElementById('manualProfessorName');
@@ -4507,7 +4507,7 @@ function handleManualAllocation() {
     
     // Integrar com o sistema principal de dados por data/turno
     try {
-        // Obter dados existentes por data e turno
+        // Obter dados existentes por data e turno do localStorage
         try {
             dataByDateAndShift = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
         } catch (e) {
@@ -4520,13 +4520,47 @@ function handleManualAllocation() {
             dataByDateAndShift[dataAlocacao] = {};
         }
         
-        // Garantir que a estrutura do turno existe
-        if (!dataByDateAndShift[dataAlocacao][turno]) {
-            dataByDateAndShift[dataAlocacao][turno] = [];
-        }
+        // IMPORTANTE: Buscar dados do Firebase antes de adicionar a nova alocação
+        // Isso garante que não sobrescreveremos alocações existentes que ainda não foram sincronizadas para o localStorage
+        console.log(' [ALOCAÇÃO MANUAL] Verificando dados existentes no Firebase...');
         
-        // Adicionar a alocação manual ao turno específico da data específica
-        dataByDateAndShift[dataAlocacao][turno].push(manualAllocation);
+        // Verificar se já existem dados no localStorage para esta data/turno
+        const hasLocalData = dataByDateAndShift[dataAlocacao][turno] && Array.isArray(dataByDateAndShift[dataAlocacao][turno]) && dataByDateAndShift[dataAlocacao][turno].length > 0;
+        
+        if (hasLocalData) {
+            console.log(` [ALOCAÇÃO MANUAL] Dados locais encontrados (${dataByDateAndShift[dataAlocacao][turno].length} registros). Adicionando nova alocação...`);
+            // Se já temos dados locais, assumimos que estão sincronizados
+            dataByDateAndShift[dataAlocacao][turno].push(manualAllocation);
+        } else {
+            console.log(' [ALOCAÇÃO MANUAL] Sem dados locais. Buscando dados do Firebase...');
+            
+            // Tentar buscar dados do Firebase antes de criar um array vazio
+            if (typeof loadDataFromFirebase === 'function') {
+                try {
+                    const firebaseData = await loadDataFromFirebase(dataAlocacao, turno);
+                    console.log(` [ALOCAÇÃO MANUAL] Dados do Firebase carregados: ${firebaseData ? firebaseData.length : 0} registros`);
+                    
+                    // Se o Firebase retornou dados, usar esses dados como base
+                    if (firebaseData && Array.isArray(firebaseData) && firebaseData.length > 0) {
+                        console.log(` [ALOCAÇÃO MANUAL] Usando ${firebaseData.length} registros existentes do Firebase`);
+                        dataByDateAndShift[dataAlocacao][turno] = [...firebaseData];
+                        dataByDateAndShift[dataAlocacao][turno].push(manualAllocation);
+                    } else {
+                        // Firebase não tem dados, criar array com apenas a nova alocação
+                        console.log(' [ALOCAÇÃO MANUAL] Firebase sem dados. Criando novo array com a alocação.');
+                        dataByDateAndShift[dataAlocacao][turno] = [manualAllocation];
+                    }
+                } catch (error) {
+                    console.warn(' [ALOCAÇÃO MANUAL] Erro ao buscar dados do Firebase:', error);
+                    // Em caso de erro, criar array com apenas a nova alocação
+                    dataByDateAndShift[dataAlocacao][turno] = [manualAllocation];
+                }
+            } else {
+                // Se a função de carregar do Firebase não está disponível, criar array com a nova alocação
+                console.log(' [ALOCAÇÃO MANUAL] loadDataFromFirebase não disponível. Inicializando array com a nova alocação...');
+                dataByDateAndShift[dataAlocacao][turno] = [manualAllocation];
+            }
+        }
         
         // Salvar no localStorage principal
         localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
