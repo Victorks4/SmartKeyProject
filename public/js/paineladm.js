@@ -2674,10 +2674,28 @@ function generateEmptyRow(shiftCapitalized, formattedDate) {
 function generateTableRow(record) {
     // Debug para alocações manuais
     if (record.tipo === 'manual_allocation') {
-        console.log(' [DEBUG] Gerando linha para alocação manual:', { id: record.id, sala: record.sala, professor: record.professor });
+        console.log(' [DEBUG] Gerando linha para alocação manual:', { id: record.id, sala: record.sala, bloco: record.bloco, numero: record.numero, professor: record.professor });
     }
     
-    const room = record.room || record.sala || '-';
+    // Para alocações manuais, concatenar bloco + sala + número
+    let room;
+    if (record.tipo === 'manual_allocation') {
+        const bloco = record.bloco || '';
+        const sala = record.sala || record.room || '';
+        const numero = record.numero || '';
+        
+        // Formatar: "Bloco Sala Número" ou variações dependendo do que está disponível
+        if (bloco && sala && numero) {
+            room = `${bloco} ${sala} ${numero}`;
+        } else if (bloco && sala) {
+            room = `${bloco} ${sala}`;
+        } else {
+            room = sala || record.room || '-';
+        }
+    } else {
+        room = record.room || record.sala || '-';
+    }
+    
     const course = record.course || record.curso || '-';
     const turma = record.turmaNumber || record.turma || '-';
     const professor = record.professorName || record.professor || '-';
@@ -4128,11 +4146,26 @@ function loadManualAllocationsTable() {
             return;
         }
 
-        tableBody.innerHTML = manualAllocations.map(allocation => `
+        tableBody.innerHTML = manualAllocations.map(allocation => {
+            // Formatar sala completa: "Bloco Sala Número"
+            const bloco = allocation.bloco || '';
+            const sala = allocation.sala || '';
+            const numero = allocation.numero || '';
+            
+            let salaCompleta;
+            if (bloco && sala && numero) {
+                salaCompleta = `${bloco} ${sala} ${numero}`;
+            } else if (bloco && sala) {
+                salaCompleta = `${bloco} ${sala}`;
+            } else {
+                salaCompleta = sala || '-';
+            }
+            
+            return `
             <tr>
                 <td>${formatDate(allocation.dataAlocacao)}</td>
                 <td><span class="badge bg-${getShiftColor(allocation.periodo)}">${capitalizeFirst(allocation.periodo)}</span></td>
-                <td>${allocation.sala || '-'}</td>
+                <td>${salaCompleta}</td>
                 <td><span class="badge bg-secondary">${allocation.bloco || '-'}</span></td>
                 <td>${allocation.numero || '-'}</td>
                 <td>${allocation.professor || '-'}</td>
@@ -4144,7 +4177,8 @@ function loadManualAllocationsTable() {
                     </button>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     } catch(error) {
         console.error('Erro ao carregar alocações manuais:', error);
         tableBody.innerHTML = `
