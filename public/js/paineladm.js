@@ -4250,7 +4250,7 @@ function getAvailableShiftsText(currentShift) {
     const shiftOrder = { 'manhã': 1, 'tarde': 2, 'noite': 3 };
     const currentOrder = shiftOrder[currentShift];
     
-    const availableShifts = allShifts.filter(shift => shiftOrder[shift] > currentOrder);
+    const availableShifts = allShifts.filter(shift => shiftOrder[shift] >= currentOrder);
     
     if (availableShifts.length === 0) {
         return 'nenhum (todos os turnos já passaram)';
@@ -4418,15 +4418,15 @@ async function handleManualAllocation() {
         return;
     }
     
-    // Se for a data atual, verificar se o turno é posterior ao turno atual
+    // Se for a data atual, verificar se o turno é válido (atual ou posterior)
     if(selectedDate.getTime() === today.getTime()) {
         const currentShift = getCurrentShiftByTime();
         const shiftOrder = { 'manhã': 1, 'tarde': 2, 'noite': 3 };
         const currentShiftOrder = shiftOrder[currentShift];
         const selectedShiftOrder = shiftOrder[turno];
         
-        if(selectedShiftOrder <= currentShiftOrder) {
-            showNotification(`Para hoje, você só pode alocar para turnos posteriores ao atual (${currentShift}). Turnos disponíveis: ${getAvailableShiftsText(currentShift)}.`, 'warning');
+        if(selectedShiftOrder < currentShiftOrder) {
+            showNotification(`Para hoje, você só pode alocar para o turno atual (${currentShift}) ou turnos posteriores. Turnos disponíveis: ${getAvailableShiftsText(currentShift)}.`, 'warning');
             return;
         }
     }
