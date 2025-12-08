@@ -606,6 +606,7 @@ let docentesCodprof = {
     "Lidiane de Jesus Freitas": "FATS4250",
     "Liliane Ribeiro dos Santos": "FATS99963",
     "Liliane Ribeiro dos Santos Fernandes": "ALA253",
+    "Lenise Cerqueira Azevedo": "FATS5246",
     "Lindinéia Gomes Bastos": "CALC1235",
     "Lindomar Carlos Sodré da Silva": "FATS3667",
     "Lindsei Oliveira Machado": "FATS5018",
@@ -892,7 +893,7 @@ let docentesCodprof = {
 };
 
 // Salva os dados no localStorage
-// localStorage.setItem("docentesCodprof", JSON.stringify(docentesCodprof));
+localStorage.setItem("docentesCodprof", JSON.stringify(docentesCodprof));
 
 const functions = [
     getRoomNumbers, getUniqueRoomsForBlock, getUniqueBlocks,

@@ -1400,26 +1400,33 @@ function saveNewTeacher() {
     }
 
     try {
+        // Obtém os dados atuais do localStorage
         const currentMapping = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
         console.log('📚 Professores atuais:', Object.keys(currentMapping).length);
 
-        // Verificar duplicatas
+        // Verificar se o professor já existe pelo nome
         if(currentMapping[name]) {
-            showNotification(`O professor "${name}" já está cadastrado.`, 'warning');
+            showNotification(`O professor "${name}" já está cadastrado no sistema.`, 'warning');
             return false;
         }
 
+        // Verificar se o código FATS já está sendo usado por outro professor
         for(const [existingName, existingFats] of Object.entries(currentMapping)) {
             if(existingFats === fats) {
-                showNotification(`O FATS "${fats}" já pertence a: ${existingName}.`, 'warning');
+                showNotification(`O FATS "${fats}" já está sendo usado pelo professor: ${existingName}.`, 'warning');
                 return false;
             }
         }
 
-        // Adicionar professor
+        // Adicionar professor ao mapeamento
         currentMapping[name] = fats;
         localStorage.setItem('docentesCodprof', JSON.stringify(currentMapping));
         console.log('✅ Professor salvo no localStorage');
+        
+        // Atualiza teacherNames para consistência
+        const existingTeacherNames = JSON.parse(localStorage.getItem('teacherNames') || '{}');
+        existingTeacherNames[name] = fats;
+        localStorage.setItem('teacherNames', JSON.stringify(existingTeacherNames));
         
         // Sincronizar com TeachersData se disponível
         if (typeof TeachersData !== 'undefined' && TeachersData.addTeacher) {
@@ -1472,7 +1479,7 @@ function saveNewTeacher() {
         if (typeof ErrorHandler !== 'undefined') {
             ErrorHandler.handle(error, 'saveNewTeacher', { name, fats });
         }
-        showNotification('Erro ao cadastrar professor.', 'danger');
+        showNotification('Erro ao cadastrar professor. Verifique os dados e tente novamente.', 'danger');
         return false;
     }
 }
@@ -2773,7 +2780,7 @@ function formatDate(dateStr) {
 
 // Constants and Configuration
 const STORAGE_KEYS = {
-    TEACHERS: "docentesCodprof"
+    TEACHERS: "teacherNames"
 };
 
 const TABLE_CONFIG = {
@@ -2875,10 +2882,28 @@ function generateEmptyRow(shiftCapitalized, formattedDate) {
 function generateTableRow(record) {
     // Debug para alocações manuais
     if (record.tipo === 'manual_allocation') {
-        console.log(' [DEBUG] Gerando linha para alocação manual:', { id: record.id, sala: record.sala, professor: record.professor });
+        console.log(' [DEBUG] Gerando linha para alocação manual:', { id: record.id, sala: record.sala, bloco: record.bloco, numero: record.numero, professor: record.professor });
     }
     
-    const room = record.room || record.sala || '-';
+    // Para alocações manuais, concatenar bloco + sala + número
+    let room;
+    if (record.tipo === 'manual_allocation') {
+        const bloco = record.bloco || '';
+        const sala = record.sala || record.room || '';
+        const numero = record.numero || '';
+        
+        // Formatar: "Bloco Sala Número" ou variações dependendo do que está disponível
+        if (bloco && sala && numero) {
+            room = `${bloco} ${sala} ${numero}`;
+        } else if (bloco && sala) {
+            room = `${bloco} ${sala}`;
+        } else {
+            room = sala || record.room || '-';
+        }
+    } else {
+        room = record.room || record.sala || '-';
+    }
+    
     const course = record.course || record.curso || '-';
     const turma = record.turmaNumber || record.turma || '-';
     const professor = record.professorName || record.professor || '-';
@@ -4329,11 +4354,26 @@ function loadManualAllocationsTable() {
             return;
         }
 
-        tableBody.innerHTML = manualAllocations.map(allocation => `
+        tableBody.innerHTML = manualAllocations.map(allocation => {
+            // Formatar sala completa: "Bloco Sala Número"
+            const bloco = allocation.bloco || '';
+            const sala = allocation.sala || '';
+            const numero = allocation.numero || '';
+            
+            let salaCompleta;
+            if (bloco && sala && numero) {
+                salaCompleta = `${bloco} ${sala} ${numero}`;
+            } else if (bloco && sala) {
+                salaCompleta = `${bloco} ${sala}`;
+            } else {
+                salaCompleta = sala || '-';
+            }
+            
+            return `
             <tr>
                 <td>${formatDate(allocation.dataAlocacao)}</td>
                 <td><span class="badge bg-${getShiftColor(allocation.periodo)}">${capitalizeFirst(allocation.periodo)}</span></td>
-                <td>${allocation.sala || '-'}</td>
+                <td>${salaCompleta}</td>
                 <td><span class="badge bg-secondary">${allocation.bloco || '-'}</span></td>
                 <td>${allocation.numero || '-'}</td>
                 <td>${allocation.professor || '-'}</td>
@@ -4345,7 +4385,8 @@ function loadManualAllocationsTable() {
                     </button>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     } catch(error) {
         console.error('Erro ao carregar alocações manuais:', error);
         tableBody.innerHTML = `
@@ -4451,7 +4492,7 @@ function getAvailableShiftsText(currentShift) {
     const shiftOrder = { 'manhã': 1, 'tarde': 2, 'noite': 3 };
     const currentOrder = shiftOrder[currentShift];
     
-    const availableShifts = allShifts.filter(shift => shiftOrder[shift] > currentOrder);
+    const availableShifts = allShifts.filter(shift => shiftOrder[shift] >= currentOrder);
     
     if (availableShifts.length === 0) {
         return 'nenhum (todos os turnos já passaram)';
@@ -4553,7 +4594,7 @@ function closeManualAllocationModal() {
 }
 
 // Função para o processamento da alocação manual
-function handleManualAllocation() {
+async function handleManualAllocation() {
     const dataInput = document.getElementById('manualAllocationDate');
     const turnoInput = document.getElementById('manualAllocationShift');
     const professorInput = document.getElementById('manualProfessorName');
@@ -4619,15 +4660,15 @@ function handleManualAllocation() {
         return;
     }
     
-    // Se for a data atual, verificar se o turno é posterior ao turno atual
+    // Se for a data atual, verificar se o turno é válido (atual ou posterior)
     if(selectedDate.getTime() === today.getTime()) {
         const currentShift = getCurrentShiftByTime();
         const shiftOrder = { 'manhã': 1, 'tarde': 2, 'noite': 3 };
         const currentShiftOrder = shiftOrder[currentShift];
         const selectedShiftOrder = shiftOrder[turno];
         
-        if(selectedShiftOrder <= currentShiftOrder) {
-            showNotification(`Para hoje, você só pode alocar para turnos posteriores ao atual (${currentShift}). Turnos disponíveis: ${getAvailableShiftsText(currentShift)}.`, 'warning');
+        if(selectedShiftOrder < currentShiftOrder) {
+            showNotification(`Para hoje, você só pode alocar para o turno atual (${currentShift}) ou turnos posteriores. Turnos disponíveis: ${getAvailableShiftsText(currentShift)}.`, 'warning');
             return;
         }
     }
@@ -4708,7 +4749,7 @@ function handleManualAllocation() {
     
     // Integrar com o sistema principal de dados por data/turno
     try {
-        // Obter dados existentes por data e turno
+        // Obter dados existentes por data e turno do localStorage
         try {
             dataByDateAndShift = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
         } catch (e) {
@@ -4721,13 +4762,47 @@ function handleManualAllocation() {
             dataByDateAndShift[dataAlocacao] = {};
         }
         
-        // Garantir que a estrutura do turno existe
-        if (!dataByDateAndShift[dataAlocacao][turno]) {
-            dataByDateAndShift[dataAlocacao][turno] = [];
-        }
+        // IMPORTANTE: Buscar dados do Firebase antes de adicionar a nova alocação
+        // Isso garante que não sobrescreveremos alocações existentes que ainda não foram sincronizadas para o localStorage
+        console.log(' [ALOCAÇÃO MANUAL] Verificando dados existentes no Firebase...');
         
-        // Adicionar a alocação manual ao turno específico da data específica
-        dataByDateAndShift[dataAlocacao][turno].push(manualAllocation);
+        // Verificar se já existem dados no localStorage para esta data/turno
+        const hasLocalData = dataByDateAndShift[dataAlocacao][turno] && Array.isArray(dataByDateAndShift[dataAlocacao][turno]) && dataByDateAndShift[dataAlocacao][turno].length > 0;
+        
+        if (hasLocalData) {
+            console.log(` [ALOCAÇÃO MANUAL] Dados locais encontrados (${dataByDateAndShift[dataAlocacao][turno].length} registros). Adicionando nova alocação...`);
+            // Se já temos dados locais, assumimos que estão sincronizados
+            dataByDateAndShift[dataAlocacao][turno].push(manualAllocation);
+        } else {
+            console.log(' [ALOCAÇÃO MANUAL] Sem dados locais. Buscando dados do Firebase...');
+            
+            // Tentar buscar dados do Firebase antes de criar um array vazio
+            if (typeof loadDataFromFirebase === 'function') {
+                try {
+                    const firebaseData = await loadDataFromFirebase(dataAlocacao, turno);
+                    console.log(` [ALOCAÇÃO MANUAL] Dados do Firebase carregados: ${firebaseData ? firebaseData.length : 0} registros`);
+                    
+                    // Se o Firebase retornou dados, usar esses dados como base
+                    if (firebaseData && Array.isArray(firebaseData) && firebaseData.length > 0) {
+                        console.log(` [ALOCAÇÃO MANUAL] Usando ${firebaseData.length} registros existentes do Firebase`);
+                        dataByDateAndShift[dataAlocacao][turno] = [...firebaseData];
+                        dataByDateAndShift[dataAlocacao][turno].push(manualAllocation);
+                    } else {
+                        // Firebase não tem dados, criar array com apenas a nova alocação
+                        console.log(' [ALOCAÇÃO MANUAL] Firebase sem dados. Criando novo array com a alocação.');
+                        dataByDateAndShift[dataAlocacao][turno] = [manualAllocation];
+                    }
+                } catch (error) {
+                    console.warn(' [ALOCAÇÃO MANUAL] Erro ao buscar dados do Firebase:', error);
+                    // Em caso de erro, criar array com apenas a nova alocação
+                    dataByDateAndShift[dataAlocacao][turno] = [manualAllocation];
+                }
+            } else {
+                // Se a função de carregar do Firebase não está disponível, criar array com a nova alocação
+                console.log(' [ALOCAÇÃO MANUAL] loadDataFromFirebase não disponível. Inicializando array com a nova alocação...');
+                dataByDateAndShift[dataAlocacao][turno] = [manualAllocation];
+            }
+        }
         
         // Salvar no localStorage principal
         localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
@@ -4775,5 +4850,3 @@ function handleManualAllocation() {
         showNotification('Erro ao salvar alocação manual. Tente novamente.', 'error');
     }
 }
-
-
