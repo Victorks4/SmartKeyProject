@@ -1320,82 +1320,158 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 
-// Cadastrar novos professores
-// Função para abrir o modal de cadastro de professor
+// ==================== CADASTRO DE PROFESSORES ====================
+
+/**
+ * Abre o modal de cadastro de professor
+ */
 function openRegisterTeacherModal() {
-    document.getElementById('registerTeacherModal').style.display = 'flex';
+    const modal = document.getElementById('registerTeacherModal');
+    if (!modal) {
+        console.error('❌ Modal não encontrado');
+        return;
+    }
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        const nameInput = document.getElementById('tpFullName');
+        if (nameInput) nameInput.focus();
+    }, 100);
 }
 
+/**
+ * Fecha o modal e limpa os campos
+ */
 function closeRegisterTeacherModal() {
-    document.getElementById('registerTeacherModal').style.display = 'none';
-    // limpar os campos
-    document.getElementById('tpFast').value = '';
-    document.getElementById('tpFullName').value = '';
+    const modal = document.getElementById('registerTeacherModal');
+    if (!modal) return;
+    modal.style.display = 'none';
+    const nameInput = document.getElementById('tpFullName');
+    const fatsInput = document.getElementById('tpFast');
+    if (nameInput) nameInput.value = '';
+    if (fatsInput) fatsInput.value = '';
 }
 
-// Faz o que for digitado no campo de fast ser convertido para UPPERCASE automáticamente
+// Inicializar campo FATS com uppercase automático
 const inputFast = document.getElementById("tpFast");
-
 if(inputFast) {
     inputFast.addEventListener("input", () => {
         inputFast.value = inputFast.value.toUpperCase();
     });
+    inputFast.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            saveNewTeacher();
+        }
+    });
 }
 
-// Função para salvar novo professor
+/**
+ * Salva novo professor com sincronização completa
+ */
 function saveNewTeacher() {
-    const name = document.getElementById('tpFullName').value.trim();
-    const fats = document.getElementById('tpFast').value.trim();
+    console.log('🔄 Cadastrando professor');
+    
+    const nameInput = document.getElementById('tpFullName');
+    const fatsInput = document.getElementById('tpFast');
+    
+    if (!nameInput || !fatsInput) {
+        console.error('❌ Campos não encontrados');
+        showNotification('Erro: Campos do formulário não encontrados!', 'danger');
+        return false;
+    }
+    
+    const name = nameInput.value.trim();
+    const fats = fatsInput.value.trim().toUpperCase();
 
+    // Validações
     if(!name || !fats) {
-        showNotification('Preencha todos os campos obrigatórios!!', 'warning');
-        return;
+        showNotification('Preencha todos os campos obrigatórios!', 'warning');
+        return false;
     }
 
-    // Validar se o nome tem pelo menos 3 caracteres
     if(name.length < 3) {
         showNotification('O nome do professor deve ter pelo menos 3 caracteres.', 'warning');
-        return;
+        return false;
+    }
+    
+    if(fats.length < 2) {
+        showNotification('O código FATS deve ter pelo menos 2 caracteres.', 'warning');
+        return false;
     }
 
-    // Valida se o professor já existe
-    const currentMapping = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
-
-    if(currentMapping[name]) {
-        showNotification(`O professor "${name}" já está cadastrado no sistema.`, 'warning');
-        return;
-    }
-
-    // Verifica se o FAST já está sendo usado por outro professor
-    for(const [existingName, existingFast] of Object.entries(currentMapping)) {
-        if(existingFast === fats) {
-            showNotification(`O FATS <strong>"${fats}"</strong> já está sendo usado pelo professor: <strong>${existingName}</strong>.`, 'warning');
-            return;
-        }
-    }
-
-    // Tenta adicionar ao sistema de nomes de professores
     try {
         const currentMapping = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
+        console.log('📚 Professores atuais:', Object.keys(currentMapping).length);
 
+        // Verificar duplicatas
+        if(currentMapping[name]) {
+            showNotification(`O professor "${name}" já está cadastrado.`, 'warning');
+            return false;
+        }
+
+        for(const [existingName, existingFats] of Object.entries(currentMapping)) {
+            if(existingFats === fats) {
+                showNotification(`O FATS "${fats}" já pertence a: ${existingName}.`, 'warning');
+                return false;
+            }
+        }
+
+        // Adicionar professor
         currentMapping[name] = fats;
         localStorage.setItem('docentesCodprof', JSON.stringify(currentMapping));
+        console.log('✅ Professor salvo no localStorage');
         
-        // Disparar evento customizado para notificar outras partes do sistema
+        // Sincronizar com TeachersData se disponível
+        if (typeof TeachersData !== 'undefined' && TeachersData.addTeacher) {
+            TeachersData.addTeacher(name, fats);
+            console.log('✅ Sincronizado com TeachersData');
+        }
+        
+        // Sincronizar com teacherPanel se disponível
+        if (typeof window.addNewProfessorToTeacherPanel === 'function') {
+            window.addNewProfessorToTeacherPanel(name, fats);
+            console.log('✅ Sincronizado com teacherPanel');
+        }
+        
+        // Atualizar variável global docentesCodprof
+        if (typeof docentesCodprof !== 'undefined') {
+            docentesCodprof[name] = fats;
+            console.log('✅ Atualizado em utilis.js');
+        }
+        
+        // Disparar evento para outras partes do sistema
         window.dispatchEvent(new CustomEvent('teacherAdded', {
-            detail: { name: name, fats: fats }
+            detail: { name, fats, timestamp: new Date().toISOString() }
         }));
+        console.log('✅ Evento disparado');
         
-        // Atualizar a tabela de professores na interface
+        // Salvar no Firebase (opcional)
+        if (typeof database !== 'undefined' && database) {
+            database.ref('teachers').push({
+                name,
+                fats,
+                createdAt: new Date().toISOString(),
+                createdBy: 'admin'
+            }).then(() => {
+                console.log('✅ Salvo no Firebase');
+            }).catch(err => {
+                console.warn('⚠️ Erro Firebase:', err);
+            });
+        }
+        
+        // Atualizar interface
         updateTeacherTable();
-        
-        // Fechar o modal e limpar os campos
         closeRegisterTeacherModal();
         
-        showNotification(`Professor '<strong>${name}</strong>' cadastrado(a) com sucesso!`, 'success');
+        showNotification(`Professor "${name}" cadastrado com sucesso!`, 'success');
+        console.log('✅ Cadastro concluído:', { name, fats });
         return true;
+        
     } catch(error) {
-        console.error('Erro ao cadastrar professor: ', error);
+        console.error('❌ Erro ao cadastrar professor:', error);
+        if (typeof ErrorHandler !== 'undefined') {
+            ErrorHandler.handle(error, 'saveNewTeacher', { name, fats });
+        }
         showNotification('Erro ao cadastrar professor.', 'danger');
         return false;
     }
@@ -1403,11 +1479,141 @@ function saveNewTeacher() {
 
 function initializeAll() {
     // Inicializar mapeamento de professores se não existir
+    let storedTeachers = localStorage.getItem('docentesCodprof');
+    if (!storedTeachers) {
+        console.log(' Inicializando mapeamento docentesCodprof no localStorage...');
+        localStorage.setItem('docentesCodprof', JSON.stringify({}));
+    } else {
+        try {
+            const parsed = JSON.parse(storedTeachers);
+            if (typeof parsed !==  "object" || Array.isArray(parsed)) {
+                throw new Error('Formato inválido para docentesCodprof');
+            }
+            console.log(' Mapeamento docentesCodprof carregado com sucesso:', Object.keys(parsed).length, 'professores');
+        } catch (error) {
+            console.warn(' Mapeamento docentesCodprof inválido, reinicializando...', error);
+            localStorage.setItem('docentesCodprof', JSON.stringify({}));
+        }
+    }    // ...existing code...
+    // Adicionar evento ao botão "Adicionar" - verificar se está funcionando
+    document.addEventListener('DOMContentLoaded', function() {
+        // Verificar se o botão existe
+        const addButton = document.querySelector('button[title="Adicionar Nova Chave"]');
+        
+        if (addButton) {
+            console.log('✅ Botão Adicionar encontrado');
+            addButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('🔄 Abrindo modal de cadastro de professor');
+                openRegisterTeacherModal();
+            });
+        } else {
+            console.warn('⚠️ Botão Adicionar não encontrado!');
+            // Buscar por outros seletores possíveis
+            const alternativeButton = document.querySelector('[data-action="add-teacher"], .btn-add-teacher, #addTeacherBtn');
+            if (alternativeButton) {
+                console.log('✅ Botão alternativo encontrado');
+                alternativeButton.addEventListener('click', openRegisterTeacherModal);
+            }
+        }
+        
+        // Verificar se o modal existe
+        const modal = document.getElementById('registerTeacherModal');
+        if (!modal) {
+            console.error('❌ Modal registerTeacherModal não encontrado no DOM!');
+        } else {
+            console.log('✅ Modal de cadastro encontrado');
+        }
+    });
+    // ...existing code...    // ...existing code...
+    function saveNewTeacher() {
+        console.log('🔄 Iniciando cadastro de novo professor');
+        
+        const nameInput = document.getElementById('tpFullName');
+        const fatsInput = document.getElementById('tpFast');
+        
+        if (!nameInput || !fatsInput) {
+            console.error('❌ Campos de input não encontrados:', { nameInput, fatsInput });
+            showNotification('Erro: Campos do formulário não encontrados!', 'danger');
+            return;
+        }
+        
+        const name = nameInput.value.trim();
+        const fats = fatsInput.value.trim();
+        
+        console.log('📝 Dados capturados:', { name, fats });
+    
+        if(!name || !fats) {
+            console.warn('⚠️ Campos obrigatórios não preenchidos');
+            showNotification('Preencha todos os campos obrigatórios!!', 'warning');
+            return;
+        }
+    
+        // Validar se o nome tem pelo menos 3 caracteres
+        if(name.length < 3) {
+            console.warn('⚠️ Nome muito curto:', name.length);
+            showNotification('O nome do professor deve ter pelo menos 3 caracteres.', 'warning');
+            return;
+        }
+    
+        // Valida se o professor já existe
+        try {
+            const currentMapping = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
+            console.log('📚 Mapeamento atual:', Object.keys(currentMapping).length, 'professores');
+    
+            if(currentMapping[name]) {
+                console.warn('⚠️ Professor já existe:', name);
+                showNotification(`O professor "${name}" já está cadastrado no sistema.`, 'warning');
+                return;
+            }
+    
+            // Verifica se o FAST já está sendo usado por outro professor
+            for(const [existingName, existingFast] of Object.entries(currentMapping)) {
+                if(existingFast === fats) {
+                    console.warn('⚠️ FATS já em uso:', { fats, existingName });
+                    showNotification(`O FATS <strong>"${fats}"</strong> já está sendo usado pelo professor: <strong>${existingName}</strong>.`, 'warning');
+                    return;
+                }
+            }
+    
+            // Adicionar novo professor
+            currentMapping[name] = fats;
+            localStorage.setItem('docentesCodprof', JSON.stringify(currentMapping));
+            
+            console.log('✅ Professor cadastrado com sucesso:', { name, fats });
+            
+            // Disparar evento customizado para notificar outras partes do sistema
+            window.dispatchEvent(new CustomEvent('teacherAdded', {
+                detail: { name: name, fats: fats }
+            }));
+            
+            // Atualizar a tabela de professores na interface
+            updateTeacherTable();
+            
+            // Fechar o modal e limpar os campos
+            closeRegisterTeacherModal();
+            
+            showNotification(`Professor '<strong>${name}</strong>' cadastrado(a) com sucesso!`, 'success');
+            
+            return true;
+        } catch(error) {
+            console.error('❌ Erro ao cadastrar professor:', error);
+            showNotification('Erro ao cadastrar professor.', 'danger');
+            return false;
+        }
+    }
+
+    };
+    
+    // Salva os dados no localStorage (descomentar esta linha)
+    localStorage.setItem("docentesCodprof", JSON.stringify(docentesCodprof));
+   
+
     if (!localStorage.getItem('docentesCodprof')) {
         console.log(' Inicializando mapeamento docentesCodprof no localStorage...');
         localStorage.setItem('docentesCodprof', JSON.stringify({}));
     }
-}
+
 
 if(document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {

@@ -1,4 +1,14 @@
+/**
+ * ⚠️ DEPRECADO: Este arquivo será dividido em módulos especializados
+ * Utilize os novos módulos:
+ * - rooms-data.js (dados de salas)
+ * - teachers-data.js (dados de professores)
+ * - validators.js (validações)
+ * - error-handler.js (tratamento de erros)
+ */
+
 // ----------- Dropdowns -----------
+// ⚠️ DEPRECADO: Use RoomsData.getDropdownData() de rooms-data.js
 const dropdown = [
   // Bloco A
   { id: 1, sala: "HIDRÁULICA",  bloco: "Bloco A", numero: "" },

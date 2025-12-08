@@ -1,0 +1,30 @@
+{
+  "database": {
+    "rules": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      
+      "allocations": {
+        "$date": {
+          "$shift": {
+            ".validate": "newData.isString() || newData.hasChildren(['id', 'teacher', 'course', 'room'])",
+            ".indexOn": ["id", "teacher", "date", "shift"]
+          }
+        }
+      },
+      
+      "rooms": {
+        "$roomId": {
+          ".validate": "newData.hasChildren(['id', 'sala', 'bloco'])",
+          ".indexOn": ["id", "bloco", "sala"]
+        }
+      },
+      
+      "teachers": {
+        "$teacherId": {
+          ".validate": "newData.hasChildren(['name', 'code'])"
+        }
+      }
+    }
+  }
+}
