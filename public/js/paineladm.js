@@ -2780,7 +2780,7 @@ function formatDate(dateStr) {
 
 // Constants and Configuration
 const STORAGE_KEYS = {
-    TEACHERS: "teacherNames"
+    TEACHERS: "docentesCodprof"  // Corrigido para usar a mesma chave que saveNewTeacher()
 };
 
 const TABLE_CONFIG = {
