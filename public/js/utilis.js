@@ -187,6 +187,7 @@ function getRoomNumbers(data, selectedBlock, selectedRoom) {
 
 // Mapa de docentes para CODPROF (DOCENTE -> CODPROF)
 let docentesCodprof = {
+    "Abdallah Sant'anna Merabet": "FATS5254",
     "Adalberto da Silva Correia": "FATS1578",
     "Adeildo Apolonio da Silva Junior": "FATS4451",
     "Aderlan dos Santos": "NORTE233",
