@@ -37,13 +37,13 @@ function addProfessorToMapping(professorName, fast) {
     const normalizedName = professorName.trim();
     
     // Verifica se o professor já existe
-    if (docentesCodprof[normalizedName]) {
-        console.warn(`Professor ${normalizedName} já existe no mapeamento com FAST: ${docentesCodprof[normalizedName]}`);
+    if (window.docentesCodprof[normalizedName]) {
+        console.warn(`Professor ${normalizedName} já existe no mapeamento com FAST: ${window.docentesCodprof[normalizedName]}`);
         return false;
     }
     
     // Verifica se o FAST já está sendo usado por outro professor
-    for (const [existingName, existingFast] of Object.entries(docentesCodprof)) {
+    for (const [existingName, existingFast] of Object.entries(window.docentesCodprof)) {
         if (existingFast === normalizedFast) {
             console.warn(`FAST ${normalizedFast} já está sendo usado pelo professor: ${existingName}`);
             return false;
@@ -51,22 +51,22 @@ function addProfessorToMapping(professorName, fast) {
     }
     
     // Adiciona o professor ao mapeamento
-    docentesCodprof[normalizedName] = normalizedFast;
+    window.docentesCodprof[normalizedName] = normalizedFast;
     
     // Salva no localStorage para persistência
     saveDocentesCodprofToStorage();
     
-    console.log(` Professor ${normalizedName} adicionado ao mapeamento com FAST: ${normalizedFast}`);
+    console.log(`✅ Professor ${normalizedName} adicionado ao mapeamento com FAST: ${normalizedFast}`);
     return true;
 }
 
 // Função para salvar o mapeamento docentesCodprof no localStorage
 function saveDocentesCodprofToStorage() {
     try {
-        localStorage.setItem('docentesCodprof', JSON.stringify(docentesCodprof));
-        console.log('� Mapeamento docentesCodprof salvo no localStorage');
+        localStorage.setItem('docentesCodprof', JSON.stringify(window.docentesCodprof));
+        console.log('✅ Mapeamento docentesCodprof salvo no localStorage');
     } catch (error) {
-        console.error(' Erro ao salvar mapeamento no localStorage:', error);
+        console.error('❌ Erro ao salvar mapeamento no localStorage:', error);
     }
 }
 
@@ -76,12 +76,15 @@ function loadDocentesCodprofFromStorage() {
         const saved = localStorage.getItem('docentesCodprof');
         if (saved) {
             const savedMapping = JSON.parse(saved);
-            // Merge com o mapeamento existente (localStorage tem prioridade)
-            Object.assign(docentesCodprof, savedMapping);
-            console.log('� Mapeamento docentesCodprof carregado do localStorage');
+            // Atualizar window.docentesCodprof com dados do localStorage
+            window.docentesCodprof = savedMapping;
+            console.log('✅ Mapeamento docentesCodprof carregado do localStorage:', Object.keys(window.docentesCodprof).length, 'professores');
+        } else if (window.docentesCodprof) {
+            // Se não há dados salvos mas window.docentesCodprof existe, usar ele
+            console.log('✅ Usando mapeamento docentesCodprof de utilis.js:', Object.keys(window.docentesCodprof).length, 'professores');
         }
     } catch (error) {
-        console.error(' Erro ao carregar mapeamento do localStorage:', error);
+        console.error('❌ Erro ao carregar mapeamento do localStorage:', error);
     }
 }
 
@@ -92,7 +95,7 @@ window.addNewProfessorToTeacherPanel = function(professorName, fast) {
 
 // Função para buscar professor por FAST
 window.findProfessorByFast = function(fast) {
-    for (const [name, professorFast] of Object.entries(docentesCodprof)) {
+    for (const [name, professorFast] of Object.entries(window.docentesCodprof)) {
         if (professorFast === fast) {
             return name;
         }
@@ -102,7 +105,7 @@ window.findProfessorByFast = function(fast) {
 
 // Função para exportar o mapeamento atualizado como código JavaScript
 window.exportDocentesCodprof = function() {
-    const mappingEntries = Object.entries(docentesCodprof)
+    const mappingEntries = Object.entries(window.docentesCodprof)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([name, fast]) => `    "${name}": "${fast}"`)
         .join(',\n');
@@ -204,13 +207,13 @@ function showUpdateNotification(updateDetail) {
 function getFastForProfessor(professorName) {
     if(!professorName || typeof professorName !== 'string') return '';
     
-    if(docentesCodprof[professorName]) return String(docentesCodprof[professorName]).trim();
+    if(window.docentesCodprof[professorName]) return String(window.docentesCodprof[professorName]).trim();
     
     const target = professorName.trim().toLocaleLowerCase('pt-BR');
 
-    for(const name of Object.keys(docentesCodprof)) {
+    for(const name of Object.keys(window.docentesCodprof)) {
         if(name.trim().toLocaleLowerCase('pt-BR') === target) {
-            return String(docentesCodprof[name]).trim();
+            return String(window.docentesCodprof[name]).trim();
         }
     }
 
@@ -1348,7 +1351,7 @@ function confirmLogin() {
 
     // 2) Senão, validar correspondência do FATS específico com o professor
     const professorName = record.professor;
-    const expectedFastId = docentesCodprof[professorName];
+    const expectedFastId = window.docentesCodprof[professorName];
 
     if(!expectedFastId) {
         document.getElementById('msg-erro').textContent = 'Erro: Professor não encontrado na base de dados.';

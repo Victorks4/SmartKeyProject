@@ -1441,9 +1441,9 @@ function saveNewTeacher() {
         }
         
         // Atualizar variável global docentesCodprof
-        if (typeof docentesCodprof !== 'undefined') {
-            docentesCodprof[name] = fats;
-            console.log('✅ Atualizado em utilis.js');
+        if (typeof window.docentesCodprof !== 'undefined') {
+            window.docentesCodprof[name] = fats;
+            console.log('✅ Atualizado em window.docentesCodprof');
         }
         
         // Disparar evento para outras partes do sistema
@@ -1612,8 +1612,8 @@ function initializeAll() {
 
     };
     
-    // Salva os dados no localStorage (descomentar esta linha)
-    localStorage.setItem("docentesCodprof", JSON.stringify(docentesCodprof));
+    // REMOVIDO: Código legado que causava erro - o salvamento agora é feito dentro de saveNewTeacher()
+    // localStorage.setItem("docentesCodprof", JSON.stringify(docentesCodprof));
    
 
     if (!localStorage.getItem('docentesCodprof')) {

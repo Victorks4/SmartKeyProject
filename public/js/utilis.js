@@ -186,7 +186,8 @@ function getRoomNumbers(data, selectedBlock, selectedRoom) {
 }
 
 // Mapa de docentes para CODPROF (DOCENTE -> CODPROF)
-let docentesCodprof = {
+// Tornando global para acessibilidade entre módulos
+window.docentesCodprof = {
     "Abdallah Sant'anna Merabet": "FATS5254",
     "Adalberto da Silva Correia": "FATS1578",
     "Adeildo Apolonio da Silva Junior": "FATS4451",
@@ -906,8 +907,34 @@ let docentesCodprof = {
     "Zilmaura Santos Daltro": "FATS4775"
 };
 
-// Salva os dados no localStorage
-localStorage.setItem("docentesCodprof", JSON.stringify(docentesCodprof));
+// Carregar dados do localStorage e fazer merge com os dados base
+// Isso garante que professores cadastrados via painel admin sejam mantidos
+(function initializeDocentesCodprof() {
+    try {
+        const savedMapping = localStorage.getItem("docentesCodprof");
+        if (savedMapping) {
+            const parsed = JSON.parse(savedMapping);
+            // Merge: mantém os novos do localStorage, adiciona os que estão apenas no código
+            for (const [name, fats] of Object.entries(window.docentesCodprof)) {
+                if (!parsed[name]) {
+                    parsed[name] = fats;
+                }
+            }
+            // Atualiza a variável global com o merge
+            window.docentesCodprof = parsed;
+        }
+        // Salva de volta no localStorage com o merge completo
+        localStorage.setItem("docentesCodprof", JSON.stringify(window.docentesCodprof));
+        console.log('✅ Mapeamento docentesCodprof inicializado:', Object.keys(window.docentesCodprof).length, 'professores');
+    } catch (error) {
+        console.error('❌ Erro ao inicializar docentesCodprof:', error);
+        // Em caso de erro, garante que pelo menos os dados base estejam salvos
+        localStorage.setItem("docentesCodprof", JSON.stringify(window.docentesCodprof));
+    }
+})();
+
+// Alias para compatibilidade com código existente
+const docentesCodprof = window.docentesCodprof;
 
 const functions = [
     getRoomNumbers, getUniqueRoomsForBlock, getUniqueBlocks,
