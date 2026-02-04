@@ -925,9 +925,9 @@ window.docentesCodprof = {
         }
         // Salva de volta no localStorage com o merge completo
         localStorage.setItem("docentesCodprof", JSON.stringify(window.docentesCodprof));
-        console.log('✅ Mapeamento docentesCodprof inicializado:', Object.keys(window.docentesCodprof).length, 'professores');
+        console.log('[DOCENTES] Mapeamento docentesCodprof inicializado:', Object.keys(window.docentesCodprof).length, 'professores');
     } catch (error) {
-        console.error('❌ Erro ao inicializar docentesCodprof:', error);
+        console.error('[DOCENTES] Erro ao inicializar docentesCodprof:', error);
         // Em caso de erro, garante que pelo menos os dados base estejam salvos
         localStorage.setItem("docentesCodprof", JSON.stringify(window.docentesCodprof));
     }
@@ -936,10 +936,97 @@ window.docentesCodprof = {
 // Alias para compatibilidade com código existente
 const docentesCodprof = window.docentesCodprof;
 
+/**
+ * Verifica se um professor existe no mapeamento docentesCodprof.
+ * Se não existir e o codprof for fornecido, adiciona automaticamente.
+ * @param {string} professorName - Nome completo do professor
+ * @param {string} [codprof] - Código do professor (FATS, ALA, etc.). Se fornecido, adiciona o professor caso não exista.
+ * @returns {boolean} - true se o professor existe (ou foi adicionado), false caso contrário
+ */
+function ensureTeacherExists(professorName, codprof) {
+    if (!professorName || typeof professorName !== 'string') {
+        console.warn('[DOCENTES] Nome do professor inválido:', professorName);
+        return false;
+    }
+
+    const normalizedName = professorName.trim();
+    
+    // Verifica se o professor já existe
+    if (window.docentesCodprof[normalizedName]) {
+        console.log(`[DOCENTES] Professor "${normalizedName}" já existe com código: ${window.docentesCodprof[normalizedName]}`);
+        return true;
+    }
+
+    // Se o codprof foi fornecido, adiciona o professor
+    if (codprof && typeof codprof === 'string') {
+        const normalizedCodprof = codprof.trim().toUpperCase();
+        
+        // Verifica se o codprof já está em uso por outro professor
+        for (const [existingName, existingCodprof] of Object.entries(window.docentesCodprof)) {
+            if (existingCodprof === normalizedCodprof) {
+                console.warn(`[DOCENTES] Código ${normalizedCodprof} já está em uso pelo professor: ${existingName}`);
+                return false;
+            }
+        }
+
+        // Adiciona o novo professor
+        window.docentesCodprof[normalizedName] = normalizedCodprof;
+        
+        // Persiste no localStorage
+        try {
+            localStorage.setItem("docentesCodprof", JSON.stringify(window.docentesCodprof));
+            console.log(`[DOCENTES] Professor "${normalizedName}" adicionado com código: ${normalizedCodprof}`);
+            return true;
+        } catch (error) {
+            console.error('[DOCENTES] Erro ao salvar professor no localStorage:', error);
+            return false;
+        }
+    }
+
+    console.warn(`[DOCENTES] Professor "${normalizedName}" não encontrado no mapeamento e codprof não fornecido.`);
+    return false;
+}
+
+/**
+ * Busca o código (CODPROF) de um professor pelo nome.
+ * @param {string} professorName - Nome completo do professor
+ * @returns {string|null} - Código do professor ou null se não encontrado
+ */
+function getTeacherCodprof(professorName) {
+    if (!professorName || typeof professorName !== 'string') {
+        return null;
+    }
+    return window.docentesCodprof[professorName.trim()] || null;
+}
+
+/**
+ * Busca o nome de um professor pelo código (CODPROF).
+ * @param {string} codprof - Código do professor
+ * @returns {string|null} - Nome do professor ou null se não encontrado
+ */
+function getTeacherByCodeprof(codprof) {
+    if (!codprof || typeof codprof !== 'string') {
+        return null;
+    }
+    const normalizedCodprof = codprof.trim().toUpperCase();
+    for (const [name, code] of Object.entries(window.docentesCodprof)) {
+        if (code === normalizedCodprof) {
+            return name;
+        }
+    }
+    return null;
+}
+
+// Expor funções globalmente
+window.ensureTeacherExists = ensureTeacherExists;
+window.getTeacherCodprof = getTeacherCodprof;
+window.getTeacherByCodeprof = getTeacherByCodeprof;
+
 const functions = [
     getRoomNumbers, getUniqueRoomsForBlock, getUniqueBlocks,
     getDropdownData, normalizeRoomKey, generateNextRoomId, 
-    ensureRoomsSeeded
+    ensureRoomsSeeded, ensureTeacherExists, getTeacherCodprof, 
+    getTeacherByCodeprof
 ];
 
 functions.forEach(func => {
