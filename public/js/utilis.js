@@ -483,6 +483,7 @@ window.docentesCodprof = {
     "Iguaraci de Souza Tavares": "ALA249",
     "ILKA MARA ALVES DA SILVA": "FATS5000",
     "Ingrid Barreto de Almeida Passos": "FATS4576",
+    "Ingrid Neylane Cerqueira Pinheiro": "FATS5263",
     "Ingrid Rocha Teixeira": "ALA259",
     "Iraneide dos Anjos dos Santos": "FATS5094",
     "Iranilton Pereira Santos": "ALA269",
