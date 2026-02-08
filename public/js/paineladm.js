@@ -1444,6 +1444,30 @@ function saveNewTeacher() {
         if (typeof window.docentesCodprof !== 'undefined') {
             window.docentesCodprof[name] = fats;
             console.log('✅ Atualizado em window.docentesCodprof');
+            
+            // Salvar no Firestore
+            console.log('🔍 DEBUG: Verificando Firestore...', {
+                funcaoExiste: typeof addOrUpdateTeacherInFirestore === 'function',
+                firestoreExiste: typeof firestore !== 'undefined' && firestore !== null,
+                name: name,
+                fats: fats
+            });
+            
+            if (typeof addOrUpdateTeacherInFirestore === 'function') {
+                console.log('💾 Chamando addOrUpdateTeacherInFirestore...');
+                addOrUpdateTeacherInFirestore(name, fats)
+                    .then(() => {
+                        console.log('✅ Professor salvo no Firestore com sucesso!');
+                        showProfessorSuccessModal(name, fats);
+                    })
+                    .catch(err => {
+                        console.error('❌ Erro ao salvar no Firestore:', err);
+                        showProfessorErrorModal('Erro ao salvar no Firestore: ' + err.message);
+                    });
+            } else {
+                console.error('❌ Função addOrUpdateTeacherInFirestore não encontrada!');
+                showProfessorErrorModal('Firestore não está disponível. Professor salvo apenas localmente.');
+            }
         }
         
         // Disparar evento para outras partes do sistema
@@ -1451,20 +1475,6 @@ function saveNewTeacher() {
             detail: { name, fats, timestamp: new Date().toISOString() }
         }));
         console.log('✅ Evento disparado');
-        
-        // Salvar no Firebase (opcional)
-        if (typeof database !== 'undefined' && database) {
-            database.ref('teachers').push({
-                name,
-                fats,
-                createdAt: new Date().toISOString(),
-                createdBy: 'admin'
-            }).then(() => {
-                console.log('✅ Salvo no Firebase');
-            }).catch(err => {
-                console.warn('⚠️ Erro Firebase:', err);
-            });
-        }
         
         // Atualizar interface
         updateTeacherTable();

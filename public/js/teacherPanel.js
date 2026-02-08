@@ -56,6 +56,13 @@ function addProfessorToMapping(professorName, fast) {
     // Salva no localStorage para persistência
     saveDocentesCodprofToStorage();
     
+    // Salva no Firestore
+    if (typeof addOrUpdateTeacherInFirestore === 'function') {
+        addOrUpdateTeacherInFirestore(normalizedName, normalizedFast)
+            .then(() => console.log(`✅ Professor ${normalizedName} salvo no Firestore`))
+            .catch(err => console.error('❌ Erro ao salvar professor no Firestore:', err));
+    }
+    
     console.log(`✅ Professor ${normalizedName} adicionado ao mapeamento com FAST: ${normalizedFast}`);
     return true;
 }

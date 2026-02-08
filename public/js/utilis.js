@@ -910,25 +910,79 @@ window.docentesCodprof = {
 
 // Carregar dados do localStorage e fazer merge com os dados base
 // Isso garante que professores cadastrados via painel admin sejam mantidos
-(function initializeDocentesCodprof() {
+// ATUALIZADO: Agora sincroniza com Firebase Firestore
+(async function initializeDocentesCodprof() {
     try {
-        const savedMapping = localStorage.getItem("docentesCodprof");
-        if (savedMapping) {
-            const parsed = JSON.parse(savedMapping);
-            // Merge: mantém os novos do localStorage, adiciona os que estão apenas no código
-            for (const [name, fats] of Object.entries(window.docentesCodprof)) {
-                if (!parsed[name]) {
-                    parsed[name] = fats;
+        console.log('[DOCENTES] 🔄 Inicializando sistema de professores com Firestore...');
+        
+        // Tentar carregar dados do Firestore primeiro
+        let firestoreData = null;
+        if (typeof loadTeachersFromFirestore === 'function' && typeof firestore !== 'undefined' && firestore) {
+            try {
+                firestoreData = await loadTeachersFromFirestore();
+            } catch (error) {
+                console.warn('[DOCENTES] ⚠️ Erro ao carregar do Firestore, usando fallback:', error);
+            }
+        }
+        
+        // Se temos dados do Firestore, usá-los como fonte principal
+        if (firestoreData && Object.keys(firestoreData).length > 0) {
+            console.log(`[DOCENTES] ✅ Carregados ${Object.keys(firestoreData).length} professores do Firestore`);
+            window.docentesCodprof = firestoreData;
+            
+            // Atualizar localStorage como cache
+            localStorage.setItem("docentesCodprof", JSON.stringify(window.docentesCodprof));
+        } else {
+            // Fallback: usar localStorage ou dados base
+            console.log('[DOCENTES] 📦 Firestore vazio, usando localStorage/dados base');
+            const savedMapping = localStorage.getItem("docentesCodprof");
+            
+            if (savedMapping) {
+                const parsed = JSON.parse(savedMapping);
+                // Merge: mantém os novos do localStorage, adiciona os que estão apenas no código
+                for (const [name, fats] of Object.entries(window.docentesCodprof)) {
+                    if (!parsed[name]) {
+                        parsed[name] = fats;
+                    }
+                }
+                window.docentesCodprof = parsed;
+            }
+            
+            // Migrar dados para Firestore se ele estiver disponível
+            if (typeof saveTeachersToFirestore === 'function' && typeof firestore !== 'undefined' && firestore) {
+                console.log('[DOCENTES] 📤 Migrando dados iniciais para Firestore...');
+                try {
+                    await saveTeachersToFirestore(window.docentesCodprof);
+                    console.log('[DOCENTES] ✅ Migração para Firestore concluída!');
+                } catch (error) {
+                    console.warn('[DOCENTES] ⚠️ Erro ao migrar para Firestore:', error);
                 }
             }
-            // Atualiza a variável global com o merge
-            window.docentesCodprof = parsed;
+            
+            // Salvar no localStorage
+            localStorage.setItem("docentesCodprof", JSON.stringify(window.docentesCodprof));
         }
-        // Salva de volta no localStorage com o merge completo
-        localStorage.setItem("docentesCodprof", JSON.stringify(window.docentesCodprof));
-        console.log('[DOCENTES] Mapeamento docentesCodprof inicializado:', Object.keys(window.docentesCodprof).length, 'professores');
+        
+        console.log('[DOCENTES] ✅ Mapeamento docentesCodprof inicializado:', Object.keys(window.docentesCodprof).length, 'professores');
+        
+        // Ativar sincronização em tempo real se disponível
+        if (typeof syncTeachersRealtime === 'function' && typeof firestore !== 'undefined' && firestore) {
+            console.log('[DOCENTES] 🔄 Ativando sincronização em tempo real...');
+            window.teachersSyncUnsubscribe = syncTeachersRealtime((updatedData) => {
+                console.log('[DOCENTES] 🔄 Dados atualizados via sincronização em tempo real');
+                window.docentesCodprof = updatedData;
+                localStorage.setItem("docentesCodprof", JSON.stringify(updatedData));
+                
+                // Notificar outras partes do sistema se necessário
+                if (typeof updateTeachersList === 'function') {
+                    updateTeachersList();
+                }
+            });
+            console.log('[DOCENTES] ✅ Sincronização em tempo real ativada!');
+        }
+        
     } catch (error) {
-        console.error('[DOCENTES] Erro ao inicializar docentesCodprof:', error);
+        console.error('[DOCENTES] ❌ Erro ao inicializar docentesCodprof:', error);
         // Em caso de erro, garante que pelo menos os dados base estejam salvos
         localStorage.setItem("docentesCodprof", JSON.stringify(window.docentesCodprof));
     }
@@ -976,10 +1030,18 @@ function ensureTeacherExists(professorName, codprof) {
         // Persiste no localStorage
         try {
             localStorage.setItem("docentesCodprof", JSON.stringify(window.docentesCodprof));
-            console.log(`[DOCENTES] Professor "${normalizedName}" adicionado com código: ${normalizedCodprof}`);
+            console.log(`[DOCENTES] ✅ Professor "${normalizedName}" adicionado com código: ${normalizedCodprof}`);
+            
+            // Persiste no Firestore
+            if (typeof addOrUpdateTeacherInFirestore === 'function') {
+                addOrUpdateTeacherInFirestore(normalizedName, normalizedCodprof)
+                    .then(() => console.log(`[DOCENTES] ✅ Professor "${normalizedName}" salvo no Firestore`))
+                    .catch(err => console.error('[DOCENTES] ❌ Erro ao salvar no Firestore:', err));
+            }
+            
             return true;
         } catch (error) {
-            console.error('[DOCENTES] Erro ao salvar professor no localStorage:', error);
+            console.error('[DOCENTES] ❌ Erro ao salvar professor no localStorage:', error);
             return false;
         }
     }
