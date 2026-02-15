@@ -71,7 +71,9 @@ function normalizeRoomKey(room) {
 }
 
 function generateNextRoomId(existingRooms) {
-    const maxId = existingRooms.length > 0 ? Math.max(...existingRooms.map(r => Number(r.id) || 0)) : 0;
+    const maxId = existingRooms.length > 0 
+        ? Math.max(...existingRooms.map(r => Number(r.id) || 0)) 
+        : 0;
     return maxId + 1;
 }
 
@@ -80,6 +82,7 @@ function ensureRoomsSeeded() {
     try {
         const storedRaw = localStorage.getItem('rooms');
         let existing = [];
+
         if(storedRaw) {
             existing = JSON.parse(storedRaw);
             if(!Array.isArray(existing)) existing = [];
@@ -90,13 +93,13 @@ function ensureRoomsSeeded() {
 
         // Base a mesclar: dados seed locais
         const baseSeed = ROOMS_SEED_DATA;
-        let mutated = false;
+        let mutated    = false;
 
-        for (const seed of baseSeed) {
+        for(const seed of baseSeed) {
             const seedObj = {
-                id: seed.id,
-                sala: seed.sala,
-                bloco: seed.bloco,
+                id:     seed.id,
+                sala:   seed.sala,
+                bloco:  seed.bloco,
                 numero: seed.numero ?? ''
             };
             const key = normalizeRoomKey(seedObj);
@@ -104,9 +107,11 @@ function ensureRoomsSeeded() {
             if(!index.has(key)) {
                 // Novo registro – atribuir ID sequencial
                 const nextId = generateNextRoomId(existing);
-                seedObj.id = seedObj.id ?? nextId;
+                seedObj.id   = seedObj.id ?? nextId;
+
                 existing.push(seedObj);
                 index.set(key, seedObj);
+
                 mutated = true;
             }
         }
@@ -119,11 +124,9 @@ function ensureRoomsSeeded() {
             localStorage.setItem('rooms', JSON.stringify(existing));
         }
     } catch (e) {
-        console.error('Erro ao mesclar salas no localStorage:', e);
         // Fallback mínimo para garantir funcionamento
-        if(!localStorage.getItem('rooms')) {
+        if(!localStorage.getItem('rooms'))
             localStorage.setItem('rooms', JSON.stringify(ROOMS_SEED_DATA));
-        }
     }
 }
 
@@ -159,37 +162,23 @@ function getRoomNumbers(data, selectedBlock, selectedRoom) {
         .filter(numero => numero !== ""); // Filtra números vazios
 }
 
-/**
- * Verifica se um professor existe no mapeamento docentesCodprof.
- * Se não existir e o codprof for fornecido, adiciona automaticamente.
- * @param {string} professorName - Nome completo do professor
- * @param {string} [codprof] - Código do professor (FATS, ALA, etc.). Se fornecido, adiciona o professor caso não exista.
- * @returns {boolean} - true se o professor existe (ou foi adicionado), false caso contrário
- */
+// Verifica se um professor existe no mapeamento docentesCodprof. 
+// Se não existir e o codprof for fornecido, adiciona automaticamente.
 function ensureTeacherExists(professorName, codprof) {
-    if(!professorName || typeof professorName !== 'string') {
-        console.warn('[DOCENTES] Nome do professor inválido:', professorName);
-        return false;
-    }
+    if(!professorName || typeof professorName !== 'string') return false;
 
     const normalizedName = professorName.trim();
     
     // Verifica se o professor já existe
-    if(window.docentesCodprof[normalizedName]) {
-        console.log(`[DOCENTES] Professor "${normalizedName}" já existe com código: ${window.docentesCodprof[normalizedName]}`);
-        return true;
-    }
+    if(window.docentesCodprof[normalizedName]) return true;
 
     // Se o codprof foi fornecido, adiciona o professor
     if(codprof && typeof codprof === 'string') {
         const normalizedCodprof = codprof.trim().toUpperCase();
         
         // Verifica se o codprof já está em uso por outro professor
-        for (const [existingName, existingCodprof] of Object.entries(window.docentesCodprof)) {
-            if(existingCodprof === normalizedCodprof) {
-                console.warn(`[DOCENTES] Código ${normalizedCodprof} já está em uso pelo professor: ${existingName}`);
-                return false;
-            }
+        for(const [existingName, existingCodprof] of Object.entries(window.docentesCodprof)) {
+            if(existingCodprof === normalizedCodprof) return false;
         }
 
         // Adiciona o novo professor
@@ -198,68 +187,46 @@ function ensureTeacherExists(professorName, codprof) {
         // Persiste no localStorage
         try {
             localStorage.setItem("docentesCodprof", JSON.stringify(window.docentesCodprof));
-            console.log(`[DOCENTES] ✅ Professor "${normalizedName}" adicionado com código: ${normalizedCodprof}`);
             
             // Persiste no Firestore
-            if(typeof addOrUpdateTeacherInFirestore === 'function') {
-                addOrUpdateTeacherInFirestore(normalizedName, normalizedCodprof)
-                    .then(() => console.log(`[DOCENTES] ✅ Professor "${normalizedName}" salvo no Firestore`))
-                    .catch(err => console.error('[DOCENTES] ❌ Erro ao salvar no Firestore:', err));
-            }
+            if(typeof addOrUpdateTeacherInFirestore === 'function')
+                addOrUpdateTeacherInFirestore(normalizedName, normalizedCodprof);
             
             return true;
         } catch (error) {
-            console.error('[DOCENTES] ❌ Erro ao salvar professor no localStorage:', error);
             return false;
         }
     }
-
-    console.warn(`[DOCENTES] Professor "${normalizedName}" não encontrado no mapeamento e codprof não fornecido.`);
     return false;
 }
 
-/**
- * Busca o código (CODPROF) de um professor pelo nome.
- * @param {string} professorName - Nome completo do professor
- * @returns {string|null} - Código do professor ou null se não encontrado
- */
+// Busca o código (CODPROF) de um professor pelo nome.
 function getTeacherCodprof(professorName) {
-    if(!professorName || typeof professorName !== 'string') {
-        return null;
-    }
+    if(!professorName || typeof professorName !== 'string') return null;
     return window.docentesCodprof[professorName.trim()] || null;
 }
 
-/**
- * Busca o nome de um professor pelo código (CODPROF).
- * @param {string} codprof - Código do professor
- * @returns {string|null} - Nome do professor ou null se não encontrado
- */
+// Busca o nome de um professor pelo código (CODPROF).
 function getTeacherByCodeprof(codprof) {
-    if(!codprof || typeof codprof !== 'string') {
+    if(!codprof || typeof codprof !== 'string') 
         return null;
-    }
+    
     const normalizedCodprof = codprof.trim().toUpperCase();
-    for (const [name, code] of Object.entries(window.docentesCodprof)) {
-        if(code === normalizedCodprof) {
-            return name;
-        }
+
+    for(const [name, code] of Object.entries(window.docentesCodprof)) {
+        if(code === normalizedCodprof) return name;
     }
     return null;
 }
 
 // Expor funções globalmente
-window.ensureTeacherExists = ensureTeacherExists;
-window.getTeacherCodprof = getTeacherCodprof;
+window.ensureTeacherExists  = ensureTeacherExists;
+window.getTeacherCodprof    = getTeacherCodprof;
 window.getTeacherByCodeprof = getTeacherByCodeprof;
-
-const functions = [
-    getRoomNumbers, getUniqueRoomsForBlock, getUniqueBlocks,
-    getDropdownData, normalizeRoomKey, generateNextRoomId, 
-    ensureRoomsSeeded, ensureTeacherExists, getTeacherCodprof, 
-    getTeacherByCodeprof
-];
-
-functions.forEach(func => {
-    window.document.func = func();
-});
+window.getRoomNumbers       = getRoomNumbers;
+window.getUniqueRoomsForBlock = getUniqueRoomsForBlock;
+window.getUniqueBlocks      = getUniqueBlocks;
+window.getDropdownData      = getDropdownData;
+window.normalizeRoomKey     = normalizeRoomKey;
+window.generateNextRoomId   = generateNextRoomId;
+window.ensureRoomsSeeded    = ensureRoomsSeeded;
