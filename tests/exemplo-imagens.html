@@ -6,7 +6,7 @@
     <title>Exemplo de Uso das Imagens - SENAI Key System</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="imgs/icon-chave.png">
+    <link rel="icon" type="image/png" href="../public/assets/imgs/ui/icon-chave.png">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -15,14 +15,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="paineladm.css">
+    <link rel="stylesheet" href="../public/assets/css/pages-styles.css">
 </head>
 <body class="bg-light">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
         <div class="container-fluid">
             <div class="navbar-brand d-flex align-items-center">
-                <img src="public/senailogo.png" alt="Logo SENAI" class="me-2" style="height: 40px;">
+                <img src="../public/assets/imgs/ui/senailogo.png" alt="Logo SENAI" class="me-2" style="height: 40px;">
                 <div class="d-flex flex-column">
                     <span class="fw-bold fs-5">SENAIKey</span>
                     <span class="small text-light">Sistema de Chaves</span>
@@ -55,9 +55,9 @@
                         </h5>
                     </div>
                     <div class="card-body text-center">
-                        <img src="public/imgs/senailogo.png" alt="Logo SENAI" class="img-fluid mb-3" style="max-height: 200px;">
+                        <img src="../public/assets/imgs/ui/senailogo.png" alt="Logo SENAI" class="img-fluid mb-3" style="max-height: 200px;">
                         <h6 class="fw-bold">Caminho da Imagem:</h6>
-                        <code class="bg-light p-2 rounded d-block">public/senailogo.png</code>
+                        <code class="bg-light p-2 rounded d-block">public/assets/imgs/ui/senailogo.png</code>
                         <p class="text-muted mt-2 mb-0">
                             Esta é a logo oficial do SENAI que aparece no cabeçalho do sistema.
                         </p>
@@ -75,9 +75,9 @@
                         </h5>
                     </div>
                     <div class="card-body text-center">
-                        <img src="public/chave-unscreen.gif" alt="Chave animada" class="img-fluid mb-3" style="max-height: 200px;">
+                        <img src="../public/assets/imgs/ui/chave-unscreen.gif" alt="Chave animada" class="img-fluid mb-3" style="max-height: 200px;">
                         <h6 class="fw-bold">Caminho da Imagem:</h6>
-                        <code class="bg-light p-2 rounded d-block">public/chave-unscreen.gif</code>
+                        <code class="bg-light p-2 rounded d-block">public/assets/imgs/ui/chave-unscreen.gif</code>
                         <p class="text-muted mt-2 mb-0">
                             GIF animado da chave que aparece no título principal do sistema.
                         </p>
@@ -95,9 +95,9 @@
                         </h5>
                     </div>
                     <div class="card-body text-center">
-                        <img src="public/placeholder.svg" alt="Placeholder" class="img-fluid mb-3" style="max-height: 200px;">
+                        <img src="../public/assets/imgs/icons/placeholder.svg" alt="Placeholder" class="img-fluid mb-3" style="max-height: 200px;">
                         <h6 class="fw-bold">Caminho da Imagem:</h6>
-                        <code class="bg-light p-2 rounded d-block">public/placeholder.svg</code>
+                        <code class="bg-light p-2 rounded d-block">public/assets/imgs/icons/placeholder.svg</code>
                         <p class="text-muted mt-2 mb-0">
                             Imagem SVG placeholder para uso em desenvolvimento e testes.
                         </p>
@@ -118,17 +118,34 @@
                         <h6 class="fw-bold">Organização do Projeto:</h6>
                         <div class="bg-light p-3 rounded">
                             <pre class="mb-0"><code>SmartKeyProject/
-├── paineladm.html
-├── paineladm.css
-├── paineladm.js
 ├── public/
-│   ├── senailogo.png
-│   ├── chave-unscreen.gif
-│   └── placeholder.svg
-└── README-conversao.md</code></pre>
+│   ├── index.html
+│   ├── paineladm.html
+│   ├── teacherPanel.html
+│   ├── assets/
+│   │   ├── css/
+│   │   │   └── pages-styles.css
+│   │   └── imgs/
+│   │       ├── ui/
+│   │       │   ├── senailogo.png
+│   │       │   ├── chave-unscreen.gif
+│   │       │   └── icon-chave.png
+│   │       └── icons/
+│   │           ├── keys.svg
+│   │           ├── green-keys.svg
+│   │           └── placeholder.svg
+│   └── src/
+│       └── modules/
+│           ├── admin/
+│           ├── teacher/
+│           └── shared/
+├── tests/
+│   └── (arquivos de teste)
+└── docs/
+    └── (documentação)</code></pre>
                         </div>
                         <p class="text-muted mt-3 mb-0">
-                            Todas as imagens devem estar na pasta <code>public/</code> e serem referenciadas com caminhos relativos.
+                            Todas as imagens devem estar na pasta <code>public/assets/imgs/</code> e serem referenciadas com caminhos relativos.
                         </p>
                     </div>
                 </div>
@@ -138,7 +155,7 @@
         <!-- Botão de Voltar -->
         <div class="row">
             <div class="col-12 text-center">
-                <a href="paineladm.html" class="btn btn-primary btn-lg">
+                <a href="../public/paineladm.html" class="btn btn-primary btn-lg">
                     <i class="bi bi-arrow-left me-2"></i>
                     Voltar para o Painel Administrativo
                 </a>
