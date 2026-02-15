@@ -14,7 +14,7 @@ let database;
 let firestore;
 try {
     // Verificar se Firebase já foi inicializado
-    if (!firebase.apps.length) {
+    if(!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
     database = firebase.database();
@@ -31,26 +31,26 @@ function saveDataToFirebase(date, shift, data) {
     console.log(' FIREBASE: Tentando salvar dados', {date, shift, dataLength: data ? data.length : 'undefined'});
     
     // Verificar se Firebase está inicializado
-    if (!database) {
+    if(!database) {
         console.error(' FIREBASE: Database não inicializado');
         return Promise.reject('Database não inicializado');
     }
     
     // Verificar se data é válido
-    if (!data || !Array.isArray(data)) {
+    if(!data || !Array.isArray(data)) {
         console.error(' FIREBASE: Dados inválidos recebidos:', data);
         return Promise.reject('Dados inválidos');
     }
     
     // Arrays vazios são válidos - representam turnos sem registros após exclusões
-    if (data.length === 0) {
+    if(data.length === 0) {
         console.log(' FIREBASE: Array vazio recebido - sincronizando estado sem registros para o turno');
         // Continuar com o salvamento - arrays vazios são válidos
     }
     
     // Limpar dados removendo valores undefined antes de salvar
     const cleanData = data.map(item => {
-        if (!item || typeof item !== 'object') {
+        if(!item || typeof item !== 'object') {
             console.warn(' FIREBASE: Item inválido encontrado:', item);
             return null;
         }
@@ -59,7 +59,7 @@ function saveDataToFirebase(date, shift, data) {
         
         // Copiar todas as propriedades, substituindo undefined por string vazia
         Object.keys(item).forEach(key => {
-            if (item[key] === undefined || item[key] === null) {
+            if(item[key] === undefined || item[key] === null) {
                 cleanItem[key] = '';
             } else {
                 cleanItem[key] = item[key];
@@ -73,7 +73,7 @@ function saveDataToFirebase(date, shift, data) {
     console.log(' FIREBASE: Quantidade de registros válidos:', cleanData.length);
     
     // Arrays vazios após limpeza também são válidos (turnos sem registros)
-    if (cleanData.length === 0) {
+    if(cleanData.length === 0) {
         console.log(' FIREBASE: Array vazio após limpeza - sincronizando estado sem registros');
         // Continuar com o salvamento mesmo com array vazio
     }
@@ -102,7 +102,7 @@ function loadDataFromFirebase(date, shift) {
 function syncDataRealtime(date, shift) {
     console.log(` SYNC: Iniciando sincronização para ${date}/${shift}`);
     
-    if (!database) {
+    if(!database) {
         console.error(' SYNC: Database não disponível para sincronização');
         return;
     }
@@ -114,7 +114,7 @@ function syncDataRealtime(date, shift) {
         const data = snapshot.val() || [];
         console.log(`� SYNC [ADMIN]: Dados recebidos do Firebase para ${date}/${shift}:`, data);
         
-        if (dataByDateAndShift[date]) {
+        if(dataByDateAndShift[date]) {
             const oldData = JSON.stringify(dataByDateAndShift[date][shift] || []);
             const newData = JSON.stringify(data);
             
@@ -125,14 +125,14 @@ function syncDataRealtime(date, shift) {
             dataByDateAndShift[date][shift] = data;
             
             // Só atualizar se estamos visualizando esta data e turno e se os dados mudaram
-            if (date === selectedDate && shift === activeShift && oldData !== newData) {
+            if(date === selectedDate && shift === activeShift && oldData !== newData) {
                 console.log(' SYNC: Atualizando tabela - dados mudaram!');
                 // Garantir que os dados sejam ordenados antes de atualizar
-                if (dataByDateAndShift[date] && dataByDateAndShift[date][shift]) {
+                if(dataByDateAndShift[date] && dataByDateAndShift[date][shift]) {
                     dataByDateAndShift[date][shift] = dataByDateAndShift[date][shift].sort((a, b) => {
                         const professorA = (a.professorName || '').trim();
                         const professorB = (b.professorName || '').trim();
-                        if (!professorA || !professorB) return 0;
+                        if(!professorA || !professorB) return 0;
                         return professorA.localeCompare(professorB, 'pt-BR');
                     });
                 }
@@ -179,7 +179,7 @@ async function loadAllDataForDate(date) {
 function syncTeacherDataRealtime(date, shift) {
     console.log(` SYNC [PROFESSOR]: Iniciando sincronização para ${date}/${shift}`);
     
-    if (!database) {
+    if(!database) {
         console.error(' SYNC [PROFESSOR]: Database não disponível para sincronização');
         return;
     }
@@ -192,9 +192,9 @@ function syncTeacherDataRealtime(date, shift) {
         console.log(`� SYNC [PROFESSOR]: Dados recebidos do Firebase para ${date}/${shift}:`, data);
         
         // Verifica se a variável global do painel professor existe
-        if (typeof dataByDateAndShift !== 'undefined') {
+        if(typeof dataByDateAndShift !== 'undefined') {
             // Inicializar estrutura se não existir
-            if (!dataByDateAndShift[date]) {
+            if(!dataByDateAndShift[date]) {
                 dataByDateAndShift[date] = {
                     'manhã': [],
                     'tarde': [],
@@ -209,7 +209,7 @@ function syncTeacherDataRealtime(date, shift) {
             
             // Converter dados do formato admin para professor se necessário
             const convertedData = data.map(item => {
-                if (item.room && item.professorName) {
+                if(item.room && item.professorName) {
                     // Formato admin - converter para professor
                     return {
                         sala: item.room || 'Sala não especificada',
@@ -230,10 +230,10 @@ function syncTeacherDataRealtime(date, shift) {
             dataByDateAndShift[date][shift] = convertedData;
             
             // Só atualizar se estamos visualizando esta data e turno e se os dados mudaram
-            if (typeof selectedDate !== 'undefined' && typeof activeShift !== 'undefined' && 
+            if(typeof selectedDate !== 'undefined' && typeof activeShift !== 'undefined' && 
                 date === selectedDate && shift === activeShift && oldData !== newData) {
                 console.log(' SYNC [PROFESSOR]: Atualizando tabela - dados mudaram!');
-                if (typeof renderTableForShift === 'function') {
+                if(typeof renderTableForShift === 'function') {
                     renderTableForShift(activeShift);
                 }
             } else {
@@ -255,7 +255,7 @@ async function loadTeacherDataFromFirebase(date) {
         const noiteData = await loadDataFromFirebase(date, 'noite');
         
         // Inicializar estrutura se não existir
-        if (!dataByDateAndShift[date]) {
+        if(!dataByDateAndShift[date]) {
             dataByDateAndShift[date] = {
                 'manhã': [],
                 'tarde': [],
@@ -266,7 +266,7 @@ async function loadTeacherDataFromFirebase(date) {
         // Converter dados para o formato do professor
         const convertShiftData = (data) => {
             return (data || []).map(item => {
-                if (item.room && item.professorName) {
+                if(item.room && item.professorName) {
                     return {
                         sala: item.room || 'Sala não especificada',
                         professor: item.professorName || 'Professor não especificado',
@@ -299,13 +299,13 @@ async function loadTeacherDataFromFirebase(date) {
 function initializeFirebaseSync() {
     console.log(' [PROFESSOR]: Inicializando sincronização Firebase...');
     
-    if (!database) {
+    if(!database) {
         console.error(' [PROFESSOR]: Database não disponível para sincronização');
         return;
     }
     
     // Sincronizar dados para a data atual e turno atual
-    if (typeof selectedDate !== 'undefined' && typeof activeShift !== 'undefined') {
+    if(typeof selectedDate !== 'undefined' && typeof activeShift !== 'undefined') {
         console.log(` [PROFESSOR]: Iniciando sincronização para ${selectedDate}/${activeShift}`);
         
         // Sincronizar todos os turnos da data atual usando a função específica do professor
@@ -331,12 +331,12 @@ function initializeFirebaseSync() {
 async function saveTeachersToFirestore(teachersData) {
     console.log('💾 [FIRESTORE]: Salvando dados dos professores...');
     
-    if (!firestore) {
+    if(!firestore) {
         console.error('❌ [FIRESTORE]: Firestore não inicializado');
         return false;
     }
     
-    if (!teachersData || typeof teachersData !== 'object') {
+    if(!teachersData || typeof teachersData !== 'object') {
         console.error('❌ [FIRESTORE]: Dados inválidos recebidos');
         return false;
     }
@@ -363,7 +363,7 @@ async function saveTeachersToFirestore(teachersData) {
 async function loadTeachersFromFirestore() {
     console.log('📥 [FIRESTORE]: Carregando dados dos professores...');
     
-    if (!firestore) {
+    if(!firestore) {
         console.error('❌ [FIRESTORE]: Firestore não inicializado');
         return null;
     }
@@ -371,7 +371,7 @@ async function loadTeachersFromFirestore() {
     try {
         const doc = await firestore.collection('teachers').doc('codprof').get();
         
-        if (doc.exists) {
+        if(doc.exists) {
             const data = doc.data();
             console.log(`✅ [FIRESTORE]: ${data.totalTeachers || 0} professores carregados com sucesso!`);
             return data.mapping || {};
@@ -394,12 +394,12 @@ async function loadTeachersFromFirestore() {
 async function addOrUpdateTeacherInFirestore(name, code) {
     console.log(`💾 [FIRESTORE]: Atualizando professor: ${name} -> ${code}`);
     
-    if (!firestore) {
+    if(!firestore) {
         console.error('❌ [FIRESTORE]: Firestore não inicializado');
         return false;
     }
     
-    if (!name || !code) {
+    if(!name || !code) {
         console.error('❌ [FIRESTORE]: Nome ou código inválido');
         return false;
     }
@@ -413,7 +413,7 @@ async function addOrUpdateTeacherInFirestore(name, code) {
         console.log(`✅ [FIRESTORE]: Professor ${name} atualizado com sucesso!`);
         return true;
     } catch (error) {
-        if (error.code === 'not-found') {
+        if(error.code === 'not-found') {
             console.log('📝 [FIRESTORE]: Criando novo documento de professores...');
             return await saveTeachersToFirestore({ [name]: code });
         }
@@ -430,12 +430,12 @@ async function addOrUpdateTeacherInFirestore(name, code) {
 async function removeTeacherFromFirestore(name) {
     console.log(`🗑️ [FIRESTORE]: Removendo professor: ${name}`);
     
-    if (!firestore) {
+    if(!firestore) {
         console.error('❌ [FIRESTORE]: Firestore não inicializado');
         return false;
     }
     
-    if (!name) {
+    if(!name) {
         console.error('❌ [FIRESTORE]: Nome inválido');
         return false;
     }
@@ -462,19 +462,19 @@ async function removeTeacherFromFirestore(name) {
 function syncTeachersRealtime(callback) {
     console.log('🔄 [FIRESTORE]: Iniciando sincronização em tempo real dos professores...');
     
-    if (!firestore) {
+    if(!firestore) {
         console.error('❌ [FIRESTORE]: Firestore não inicializado');
         return () => {};
     }
     
-    if (typeof callback !== 'function') {
+    if(typeof callback !== 'function') {
         console.error('❌ [FIRESTORE]: Callback inválido');
         return () => {};
     }
     
     const unsubscribe = firestore.collection('teachers').doc('codprof')
         .onSnapshot((doc) => {
-            if (doc.exists) {
+            if(doc.exists) {
                 const data = doc.data();
                 console.log(`🔄 [FIRESTORE]: Dados dos professores atualizados (${data.totalTeachers || 0} professores)`);
                 callback(data.mapping || {});

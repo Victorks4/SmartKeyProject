@@ -1,33 +1,19 @@
-/**
- * ⚠️ DEPRECADO: Este arquivo será dividido em módulos especializados
- * Utilize os novos módulos:
- * - rooms-data.js (dados de salas)
- * - teachers-data.js (dados de professores)
- * - validators.js (validações)
- * - error-handler.js (tratamento de erros)
- */
-
-// ----------- Dropdowns -----------
-// ⚠️ DEPRECADO: Use RoomsData.getDropdownData() de rooms-data.js
-const dropdown = [
+// Dados base de salas - utilizados como seed/fallback
+const ROOMS_SEED_DATA = [
   // Bloco A
-  { id: 1, sala: "HIDRÁULICA",  bloco: "Bloco A", numero: "" },
+  { id: 1, sala: "HIDRÁULICA", bloco: "Bloco A", numero: "" },
   { id: 2, sala: "AUT PREDIAL", bloco: "Bloco A", numero: "" },
-
   // Bloco B
-  { id: 3, sala: "QUÍMICA",     bloco: "Bloco B", numero: "" },
-
+  { id: 3, sala: "QUÍMICA", bloco: "Bloco B", numero: "" },
   // Bloco C
-  { id: 4, sala: "FABRICAÇÃO",  bloco: "Bloco C", numero: "" },
-
+  { id: 4, sala: "FABRICAÇÃO", bloco: "Bloco C", numero: "" },
   // Bloco D
-  { id: 5, sala: "PLANTA CIM",  bloco: "Bloco D", numero: "" },
-  { id: 6, sala: "METROLOGIA",  bloco: "Bloco D", numero: "" },
-  { id: 7, sala: "LAB MAKER",   bloco: "Bloco D", numero: "" },
-
-  // Bloco E
-  { id: 8,  sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "1" },
-  { id: 9,  sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "2" },
+  { id: 5, sala: "PLANTA CIM", bloco: "Bloco D", numero: "" },
+  { id: 6, sala: "METROLOGIA", bloco: "Bloco D", numero: "" },
+  { id: 7, sala: "LAB MAKER", bloco: "Bloco D", numero: "" },
+  // Bloco E - Salas Térreo
+  { id: 8, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "1" },
+  { id: 9, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "2" },
   { id: 10, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "3" },
   { id: 11, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "4" },
   { id: 12, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "5" },
@@ -42,8 +28,7 @@ const dropdown = [
   { id: 21, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "14" },
   { id: 22, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "15" },
   { id: 23, sala: "SALAS TÉRREO", bloco: "Bloco E", numero: "16" },
-
-  // Bloco F
+  // Bloco F - Labs de Informática
   { id: 24, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "1" },
   { id: 25, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "2" },
   { id: 26, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "3" },
@@ -54,42 +39,33 @@ const dropdown = [
   { id: 31, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "8" },
   { id: 32, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "9" },
   { id: 33, sala: "LAB DE INFORMÁTICA", bloco: "Bloco F", numero: "10" },
-
+  // Bloco F - Outros Labs e Salas
   { id: 34, sala: "LAB ELETROTÉCNICA", bloco: "Bloco F", numero: "11" },
-  { id: 35, sala: "SALAS - 2º ANDAR",  bloco: "Bloco F", numero: "12" },
-  { id: 36, sala: "LAB ACIONAMENTOS",  bloco: "Bloco F", numero: "13" },
-  { id: 37, sala: "SALAS - 2º ANDAR",  bloco: "Bloco F", numero: "14" },
-  { id: 38, sala: "LAB ELETRÔNICA",    bloco: "Bloco F", numero: "15" },
-  { id: 39, sala: "SALAS - 2º ANDAR",  bloco: "Bloco F", numero: "16" },
-  { id: 40, sala: "SALAS - 2º ANDAR",  bloco: "Bloco F", numero: "17" },
-  { id: 41, sala: "SALAS - 2º ANDAR",  bloco: "Bloco F", numero: "18" },
-  { id: 42, sala: "SALAS - 2º ANDAR",  bloco: "Bloco F", numero: "19" },
-  { id: 43, sala: "SALAS - 2º ANDAR",  bloco: "Bloco F", numero: "20" },
-
+  { id: 35, sala: "SALAS - 2º ANDAR", bloco: "Bloco F", numero: "12" },
+  { id: 36, sala: "LAB ACIONAMENTOS", bloco: "Bloco F", numero: "13" },
+  { id: 37, sala: "SALAS - 2º ANDAR", bloco: "Bloco F", numero: "14" },
+  { id: 38, sala: "LAB ELETRÔNICA", bloco: "Bloco F", numero: "15" },
+  { id: 39, sala: "SALAS - 2º ANDAR", bloco: "Bloco F", numero: "16" },
+  { id: 40, sala: "SALAS - 2º ANDAR", bloco: "Bloco F", numero: "17" },
+  { id: 41, sala: "SALAS - 2º ANDAR", bloco: "Bloco F", numero: "18" },
+  { id: 42, sala: "SALAS - 2º ANDAR", bloco: "Bloco F", numero: "19" },
+  { id: 43, sala: "SALAS - 2º ANDAR", bloco: "Bloco F", numero: "20" },
   // Bloco G
-  { id: 44, sala: "ARMAZENAGEM",        bloco: "Bloco G", numero: "" },
+  { id: 44, sala: "ARMAZENAGEM", bloco: "Bloco G", numero: "" },
   { id: 45, sala: "SALA DE AUTOMOTIVA", bloco: "Bloco G", numero: "" },
-  { id: 46, sala: "MOTOCICLETAS",       bloco: "Bloco G", numero: "" },
-  { id: 47, sala: "FUNILARIA",          bloco: "Bloco G", numero: "" },
-  { id: 48, sala: "PREDIAL II",         bloco: "Bloco G", numero: "" },
-  { id: 49,  sala: "LABORATÓRIO DE SEGURANÇA", bloco: "Bloco G", numero: ""},
-
+  { id: 46, sala: "MOTOCICLETAS", bloco: "Bloco G", numero: "" },
+  { id: 47, sala: "FUNILARIA", bloco: "Bloco G", numero: "" },
+  { id: 48, sala: "PREDIAL II", bloco: "Bloco G", numero: "" },
+  { id: 49, sala: "LABORATÓRIO DE SEGURANÇA", bloco: "Bloco G", numero: "" },
   // Bloco H
-  { id: 50, sala: "SALA EMPILHADEIRA",  bloco: "Bloco H", numero: "" },
-  { id: 51, sala: "MICROBIOLOGIA",      bloco: "Bloco H", numero: "" },
-  { id: 52, sala: "PANIFICAÇÃO",        bloco: "Bloco H", numero: "" }
-];
-
-// Adicione novas salas diretamente aqui (não precisa editar o array grande acima).
-// Exemplo de uso:
-// { sala: "LAB DE ROBÓTICA", bloco: "Bloco F", numero: "21" }
-const NEW_ROOMS_SEED = [
-    { sala: "LABORATÓRIO DE SEGURANÇA", bloco: "Bloco G", numero: "" }
+  { id: 50, sala: "SALA EMPILHADEIRA", bloco: "Bloco H", numero: "" },
+  { id: 51, sala: "MICROBIOLOGIA", bloco: "Bloco H", numero: "" },
+  { id: 52, sala: "PANIFICAÇÃO", bloco: "Bloco H", numero: "" }
 ];
 
 function normalizeRoomKey(room) {
-    const sala = (room.sala || '').toString().trim().toUpperCase();
-    const bloco = (room.bloco || '').toString().trim().toUpperCase();
+    const sala   = (room.sala || '').toString().trim().toUpperCase();
+    const bloco  = (room.bloco || '').toString().trim().toUpperCase();
     const numero = (room.numero ?? '').toString().trim();
     return `${sala}|${bloco}|${numero}`;
 }
@@ -99,56 +75,54 @@ function generateNextRoomId(existingRooms) {
     return maxId + 1;
 }
 
-// Garante que as salas definidas em código (dropdown + NEW_ROOMS_SEED) existam no localStorage sem duplicar
+// Garante que as salas base existam no localStorage sem duplicar
 function ensureRoomsSeeded() {
     try {
         const storedRaw = localStorage.getItem('rooms');
         let existing = [];
-        if (storedRaw) {
+        if(storedRaw) {
             existing = JSON.parse(storedRaw);
-            if (!Array.isArray(existing)) existing = [];
+            if(!Array.isArray(existing)) existing = [];
         }
 
         // Índice por chave normalizada
         const index = new Map(existing.map(r => [normalizeRoomKey(r), r]));
 
-        // Base a mesclar: tudo do dropdown original + novas salas definidas em código
-        const baseSeed = [...dropdown, ...NEW_ROOMS_SEED.map(r => ({ ...r }))];
+        // Base a mesclar: dados seed locais
+        const baseSeed = ROOMS_SEED_DATA;
         let mutated = false;
 
         for (const seed of baseSeed) {
             const seedObj = {
-                id: seed.id, // pode vir definido no dropdown
+                id: seed.id,
                 sala: seed.sala,
                 bloco: seed.bloco,
                 numero: seed.numero ?? ''
             };
             const key = normalizeRoomKey(seedObj);
 
-            if (!index.has(key)) {
+            if(!index.has(key)) {
                 // Novo registro – atribuir ID sequencial
                 const nextId = generateNextRoomId(existing);
                 seedObj.id = seedObj.id ?? nextId;
                 existing.push(seedObj);
                 index.set(key, seedObj);
                 mutated = true;
-            } else {
-                // Já existe – manter o existente (não sobrescreve ID/valores do usuário)
             }
         }
 
-        if (!storedRaw) {
+        if(!storedRaw) {
             // Não havia nada salvo – salvar tudo
             localStorage.setItem('rooms', JSON.stringify(existing));
-        } else if (mutated) {
+        } else if(mutated) {
             // Havia dados e adicionamos novos – persistir merge
             localStorage.setItem('rooms', JSON.stringify(existing));
         }
     } catch (e) {
         console.error('Erro ao mesclar salas no localStorage:', e);
         // Fallback mínimo para garantir funcionamento
-        if (!localStorage.getItem('rooms')) {
-            localStorage.setItem('rooms', JSON.stringify(dropdown));
+        if(!localStorage.getItem('rooms')) {
+            localStorage.setItem('rooms', JSON.stringify(ROOMS_SEED_DATA));
         }
     }
 }
@@ -159,7 +133,7 @@ ensureRoomsSeeded();
 // Função para obter os dados do dropdown do localStorage ou usar o padrão
 function getDropdownData() {
     const stored = localStorage.getItem("rooms");
-    return stored ? JSON.parse(stored) : dropdown;
+    return stored ? JSON.parse(stored) : ROOMS_SEED_DATA;
 }
 
 // Função para obter blocos únicos a partir dos dados
@@ -185,812 +159,6 @@ function getRoomNumbers(data, selectedBlock, selectedRoom) {
         .filter(numero => numero !== ""); // Filtra números vazios
 }
 
-// Mapa de docentes para CODPROF (DOCENTE -> CODPROF)
-// Tornando global para acessibilidade entre módulos
-window.docentesCodprof = {
-    "Abdallah Sant'anna Merabet": "FATS5254",
-    "Adalberto da Silva Correia": "FATS1578",
-    "Adeildo Apolonio da Silva Junior": "FATS4451",
-    "Aderlan dos Santos": "NORTE233",
-    "Adilson Alexandre Amorim": "CALC1227",
-    "Adjalbas de Oliveira Santos": "FATS3070",
-    "Adriana Bitencourt Bezerra": "FATS5014",
-    "Adriana Freitas de Moura": "FATS4312",
-    "Adriane do Nascimento Apostolo": "FATS5071",
-    "Adrianne Bastos Ferreira": "FATS5189",
-    "Adriano Santos de Araujo": "FATS5049",
-    "Adriel Rasslan da Silva Gama": "FATS4758",
-    "Adson Aragão Carvalho": "FATS4656",
-    "Agnelo Souto de Jesus Filho": "FATS1673",
-    "Aislan da Silva Souza": "FATS4277",
-    "Alberto César Queiroz Fonseca": "ALA265",
-    "Alberto Luís Santos e Santos": "AUT0087",
-    "Alcígledes de Jesus Sales": "FATS4977",
-    "Aldivan Fernandes Conceição Moura Junior": "FATS4990",
-    "Alessandra Knoll": "043EAD",
-    "Alex Almeida de Souza": "FATS7899",
-    "Alex Ferreira": "ALF767",
-    "Alexandre da Silva Nogueira": "FATS999109",
-    "Alexandre Hartkopf Cardozo": "EAD098",
-    "Alexandre Jose Guerra Praia": "ATO074",
-    "Alexandre Morais Barbosa": "FATS2399",
-    "Alexsandra Alves de Macedo Aquino": "CALC1154",
-    "Alexsandra Zaparoli": "FATS022",
-    "Aline de Andrade Bonifácio": "EAD010",
-    "Aline de Cerqueira dos Santos": "FATS5010",
-    "Alisson Cleisson Carvalho Silva": "FATS5060",
-    "Allan Jackson Alves da Silva": "FATS3546",
-    "Alleson Silva Sousa": "FATS4637",
-    "Alvaro Tadeu Paes Fiuza Filho": "FATS4732",
-    "Amanda de Almeida Santana": "FATS4819",
-    "Amanda Moreira Santiago Pereira": "FATS5158",
-    "ANA CARMEM CASTRO LEITE": "ALA0163",
-    "Ana Carolina Rabêlo Nonato": "FATS4280",
-    "Ana Caroline Neves da Silva": "ALA0171",
-    "Ana Cláudia de Almeida Gomes Galiza": "FATS4959",
-    "Ana Karine Ferreira Bastos Vidal": "FATS4725",
-    "Ana Marcia dos Santos Silva": "FATS4112",
-    "Ana Paula Farias Goulart": "EAD739",
-    "Ana Paula Pereira Lima": "CAM 251",
-    "Anderson Batista Córdova": "FATS3124",
-    "Anderson Bismark Porto e Silva": "FATS5047",
-    "Anderson Emanuel Oliveira Daltro": "FATS4103",
-    "Anderson Leandro da Silva Pita": "FATS5108",
-    "Anderson Marcos Santos Lobo": "FATS4984",
-    "André Luis Pinho Braga": "FATS5194",
-    "André Luís Rocha Reis": "ALA0178",
-    "André Luiz Gomes da Silva": "FATS5213",
-    "André Luiz Santos Santana": "REG161",
-    "Andre Pires Araujo Kuhn": "MAN-40238",
-    "Andressa Mirella Figueiras da Silva": "ALA0086",
-    "Andressa Fraga Correira": "FATS5257",
-    "Anésio Sousa Dos Santos Neto": "FATS4995",
-    "Angel Cristian Barbosa Santos": "ALA0053",
-    "Angelica da Silveira Lima": "SECBA0003",
-    "Anna Carolina Araujo Romualdo": "ALA193",
-    "Anna Paula Paz de Jesus": "ALA214",
-    "Anselmo Luiz Lima Brito Junior": "FATS4796",
-    "Antônia Raniele Costa Lima": "FATS4994",
-    "Antonio Henrique Ramos Bismarck César": "ALA243",
-    "Antonio Luis Gomes dos Santos": "FATS4334",
-    "Antonio Marcos Pereira dos Santos": "SB0792",
-    "Antonio Nery da Silva Filho": "FATS4119",
-    "Antônio Pinto de Santana Neto": "FATS3506",
-    "Ari Santos Gomes": "FATS1629",
-    "Ariádene Gomes Pinheiro": "Alim00022",
-    "Arícia Silva Gama Muniz": "FATS5141",
-    "Arlete do Nascimento Rocha": "FATS5217",
-    "Arthur Gomes Lima França": "AGLF857",
-    "Audrei de Abreu Marques": "MOB 134",
-    "Augusto Magno Ornelas Saraiva": "ALA286",
-    "Áurea Pereira da Costa": "FATS5028",
-    "Bárbara da Marilia Madureira Conceição": "FATS5099",
-    "Bárbara Daiana da Anunciação Nascimento": "FATS5029",
-    "Brenda Souza dos Santos": "FATS4812",
-    "BRUNO CHAVES SILVA": "ALA0074",
-    "Bruno de Almeida Borges": "FATS4777",
-    "Bruno de Menezes Moreira": "FATS5193",
-    "Bruno dos Santos Pereira": "FATS5115",
-    "Bruno dos Santos Pereira": "NORTE515",
-    "Bruno Ferreira de Oliveira": "FATS5001",
-    "Bruno Geovani Santos Silva": "ALA0119",
-    "Bruno Oliveira da Silva": "FATS5825",
-    "Bruno Paranhos Lima Bitencourt": "FATS3980",
-    "Bruno Schramm Alves de Matos": "ALA282",
-    "Caio Hamab Costa": "FATS4696",
-    "Caio Rhuan Ribeiro Oliveira": "FATS5186",
-    "Caique Barbosa Santos": "FATS5215",
-    "Caleb Sena da Silva": "FATS4839",
-    "Camila Martins Ghilardi": "FATS5200",
-    "Camila Pereira da Silva": "FATS5065",
-    "Carini dos Santos de Souza": "CAM 060",
-    "Carla Evelin Xavier Freitas": "ALA247",
-    "Carlos Alexandre Sant'ana Figueiredo": "ALA205",
-    "Carlos André de Jesus Santos": "FATS4603",
-    "Carlos Augusto da Cruz Santos de Jesus": "ALA245",
-    "Carlos Augusto de Assis Alves Junior": "FATS5137",
-    "Carlos Eduardo da Cruz Nascimento": "MOB 121",
-    "Carlos Eduardo Ferreira Gomes": "FATS5083",
-    "Carlos Robson Santos Cerqueira": "FATS4189",
-    "Carlos Luan Cazumbá de Souza": "FATS5221",
-    "Carmen Luft Bammesberger": "EAD388",
-    "Carolina Gesteira Lopes Lima": "FATS3393",
-    "Carolina Souto Ferreira": "FATS857",
-    "Caroline Souza Cardoso da Silva Oliveira": "FATS5027",
-    "Caroline Cruz de Oliveira Barros": "FATS5250",
-    "Celia Nascimento Felix Filha": "SEG0035",
-    "Celso de Oliveira": "FATS4739",
-    "Chrislaynne Cardoso Cerqueira": "FATS4765",
-    "Christiano Martinez Garcia": "FATS1060",
-    "Cíntia Azevedo de Araújo": "FATS4170",
-    "Cintia Gomes de Siqueira": "FATS5136",
-    "CIRO TADEU DE MATOS BASTOS": "ALA0041",
-    "Cislandia Maria dos Santos Oliveira": "FATS4648",
-    "Clara Fernandes Bastos": "FATS5199",
-    "Claryssa Palloma Rosa Barros de Oliveira": "FATS5204",
-    "Claudemir Felix": "CALC 02",
-    "Cláudia de Matos Santos": "FATS0005",
-    "Claudia Mendes da Silva": "FATS4518",
-    "Claudinei Aparecido Ferreira de Paula": "1940",
-    "Claudiomiro José Henn": "CALC1103",
-    "Cléa Mercedes Alves de Jesus Oliva": "FATS5110",
-    "Cleomenes Nunes Torres": "FATS5092",
-    "Clóvis Andrade Filho": "40704",
-    "Crislane de Jesus Gomes": "ALA0132",
-    "Crislayne Conceição da Silva de Oliveira": "FATS5103",
-    "Cristiane de Souza Oliveira": "FATS5133",
-    "Cristiane Pereira Santos de Souza": "FATS4658",
-    "Cristiani de Moura": "ALA217",
-    "Cristiano Vieira Santos Passos": "FATS5101",
-    "Daiana de Oliveira Machado Bulos": "FATS5039",
-    "Daiane dos Santos Carvalho": "FATS5093",
-    "Daniel Austregesilo Xavier de Oliveira": "FATS4534",
-    "Daniel da Silva Araújo": "FATS4079",
-    "Daniel dos Santos Lima": "FATS5206",
-    "Daniel Pinto dos Santos Neto": "FATS5248",
-    "Daniel Duarte de Souza da Silva": "FATS5149",
-    "DANIEL FERNANDES LIMA BISPO": "FATS4496",
-    "Daniel Rabelo do Vale": "GRAF814",
-    "Daniela Borges Cerqueira Tavares": "FATS5155",
-    "Daniela Silva Chagas": "FATS10000",
-    "Danieli da Silva Machado Souza": "FATS5079",
-    "Danilo Brandão Soares": "FATS5111",
-    "Danilo Ferreira Barros": "FATS5127",
-    "Danilo Souza de Oliveira": "FATS4682",
-    "Dannywill Medeiros dos Santos": "ALA0129",
-    "Dante Bitencourt Nascimento Filho": "ALA255",
-    "Dante Nascimento Cunha": "CAM518",
-    "Dara Lima Medeiros": "FATS3498",
-    "Darlene Neves Ramos Liger": "FATS5061",
-    "Davi dos Santos Haack": "FATS5032",
-    "David Roberto Vasel": "EAD920",
-    "Dayse Marana de Brito Araujo": "FATS3895",
-    "Debora Maia Teixeira de Moura": "FATS4156",
-    "Deivson Nonato Alves": "NGE6989",
-    "Dejanira Silva Alves Pereira": "ALA0055",
-    "Dejany dos Santos Silva": "CAM460",
-    "Denilson Brito dos Santos": "MOB021",
-    "Denivaldo de Queiroz Bispo": "FATS1687",
-    "Dennis Jean Borges Rosado da Rocha": "065EAD",
-    "Diana Pereira dos Santos": "FATS4966",
-    "Diego de Oliveira Teixeira": "EAD052",
-    "Diego Santos de Oliveira": "VEST120",
-    "Dilma Ribeiro Lopes": "FATS4431",
-    "Dilson Portela Santos": "MOB 017",
-    "Dinis Caetano Pereira Nascimento": "FATS5162",
-    "Divino Alves Vieira": "ALA252",
-    "Docente Autoinstrucional": "AUTO",
-    "Duilio Almeida Norberto Da Silva": "ALA257",
-    "Dulcila Barreiros Torres": "REG241",
-    "Ecatarine Ivi Guerrreiro de Freitas Figueiredo": "ALA207",
-    "Eddie William Calazans Ventura": "EWCV030",
-    "Edilma Mendes de Sousa": "FATS4585",
-    "Edilza Santana Bomfim": "FATS5045",
-    "Edimilson Chaves dos Reis": "FATS5002",
-    "Edinaldo do Nascimento Pereira Gomes": "SLEM760",
-    "Edmayre Coelho dos Santos": "FATS3186",
-    "Ednaldo de Souza Santos": "FATS5249",
-    "Edmilson da Silva Rocha": "FATS4472",
-    "Edson dos Santos": "FATS4533",
-    "Edson José Nunes": "FATS1596",
-    "Edson Luiz Pinto Cruz Junior": "FATS4826",
-    "Edvaldo Cerqueira Santos": "FATS5069",
-    "Elaine Graziela Sampaio Passos": "FATS5195",
-    "Elaine Santos Silva": "FATS5197",
-    "Elder Nunes da Silva": "ALA200",
-    "Eliana Pereira dos Santos": "MOU1971",
-    "Eliandra dos Santos Mendes": "FATS4830",
-    "Elias Dias Arruda de Paulo": "FATS183",
-    "ELIAS WASHINGTON CAMPOS OLIVEIRA": "FATS5037",
-    "Eliecy Guirra Reis": "SB0781",
-    "Eliézer José da Silva": "FATS3277",
-    "Eliseu Miranda Alves": "0FATS6814",
-    "Elisson Nadson Souza Marques": "FATS5244",
-    "Ellen Midian Santana da Silva": "FATS4965",
-    "Ellerry Lima Silva": "ALA0164",
-    "Emanoel Ferreira Costa da Rocha": "FATS1690",
-    "Emerson Salgado de Carvalho": "FATS5105",
-    "Emilly Nathalia Sousa Almeida": "FATS4824",
-    "Eneida Crisitina Cardoso das Neves": "FATS4538",
-    "Enio Cezar Dias Junior": "ALA284",
-    "Eric Cristiano Silva Soares": "ALA194",
-    "Éric Nunes Gomes": "FATSI3204",
-    "Érica Almeida Soares Araújo": "FATS5766",
-    "Érica de Oliveira Silva": "FATS4821",
-    "Érica Lavinia Borges Moraes de Oliveira": "FATS5019",
-    "Erik do Carmo Marques": "FATS3304",
-    "Erik do Carmo Marques": "FATS3438",
-    "Erimonica Santos de Jesus Dantas": "FATS4054",
-    "Euzebio Bastos da Silva": "FATS5077",
-    "Evangildo Santana Santos": "ALA221",
-    "Evans Andrade Costa": "CALC1236",
-    "Evson Santos Silva": "ALA0014",
-    "Fabiana Araujo Diniz": "EAD617",
-    "Fábio da Silva Campos": "GES0112",
-    "Fábio Luciano Carvalho dos Santos": "EMI00200",
-    "Fabio Lúcio Almeida Lima": "CAM 004",
-    "Fabrício da Silva do Espírito Santo": "FATS5166",
-    "Fabrício Pacheco Borges": "SEG9136",
-    "Fagna Gomes da Silva Santos": "FATS5050",
-    "Felipe de Lima Oliveira": "FATS5112",
-    "Fernanda de Matos Fialho Tojo": "Fats514",
-    "Fernando Marafon Balem": "EAD06",
-    "Fernando Vessosi Alberti": "EAD979",
-    "Filipe Almeida da Conceição Inocencio": "FATS5120",
-    "Filipe Santanna Freitas da Silva": "FATS4745",
-    "Filipe Silva Santos": "ALA294",
-    "Flávio Ferreira Barbosa": "FATS6870",
-    "Francegleide Souza Oliveira": "ALA0145",
-    "Francieli Pacassa": "EAD082",
-    "Francielle Bitencourt de Oliveira": "FATS5004",
-    "Francielli Pinto da Silva": "FATS4957",
-    "Francisca Maria Mami Kaneoya": "FATS320",
-    "Francisco Marcos Rosa de Sousa": "FATS4081",
-    "Francisco Vieira Lima": "FATS5214",
-    "Francklin Moura da Costa": "FATS5212",
-    "Frederico Dominguez Fonseca": "FATS3114",
-    "Frederico Iglezias Figueira": "FIF1300",
-    "Gabriel Cabral Daltro": "FATS5074",
-    "Gabriel Queiroz dos Santos": "FATS3597",
-    "Gabriel Rocha Santos": "ALA264",
-    "Gabriel Souza de Santana": "FATSC1559",
-    "Gabriel Vitorio de Arcanjo": "FATS5114",
-    "Gabriel Wendel Santos da Silva": "021EAD",
-    "Gabrielle Albuquerque Maciel Brasileiro": "FATS5023",
-    "Geandson Almeida de Sousa": "FATS4806",
-    "Geisa Ferraz Lima Córdova": "FATS3452",
-    "Genilson Santana Santos": "FATS5053",
-    "Genival de Andrade Silva": "FATS031000",
-    "Genivania Gomes Oliveira": "FATS4541",
-    "George Anderson Soares e Sales": "NOAAUTO62",
-    "George Bispo dos Santos": "ALA0070",
-    "Gerusa Souza Pimentel": "FATS4736",
-    "Gessica Brandão do Nascimento Lima": "FATS5247",
-    "Giancarlo Alves Simões": "FATS999112",
-    "Gilberto Lopes Nery": "FATS4988",
-    "Gildean Santos Ribeiro": "GSR044",
-    "Gilmar Menezes": "FATS4506",
-    "Gilmar Pereira Mota": "FATS4972",
-    "Gilmario dos Santos Machado": "FATS3992",
-    "Gilsimar de Jesus Benicio": "FATS5082",
-    "Gilson Marcelo da Silva Rios": "FATS5168",
-    "Girlene Bispo de Oliveira": "FATS5012",
-    "Gislana Santana Machado": "FATS5025",
-    "Gizelle Karine Santos Alcantara": "ALA231",
-    "Gleice da Silva Diogo": "FATS4463",
-    "Gleison Fernandes da Silva": "FATS5106",
-    "Guilherme Canarin Marcellino": "EAD050",
-    "Hanna Mayara Miranda Araujo": "FATS5126",
-    "Hebert Santos Peneluc": "ALAA007",
-    "Henderson Cari Nascimento": "EAD070",
-    "Henderson Souza Chalegre": "FATS5051",
-    "Henrique Silveira Alves Marques": "SNSUD240",
-    "HERBERT CÂNDIDO DOS SANTOS": "ALA0167",
-    "Heron Borges Machado": "FATS4793",
-    "Hiago Santos Silva": "ALA250",
-    "Hikaro dos Santos Carvalho": "FATS4599",
-    "Hilton Brandão": "FATSI1797",
-    "Hipólito Matos Carneiro": "FATS5205",
-    "Hudson de Carvalho Lima": "FATS4413",
-    "Iago de Cerqueira Azevedo": "FATS5006",
-    "Ian Hudson Martins de Oliveira": "FATS4816",
-    "Ian Pedro Martinez Silva": "FATS4735",
-    "Iara de Andrade Oliveira": "FATS4998",
-    "Ícaro Vasconcelos Alvim": "FATS4803",
-    "Igor Ernandez Almeida Santana": "CAM 213",
-    "Igor Silva Marques": "FATS5009",
-    "Igor Souza de Almeida": "ALA263",
-    "Iguaraci de Souza Tavares": "ALA249",
-    "ILKA MARA ALVES DA SILVA": "FATS5000",
-    "Ingrid Barreto de Almeida Passos": "FATS4576",
-    "Ingrid Neylane Cerqueira Pinheiro": "FATS5263",
-    "Ingrid Rocha Teixeira": "ALA259",
-    "Iraneide dos Anjos dos Santos": "FATS5094",
-    "Iranilton Pereira Santos": "ALA269",
-    "Iris Araújo Silva": "FATS5143",
-    "Irlan Silva de Almeida": "FATS5154",
-    "Iromar de Freitas Nascimento Filho": "FATS5078",
-    "Isaac Porto Assunção": "FATS4082",
-    "Islane Ferreira de Andrade": "FATS5090",
-    "Ismael de Andrade Gonçalves": "FATS4855",
-    "Ivan Gomes Soares": "ALA230",
-    "Ivanildo Gomes da Silva": "FATS4960",
-    "Ivo Ribeiro Almeida": "FATS5054",
-    "Jaciane Saba Bispo": "FATS5172",
-    "Jaciara Teodora dos Reis Malta": "ALA0151",
-    "Jadiane de Almeida Ribeiro de Santana": "NOAVIRT027",
-    "Jadieli Sansão Elias Lima": "ALA0061",
-    "Jadilma Rodrigues da Silva Dias": "FATS3874",
-    "Jailson dos Santos Júnior": "ALA0152",
-    "Jair Santos de Almeida": "FATS3319",
-    "Jairo Alves da Silva": "PLAN2011",
-    "Jamile Batista dos Santos": "ALA0017",
-    "Janaína Gonçalves Bastos": "FATS3368",
-    "Janielson Barbosa de Oliveira": "FATS5150",
-    "Jaqueline de Souza Pereira": "ALA0149",
-    "Jaqueline Santos da Silva": "FATS5063",
-    "Jean dos Santos Carvalho Goes": "FATS4969",
-    "Jean Moreira Lins": "MAN-40233",
-    "Jeane Cerqueira Ferreira": "FATS4794",
-    "Jeane Lima dos Santos": "FATS5216",
-    "Jeanildo de Aragão Alves": "FATS5026",
-    "Jeferson Navarro": "FATS5046",
-    "Jefferson Leite de Jesus": "FATS4955",
-    "Jefté Goes Salvador Silva": "FATS4838",
-    "Jeilson Soares Cerqueira": "SLEM0049",
-    "Jeovan Moreira dos Reis": "FATS4234",
-    "Jessica Alves Dutra": "FATS5222",
-    "Jéssica Franco Freitas Macena": "FATS5219",
-    "Jéssica Queli Santos Santana Nunes": "FATS5015",
-    "Jessiele Caroline Santos Santana Nunes": "FATS4996",
-    "Jhonatan Filippe Alves Macedo": "FATS5140",
-    "Jhonne Elson Queiroz Moreira": "FATS4644",
-    "Joab Lima Alves": "FATS4723",
-    "Joacy Marley Queiroz Mota": "FATS4844",
-    "Joane de Jesus Araújo": "FATS5057",
-    "João Batista Moura Santos": "FATS3163",
-    "João Fernando Souza Flores Filho": "ALA271",
-    "João Gabriel Ferreira Vitório": "FATS4672",
-    "João Gabriel Santos de Souza": "ALA209",
-    "João Garcia da Mota": "QTEC10001",
-    "João Guilherme Lisboa Moreira": "FATS4991",
-    "João Marcos Araujo Pereira": "FATS4028",
-    "João Marcos Xavier Matos": "ALA0177",
-    "João Paulo Dias da Silva Munck": "EAD118",
-    "João Valter Batista Santos Filho": "FATS4727",
-    "João Vitor Ferreira Matos": "FATS4981",
-    "João Vitor Merlo": "096EAD",
-    "João Vitor Santos Silva": "ALA228",
-    "Joce Macedo Ramos": "FATS3281",
-    "Jociel Alves de Jesus": "FATS4831",
-    "Joeli Rodrigues da Hora": "254218",
-    "Joéliton Santos Neri": "FATS8640",
-    "Joice Oliveira de Jesus Bastos": "ALA0114",
-    "Joilson Garcia da Mota": "FATS4606",
-    "Jonatah Nery de Carvalho": "432158",
-    "Jonatas Mendes dos Santos": "FATS5089",
-    "Jones Emanuel dos Santos Junior": "EMI318",
-    "Jorgeana Shirley dos Santos": "FATS5067",
-    "Jorgevany Almeida Santos": "REG145",
-    "José Ademar da Silva de Souza Junior": "FATS5038",
-    "Jose Antonio de Oliveira Fonseca": "FATS4713",
-    "José Batista de Macedo Júnior": "FATS4798",
-    "José Benedito de Lima": "FATS3033",
-    "José da Costa Lima Neto": "FATS3598",
-    "JOSE DOMINGOS NUNES DOS SANTOS": "FATS5040",
-    "José Eliseu Araújo Damião": "FATS5097",
-    "José Fabricio Oliveira de Santana": "FATS5073",
-    "José Luis da Silva Rocha": "REG213",
-    "José Marciel Reis Mascarenhas": "VEST187",
-    "Jose Mario de Jesus Pinheiro": "FATS5163",
-    "José Milton Vitorino dos Reis": "FATS4482",
-    "José Vagner de Souza Batista": "FATS4814",
-    "José Vital de Souza Filho": "CAM 075",
-    "Josefa Fagner dos Santos": "FATS5033",
-    "Joselia Lima de Sena Alves": "FATS5052",
-    "Josenildo Macêdo Oliveira": "FATS5170",
-    "Josete Oliveira Carvalho": "FATS5042",
-    "Josi dos Anjos Silva": "FATS4520",
-    "Josilene da Silva de Jesus": "FATS5044",
-    "Josimary Kelly Amado Santos": "ALA270",
-    "Josue dos Santos Souza": "ALA224",
-    "Josué Leite Conceição": "FATS3309",
-    "Josué Oliveira de Araujo": "FATS4804",
-    "Jozan dos Santos Barbosa": "SOLD043",
-    "Juciara Pedreira de Jesus Freitas": "FATS4586",
-    "Jucinaldo Cardoso dos Reis": "FATS4382",
-    "Julia dos Anjos Costa": "FATS4086",
-    "Júlia Oliveira Cordeiro": "FATS4477",
-    "Juliana Santos da Silva": "FATS5148",
-    "Juliana Silva Bastos": "FATS5041",
-    "Juliana Vieira Santos Pereira": "SECBA0012",
-    "Juracy Oliveira Cardoso": "FATS5008",
-    "Justino Neves de Jesus Neto": "FATS4542",
-    "Karina Casola Fernandes": "EAD023",
-    "Karine das Neves Paixão Silva": "FATS3863",
-    "Karoline Conceicao da Fonseca Santos": "SLEM718",
-    "Karolyne Mota Gomes": "FATS4770",
-    "Kelly Dourado Rodrigues": "FATS72479",
-    "Kleber Bomfim de Oliveira": "FATS4761",
-    "Laecio dos Santos Teixeira": "FATS4989",
-    "Laize Lourene Reis Bispo Silva": "FATS5230",
-    "Laís Leão Sampaio Leite": "FATS5165",
-    "Lais Lorena Ribeiro": "ALA210",
-    "Layla de Oliveira Pires Aquino": "CAM469",
-    "Leandro dos Santos Viana": "FATS5218",
-    "Leandro Neves Alves": "LNA0324",
-    "Leandro Silva Costa": "FATS5064",
-    "Leda dos Santos Souza": "FATS1575",
-    "Leilane Ferreira Santos": "FATS5207",
-    "Leiliane Vieira Souza": "FATS5182",
-    "Leniel Oliveira dos Santos": "ALA223",
-    "Leonard Fernandes e Silva": "ALA183",
-    "Leonardo Andrade Souza": "FATS5096",
-    "Leonardo Argolo dos Santos": "FATS5036",
-    "Leonardo da Costa Lins": "ALA125",
-    "Leonardo Silva Pinto": "FATS4718",
-    "Leonardo Alves Moreira": "FATS5251",
-    "Leonice Nascimento Santiago": "FATS4961",
-    "Leticia Rodrigues Pereira de Santana": "FATS4962",
-    "Létícia Rosa de Jesus": "FATS4982",
-    "LÍBIA XIMENES CABRAL MARTINS": "ALA0023",
-    "Lidiane de Jesus Freitas": "FATS4250",
-    "Liliane Ribeiro dos Santos": "FATS99963",
-    "Liliane Ribeiro dos Santos Fernandes": "ALA253",
-    "Lenise Cerqueira Azevedo": "FATS5246",
-    "Lindinéia Gomes Bastos": "CALC1235",
-    "Lindomar Carlos Sodré da Silva": "FATS3667",
-    "Lindsei Oliveira Machado": "FATS5018",
-    "Lívia Graziele Gomes Ramos da Silva": "MAN-40087",
-    "Livia Suely Silva Souza": "FATS4152",
-    "Liziane da Silva Carneiro": "FATS5070",
-    "Luan Guimarães da Silva": "FATS4810",
-    "Luana Moura Silva": "FATS5123",
-    "Luana Silva dos Santos": "FATS5024",
-    "Luana Besserra de Oliveira Silva": "FATS5252",
-    "Lucas Cauã de Souza Mota": "FATS4829",
-    "Lucas da Glória Oliva Costa": "FATS5138",
-    "Lucas Moreira Reis": "FATS4976",
-    "Lucas Porto Assunção": "FATS3968",
-    "Lucas Santos Brandão": "FATS5107",
-    "Lucas Silva Sampaio": "ALA237",
-    "Lucas Soares Santos": "FATS566",
-    "Lucas Silva Barreto": "FATS5259",
-    "Luciana Cassia Goes Pereira": "ALA285",
-    "Luciana dos Santos Silva Marques": "FATS4843",
-    "Luciana Maria Limeira dos Santos": "CALC1233",
-    "Luciana Mendes Brito Vidal": "SECBA101",
-    "Luciana Santos Nobre": "FATS4158",
-    "Luciano Santos Ribeiro": "AUTOMO24",
-    "Luciélia dos Santos Novaes": "CALC1243",
-    "Lucineide Miranda Silva Araújo": "FATS4537",
-    "Lucio Roberto Severo Rosas": "ALA0020",
-    "Lucivânia Silva Carneiro de Cintra": "FATS4274",
-    "Luidivan Rodrigues Alves": "FATS3230",
-    "Luis Fabio Santos da Silva": "ALA238",
-    "Luis Tertuliano Silva de Souza": "CAM 347",
-    "Luiz Carlos Campos Torres": "EAD922",
-    "Luiz Eduardo Araujo Machado": "FATS4827",
-    "Luiz Eduardo Batista Barreto Junior": "FATS4020",
-    "Luize Muricy dos Santos Vieira": "FATS4851",
-    "Lumma da Silva Borges": "FATS4578",
-    "Luziete Moreira Santos": "FATS5072",
-    "Luzimary Carneiro de Lima": "FATS5132",
-    "Magna Maria Lima": "FATS5091",
-    "Magno Santana Morais": "FATS999143",
-    "Maiara Argolo Negromonte": "FATS4367",
-    "Maiara de Jesus Araújo": "FATS5031",
-    "Maicon Luiz Muniz da Silva": "FATS5013",
-    "Maida Santos Alcântara": "FATS5174",
-    "MANOEL DAMASIO ALVES": "FATS5034",
-    "Manoel Gustavo Souza de Almeida Pina": "MGSAP068",
-    "Manoel Hito Sampaio Mascarenhas": "CALC1272",
-    "Manoel Serafim da Silva Neto": "FATS7854",
-    "Manoela Trabuco de Queiroz": "FATS5151",
-    "Marcello Oliveira Coelho Silva": "FATS5066",
-    "Marcelo de Vasconcelos Pereira": "FATS4741",
-    "Marcelo dos Santos Santana": "FATSI96180",
-    "Marcelo Luis Moreira Sousa": "FATS987563",
-    "Marcelo Márcio de Oliveira Ferreira": "11208401",
-    "Marcelo Santana Lacerda": "SNSUD343",
-    "Marcilio Aquino Marques": "FATS5201",
-    "Márcio Lima Carneiro de Oliveira": "FATS4813",
-    "Marco Antonio Maia Santos": "FATS4992",
-    "Marcos Antônio Vieira Costa": "FATS5128",
-    "Marcos Augusto de Jesus Souza": "FATS4392",
-    "Marcos Cesar Nunes Laranjeiras Filho": "MCNLF-038",
-    "Marcos Davi Barbosa de Oliveira": "FATS3198",
-    "Marcos de Souza Simões": "FATS4671",
-    "Marcos Paulo Araujo Santiago": "FATS2801",
-    "Marcos Teixeira Quadro": "FATS4050",
-    "Marcos Vinicius Cerqueira Santos": "ALA240",
-    "Marcos Vinicius de Oliveira Santos": "FATS4272",
-    "Marcos Vinicius Petri": "EAD691",
-    "Maria das Graças Oliveira Lira": "FATS4325",
-    "Maria Do Carmo Souza Santos": "ALA190",
-    "Maria Fernanda Menezes de Oliveira de Souza": "CAM470",
-    "Maria Gilcilene Maciel Rocha": "FATS5055",
-    "Maria Izabel Cruz Alves Simões": "FATS5113",
-    "Maria Janaina Daltro Alves": "FATS3901",
-    "Maria Mariluce Vitalino Santos": "ALA203",
-    "Mariana do Rosário Liger": "ALA235",
-    "Mariana Moura Pinheiro": "FATS4975",
-    "Mariana Torres Uchôa": "EAD03",
-    "Marileia Araujo da Silva": "FATS3072",
-    "Marilene Santos de Jesus Lins": "FATS4512",
-    "Marilia Neri Porto": "FATS4834",
-    "Marina Ane Gomes Cordeiro": "FATS5220",
-    "Marina Brayner dos Santos": "ALA248",
-    "Mario Andre Correia Ribeiro": "FATS5121",
-    "Marisete Kniess Adriano": "FATS045",
-    "Mariza de Oliveira Conceição Bela": "FATS4964",
-    "Marlangela Santos Cunha": "FATS5005",
-    "Marlon Nunes Couto": "FATS5210",
-    "Marta Farias Almeida da Silva": "FATS5007",
-    "Mateus de Santana Souza": "FATS4150",
-    "Matheus Araujo de Assis": "FATS3332",
-    "Matheus Barreto Ribas": "12275752",
-    "Matheus da Silva Teixeira": "FATS4263",
-    "Matheus de Oliveira": "EAD091",
-    "Matheus Nunes Menezes": "ALA216",
-    "Mathias de Oliveira Carneiro": "FATS5192",
-    "Mauricio de Almeida Silva": "FATS4568",
-    "Mauricio Cruz de Fontes": "FATS5256",
-    "Maurino Candido de Medeiros": "FATS3287",
-    "Maxuel Carlos de Melo": "FATS3359",
-    "Mayk Fernandes Lima da Silva": "FATS5003",
-    "Meirise Araújo dos Santos Silva": "FATS4997",
-    "Mennandro Menezes de Oliveira": "FATS1703",
-    "Merilin Gomes de Oliveira Moreira": "FATS4726",
-    "Michelle Sousa de Freitas": "FATS5117",
-    "MIGUEL DA SILVA BASTOS": "FATS5043",
-    "MILENA CORDEIRO DA SILVA": "ALA0039",
-    "Milena Fonsêca Rios Araújo": "FATS5179",
-    "Milena Ribeiro dos Santos": "NGE99",
-    "Milenna Santos Silva": "FATS3966",
-    "Millena Pereira Brito": "FATS4974",
-    "Mirela Macedo Sandes": "FATS4730",
-    "Mirian Maria Araújo": "FATS5144",
-    "Moisés Lima Santos": "80993",
-    "Murilo Gomes Santana": "FATS5211",
-    "Nadja Rita Santos Cezar": "FATS5152",
-    "Naila Naja Silva Soares": "FATS5116",
-    "Natália Campbell Correa": "58086",
-    "Natalia Cristina Amorim Nascimento": "FATS3128",
-    "Natalicio Diego da Silva": "FATS5118",
-    "Natanael do Nascimento Pereira Neto": "ALA234",
-    "Nathanael Pereira de Oliveira": "FATS5095",
-    "Nayara Oliveira de Lima": "ALA297",
-    "Nayara Santos Queiroz": "ADM01",
-    "Neidson Santana de Souza": "FATS3967",
-    "Nilo Dantas da Silva": "FATS5021",
-    "Norman Bitencourt da Silva Montenegro": "ALA296",
-    "Nubia Oliveira da Silva": "FATS4024",
-    "Nubia Viana Cardoso Leal": "FATS5130",
-    "Olandiara de Aragão dos Santos": "GES0751",
-    "Osny Dantas de Oliveira Silva": "EAD007",
-    "Osvaldo da Silva Neto": "009EAD",
-    "Otávio Teixeira Pinto": "FATS016",
-    "Ozair Santos Lima": "FATS4608",
-    "Pablo Cruz de Santana": "ALA0155",
-    "Pâmela Villare Fernandes Fonseca": "FATS4258",
-    "Patricia Claudia da Silva": "FATS5119",
-    "Patrícia Cristiane Alcarria Martins": "FATS1927",
-    "Patricia dos Santos": "NOAVIRT050",
-    "PATRICIA REIS CALASANS": "PRC0309",
-    "Patrícia Silva das Merces": "FATS5129",
-    "Paulo Ferreira da Costa Neto": "ALA258",
-    "Paulo Sergio da Silva Oliveira Junior": "FATS5142",
-    "Paulo Victor Aragão dos Santos": "FATS5135",
-    "Pedro Carneiro de Oliveira Filho": "FATS5235",
-    "Pedro Geraldo Correia da Silva": "3",
-    "Pedro Henrique Almeida dos Santos Alves": "NOAVIRT033",
-    "Pedro Ivo Santos Furtado": "MAN40106",
-    "Pedro Kleber Matos de Araujo": "FATS4064",
-    "Pedro Lopes Batista Neto": "ALA283",
-    "Pedro Raimundo Soares da Conceição": "FATS1634",
-    "Phillipe Ramos Brandão": "FATS4262",
-    "Poliana Silva Araújo": "MAT2304",
-    "Priscila Mikulski Guedes": "PMG0194",
-    "Priscila Natividade de Jesus": "FATS5017",
-    "Priscila Saturnino dos Santos Brandão": "FATS5022",
-    "Priscila Souza Azevedo": "FATS5098",
-    "Priscilla Araujo Vieira": "FATS4849",
-    "Quécia Ferreira de Oliveira": "FATS4799",
-    "Quelen Priscila Santana da Silva Santos": "FATS4967",
-    "Quelme de Jesus Silva Brito": "FATS5016",
-    "Rachell Adrielle Bomfim Reis Santos": "ALA272",
-    "Rafael Brito Teixeira": "SNSUD387",
-    "Rafael Nascimento Caldeira": "ALA287",
-    "Rafael Parenti": "EAD085",
-    "Rafaella Braga Santos": "FATS4999",
-    "Rafaella Cerqueira Oliveira Souza": "FATS5075",
-    "Raphaela Santana Melo Araujo": "FATS5131",
-    "Raul Dauram de Vasconcelos": "NORTE349",
-    "Rayanna Rodrigues Evangelho": "FATS5056",
-    "Regis Marsico Cayret": "FATS4342",
-    "Regivaldo Francisco da Silva Junior": "FATS5159",
-    "Reinalda dos Santos Ramos": "FATS4983",
-    "Reinaldo Silva de Sena": "FATS4970",
-    "Renaldo dos Santos Ramos": "ALA229",
-    "Renan do Carmo Araujo": "ALA275",
-    "Renata da Purificação Pinto": "FATS3363",
-    "Renato Buranelli": "ALA0147",
-    "Renildo da Silva Santos": "FATS5160",
-    "Rescima Fernanda Novais dos Santos": "FATS4993",
-    "Rhavi Gonçalves de Borda": "FATS071",
-    "Rita Urânia Silva Santos": "FATS5109",
-    "Roberta Silva Pereira": "FATS4292",
-    "Roberto Carrion Eça da Silva": "PRON8579",
-    "Robson Carvalho Freitas": "FATS4802",
-    "Rodrigo Roberto Dias": "EAD024",
-    "Rogério Cerqueira Lima": "FATS1667",
-    "Rogerio da Silva Fiscina": "SNSUD216",
-    "Romário Andrade Rodrigues": "FATS3278",
-    "Romulo Carvalho de Souza Vieira": "ALA277",
-    "Romulo Lopes Souza": "FATS1708",
-    "Ronaldo Soares Monteiro": "FATS5169",
-    "Ronei Vagner Alves": "EAD038",
-    "Roquelane Ramos da Conceição": "FATS5030",
-    "Rosenilson Lima Macêdo": "FATS1709",
-    "Rosilene da Silva Dias": "FATS4179",
-    "Rosimeire de Vasconcelos": "ALA0113",
-    "RUBENS OLIVEIRA LIMA JUNIOR": "FATS5035",
-    "Rudney Oliveira de Freitas": "NORTE 527",
-    "Sabrina Bet": "EAD0055",
-    "Samer Magaldi Almerindo": "EAD054",
-    "Samuel da Silva Cunha": "FATS5161",
-    "Saolo Santos Souza": "ALA246",
-    "Sergio Henrique Ferreira Martins": "FATS3912",
-    "Shirlei Lima dos Anjos": "ALA197",
-    "Sidnei dos Santos Sacramento": "ALA0076",
-    "Sidney Conceição Andrade": "CALC1246",
-    "Sidney da Silva Jesus": "ALA208",
-    "Silas Pereira Santos": "ALA128",
-    "Silas Santos Carvalho": "FATS4340",
-    "Sillas Leal Castro Silva": "FATS3399",
-    "Silmara Simas dos Santos": "FATS5202",
-    "Silvano Pinto Dias": "FATS3256",
-    "Silvoney Santos Couto": "CALC1252",
-    "Simone de Almeida Silva": "FATS5227",
-    "Simone dos Santos do Amaral": "FATS4971",
-    "Sirlex de Almeida Figueredo": "FATS4776",
-    "Sócrates Sousa Queiroz": "FATS3042",
-    "Solismar De Souza Aroeira": "FATS5134",
-    "Sonia de Jesus Oliveira": "FATS5258",
-    "Stefanie Daysy Sipert Miranda": "NOAVIRT03",
-    "Sterfany da Silva Almeida": "FATS5059",
-    "Sueli Oliveira Costa": "FATS4956",
-    "Sueli Vieira Leão": "SVL8192",
-    "SUNANDA MARIA RODRIGUES BATISTA": "ALA0063",
-    "Suran Oliveira Messias": "FATS4600",
-    "Suzanna Raquel Ramos Lima": "ALA256",
-    "Tainá Melo de Oliveira": "FATS4797",
-    "Talita Emanuele Abreu da Silva": "FATS5104",
-    "Tamara Eloy Caldas": "FATS4400",
-    "Tânia Maria Cardoso Cerqueira": "TMCC466",
-    "Tania Renilda Santos Torres": "TRST009",
-    "Tarcisio Marques Santos de Souza": "FATS3909",
-    "Tassio de Freitas Ferreira": "FATS3335",
-    "Tayane de Jesus Nunes": "TJN026",
-    "Tércio Borges Ribeiro": "EAD094",
-    "Thaiany Santana da Cruz Nunes": "FATS4963",
-    "Thais Santana Barreto": "NOAVIRT035",
-    "Thiago Alves Carneiro": "FATS4800",
-    "Thiago Jesus de Oliveira Trindade": "ALA0179",
-    "Thiago Mendes Paixão Melo": "FATS4688",
-    "Thiago Vinicius Barbosa Menezes Sales": "ALA0012",
-    "Thomas Santos da Silva": "FATS4615",
-    "Tiago Araujo Freaza dos Santos": "FATS5058",
-    "Tiago Araujo Matos": "FATS5196",
-    "Tiago da Silva Oliveira": "FATS4661",
-    "Tiago Luis Santos Silva": "ALA213",
-    "Tiago Martins dos Santos de Jesus": "ALA233",
-    "TIAGO MEDRADO COSTA": "FATSI9613",
-    "Tiago Santana Costa": "FATS5253",
-    "Tony Clériston Oliveira dos Santos": "FATS4575",
-    "Topson Andrade dos Santos": "SECBA0060",
-    "Ualison Pereira Roque Freitas": "FATS5100",
-    "Uallas Henrique de Oliveira de Brito": "030EAD",
-    "Uerles Bastos de Menezes": "FATS4978",
-    "Uilberton de Oliveira Soares": "UOS0253",
-    "Vando Silva Bizerra": "FATS3378",
-    "Vanessa de Oliveira Debiasi": "FATS072",
-    "Vanessa Silva Lima": "FATS4817",
-    "Vanessa Vilanova Fraga Vieira": "CAM 267",
-    "Valdiney Justiniano dos Santos": "FATS5228",
-    "Vânia Lago Guimarães Correia": "FATS3925",
-    "Velluma Cerqueira Invenção de Oliveira": "FATS5167",
-    "Victor da Silva Pimenta": "FATS4973",
-    "Victor Lima Cardoso": "ALA0058",
-    "Victor Moak da Silva Souza": "FATS4854",
-    "Victor Montes Fernandes Pereira": "ALA242",
-    "Victor Oliveira Mascarenhas": "FATS4636",
-    "Vinicius Camelo Molinari": "slem222",
-    "Vinicius Lima Cardoso": "NGE70110",
-    "Vinícius Ornellas de Araújo": "ALA239",
-    "Viviane Rafael Ferreira": "FATS5102",
-    "Wagner José Mezoni": "004EAD",
-    "Waldemir Pereira Santiago": "FATS5145",
-    "Wanna Nascimento Macedo": "FATS5011",
-    "Weiller Queiroz Silva": "FATS5068",
-    "Welber Lima de Brito Guimarães": "NORTE277",
-    "Welder Nascimento dos Santos": "FATS5048",
-    "Welder Nascimento dos Santos": "FATS5081",
-    "Welington Salomão Pereira": "FATS4832",
-    "Wesley Moura da Silva Pereira": "FATS4536",
-    "Wguaracy Araujo Santana": "FATS4300",
-    "William Martins Lopes Ribeiro": "FATS4647",
-    "Williane Santana Marques": "FATS5076",
-    "Wilton Silva Souza": "ALA198",
-    "Yanes Costa Nascimento": "FATS4968",
-    "Yanna Carvalho de Assis": "FATS3634",
-    "Zilmaura Santos Daltro": "FATS4775"
-};
-
-// Carregar dados do localStorage e fazer merge com os dados base
-// Isso garante que professores cadastrados via painel admin sejam mantidos
-// ATUALIZADO: Agora sincroniza com Firebase Firestore
-(async function initializeDocentesCodprof() {
-    try {
-        console.log('[DOCENTES] 🔄 Inicializando sistema de professores com Firestore...');
-        
-        // Tentar carregar dados do Firestore primeiro
-        let firestoreData = null;
-        if (typeof loadTeachersFromFirestore === 'function' && typeof firestore !== 'undefined' && firestore) {
-            try {
-                firestoreData = await loadTeachersFromFirestore();
-            } catch (error) {
-                console.warn('[DOCENTES] ⚠️ Erro ao carregar do Firestore, usando fallback:', error);
-            }
-        }
-        
-        // Se temos dados do Firestore, usá-los como fonte principal
-        if (firestoreData && Object.keys(firestoreData).length > 0) {
-            console.log(`[DOCENTES] ✅ Carregados ${Object.keys(firestoreData).length} professores do Firestore`);
-            window.docentesCodprof = firestoreData;
-            
-            // Atualizar localStorage como cache
-            localStorage.setItem("docentesCodprof", JSON.stringify(window.docentesCodprof));
-        } else {
-            // Fallback: usar localStorage ou dados base
-            console.log('[DOCENTES] 📦 Firestore vazio, usando localStorage/dados base');
-            const savedMapping = localStorage.getItem("docentesCodprof");
-            
-            if (savedMapping) {
-                const parsed = JSON.parse(savedMapping);
-                // Merge: mantém os novos do localStorage, adiciona os que estão apenas no código
-                for (const [name, fats] of Object.entries(window.docentesCodprof)) {
-                    if (!parsed[name]) {
-                        parsed[name] = fats;
-                    }
-                }
-                window.docentesCodprof = parsed;
-            }
-            
-            // Migrar dados para Firestore se ele estiver disponível
-            if (typeof saveTeachersToFirestore === 'function' && typeof firestore !== 'undefined' && firestore) {
-                console.log('[DOCENTES] 📤 Migrando dados iniciais para Firestore...');
-                try {
-                    await saveTeachersToFirestore(window.docentesCodprof);
-                    console.log('[DOCENTES] ✅ Migração para Firestore concluída!');
-                } catch (error) {
-                    console.warn('[DOCENTES] ⚠️ Erro ao migrar para Firestore:', error);
-                }
-            }
-            
-            // Salvar no localStorage
-            localStorage.setItem("docentesCodprof", JSON.stringify(window.docentesCodprof));
-        }
-        
-        console.log('[DOCENTES] ✅ Mapeamento docentesCodprof inicializado:', Object.keys(window.docentesCodprof).length, 'professores');
-        
-        // Ativar sincronização em tempo real se disponível
-        if (typeof syncTeachersRealtime === 'function' && typeof firestore !== 'undefined' && firestore) {
-            console.log('[DOCENTES] 🔄 Ativando sincronização em tempo real...');
-            window.teachersSyncUnsubscribe = syncTeachersRealtime((updatedData) => {
-                console.log('[DOCENTES] 🔄 Dados atualizados via sincronização em tempo real');
-                window.docentesCodprof = updatedData;
-                localStorage.setItem("docentesCodprof", JSON.stringify(updatedData));
-                
-                // Notificar outras partes do sistema se necessário
-                if (typeof updateTeachersList === 'function') {
-                    updateTeachersList();
-                }
-            });
-            console.log('[DOCENTES] ✅ Sincronização em tempo real ativada!');
-        }
-        
-    } catch (error) {
-        console.error('[DOCENTES] ❌ Erro ao inicializar docentesCodprof:', error);
-        // Em caso de erro, garante que pelo menos os dados base estejam salvos
-        localStorage.setItem("docentesCodprof", JSON.stringify(window.docentesCodprof));
-    }
-})();
-
-// Alias para compatibilidade com código existente
-const docentesCodprof = window.docentesCodprof;
-
 /**
  * Verifica se um professor existe no mapeamento docentesCodprof.
  * Se não existir e o codprof for fornecido, adiciona automaticamente.
@@ -999,7 +167,7 @@ const docentesCodprof = window.docentesCodprof;
  * @returns {boolean} - true se o professor existe (ou foi adicionado), false caso contrário
  */
 function ensureTeacherExists(professorName, codprof) {
-    if (!professorName || typeof professorName !== 'string') {
+    if(!professorName || typeof professorName !== 'string') {
         console.warn('[DOCENTES] Nome do professor inválido:', professorName);
         return false;
     }
@@ -1007,18 +175,18 @@ function ensureTeacherExists(professorName, codprof) {
     const normalizedName = professorName.trim();
     
     // Verifica se o professor já existe
-    if (window.docentesCodprof[normalizedName]) {
+    if(window.docentesCodprof[normalizedName]) {
         console.log(`[DOCENTES] Professor "${normalizedName}" já existe com código: ${window.docentesCodprof[normalizedName]}`);
         return true;
     }
 
     // Se o codprof foi fornecido, adiciona o professor
-    if (codprof && typeof codprof === 'string') {
+    if(codprof && typeof codprof === 'string') {
         const normalizedCodprof = codprof.trim().toUpperCase();
         
         // Verifica se o codprof já está em uso por outro professor
         for (const [existingName, existingCodprof] of Object.entries(window.docentesCodprof)) {
-            if (existingCodprof === normalizedCodprof) {
+            if(existingCodprof === normalizedCodprof) {
                 console.warn(`[DOCENTES] Código ${normalizedCodprof} já está em uso pelo professor: ${existingName}`);
                 return false;
             }
@@ -1033,7 +201,7 @@ function ensureTeacherExists(professorName, codprof) {
             console.log(`[DOCENTES] ✅ Professor "${normalizedName}" adicionado com código: ${normalizedCodprof}`);
             
             // Persiste no Firestore
-            if (typeof addOrUpdateTeacherInFirestore === 'function') {
+            if(typeof addOrUpdateTeacherInFirestore === 'function') {
                 addOrUpdateTeacherInFirestore(normalizedName, normalizedCodprof)
                     .then(() => console.log(`[DOCENTES] ✅ Professor "${normalizedName}" salvo no Firestore`))
                     .catch(err => console.error('[DOCENTES] ❌ Erro ao salvar no Firestore:', err));
@@ -1056,7 +224,7 @@ function ensureTeacherExists(professorName, codprof) {
  * @returns {string|null} - Código do professor ou null se não encontrado
  */
 function getTeacherCodprof(professorName) {
-    if (!professorName || typeof professorName !== 'string') {
+    if(!professorName || typeof professorName !== 'string') {
         return null;
     }
     return window.docentesCodprof[professorName.trim()] || null;
@@ -1068,12 +236,12 @@ function getTeacherCodprof(professorName) {
  * @returns {string|null} - Nome do professor ou null se não encontrado
  */
 function getTeacherByCodeprof(codprof) {
-    if (!codprof || typeof codprof !== 'string') {
+    if(!codprof || typeof codprof !== 'string') {
         return null;
     }
     const normalizedCodprof = codprof.trim().toUpperCase();
     for (const [name, code] of Object.entries(window.docentesCodprof)) {
-        if (code === normalizedCodprof) {
+        if(code === normalizedCodprof) {
             return name;
         }
     }

@@ -1,19 +1,39 @@
 /**
  * Teachers Data Module - Gestão de dados de docentes
  * @module teachers-data
+ * 
+ * Este módulo fornece uma interface unificada para acessar dados de professores.
+ * Os dados são carregados do localStorage/Firestore (via window.docentesCodprof).
+ * 
+ * NOTA: Os dados reais dos professores são gerenciados pelo sistema de sincronização
+ * do Firebase Firestore. Este módulo apenas provê funções utilitárias de acesso.
  */
 
-// Mapa de docentes (DOCENTE -> CODPROF)
-const TEACHERS_CODPROF = {
-  "Adalberto da Silva Correia": "FATS1578",
-  "Adeildo Apolonio da Silva Junior": "FATS4451",
-  "Aderlan dos Santos": "NORTE233",
-  // ... (continua com todos os professores)
-  // Nota: Por limitação de espaço, incluí apenas uma amostra
-  // O arquivo real deve conter todos os 600+ professores
-};
-
 const TeachersData = {
+  /**
+   * Obtém o mapeamento atual de professores
+   * @returns {Object} Mapeamento nome -> código
+   * @private
+   */
+  _getMapping() {
+    // Prioridade: window.docentesCodprof (carregado do Firebase/localStorage)
+    if (typeof window !== 'undefined' && window.docentesCodprof) {
+      return window.docentesCodprof;
+    }
+    
+    // Fallback: tentar carregar do localStorage
+    try {
+      const stored = localStorage.getItem('docentesCodprof');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (error) {
+      console.warn('[TeachersData] Erro ao carregar dados do localStorage:', error);
+    }
+    
+    return {};
+  },
+
   /**
    * Obtém código de professor pelo nome
    * @param {string} teacherName 
@@ -21,7 +41,8 @@ const TeachersData = {
    */
   getTeacherCode(teacherName) {
     if (!teacherName || typeof teacherName !== 'string') return null;
-    return TEACHERS_CODPROF[teacherName] || null;
+    const mapping = this._getMapping();
+    return mapping[teacherName.trim()] || null;
   },
 
   /**
@@ -31,7 +52,9 @@ const TeachersData = {
    */
   getTeacherName(code) {
     if (!code || typeof code !== 'string') return null;
-    const entry = Object.entries(TEACHERS_CODPROF).find(([_, c]) => c === code);
+    const mapping = this._getMapping();
+    const normalizedCode = code.trim().toUpperCase();
+    const entry = Object.entries(mapping).find(([_, c]) => c === normalizedCode);
     return entry ? entry[0] : null;
   },
 
@@ -40,7 +63,17 @@ const TeachersData = {
    * @returns {Array<string>}
    */
   getAllTeachers() {
-    return Object.keys(TEACHERS_CODPROF).sort();
+    const mapping = this._getMapping();
+    return Object.keys(mapping).sort();
+  },
+
+  /**
+   * Obtém total de professores cadastrados
+   * @returns {number}
+   */
+  getTeacherCount() {
+    const mapping = this._getMapping();
+    return Object.keys(mapping).length;
   },
 
   /**
@@ -51,10 +84,11 @@ const TeachersData = {
   searchTeachers(searchTerm) {
     if (!searchTerm || typeof searchTerm !== 'string') return [];
     
+    const mapping = this._getMapping();
     const term = searchTerm.toLowerCase().trim();
     const results = [];
 
-    for (const [name, code] of Object.entries(TEACHERS_CODPROF)) {
+    for (const [name, code] of Object.entries(mapping)) {
       if (
         name.toLowerCase().includes(term) || 
         code.toLowerCase().includes(term)
@@ -72,31 +106,25 @@ const TeachersData = {
    * @returns {boolean}
    */
   isValidTeacher(teacherName) {
-    return teacherName in TEACHERS_CODPROF;
+    if (!teacherName || typeof teacherName !== 'string') return false;
+    const mapping = this._getMapping();
+    return teacherName.trim() in mapping;
   },
 
   /**
-   * Adiciona novo professor (runtime)
-   * @param {string} name 
+   * Valida se um código (FATS) existe
    * @param {string} code 
    * @returns {boolean}
    */
-  addTeacher(name, code) {
-    if (!name || !code || typeof name !== 'string' || typeof code !== 'string') {
-      return false;
-    }
-
-    if (TEACHERS_CODPROF[name]) {
-      console.warn(`Professor ${name} já existe`);
-      return false;
-    }
-
-    TEACHERS_CODPROF[name] = code;
-    return true;
+  isValidCode(code) {
+    if (!code || typeof code !== 'string') return false;
+    const mapping = this._getMapping();
+    const normalizedCode = code.trim().toUpperCase();
+    return Object.values(mapping).includes(normalizedCode);
   }
 };
 
-// Exportar
+// Exportar para uso em módulos Node.js (se aplicável)
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { TeachersData, TEACHERS_CODPROF };
+  module.exports = { TeachersData };
 }

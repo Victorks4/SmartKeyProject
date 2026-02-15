@@ -20,13 +20,13 @@ let firebaseInitialized = false;
 function initializeFirebase() {
   try {
     // Verificar se Firebase SDK está disponível
-    if (typeof firebase === 'undefined') {
+    if(typeof firebase === 'undefined') {
       console.error(' Firebase SDK não carregado');
       return false;
     }
 
     // Verificar se Firebase já foi inicializado
-    if (!firebase.apps.length) {
+    if(!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
       console.log(' Firebase inicializado com sucesso');
     }
@@ -36,7 +36,7 @@ function initializeFirebase() {
     
     // Testar conexão
     database.ref('.info/connected').on('value', (snapshot) => {
-      if (snapshot.val() === true) {
+      if(snapshot.val() === true) {
         console.log(' Conectado ao Firebase');
       } else {
         console.warn(' Desconectado do Firebase');
@@ -53,7 +53,7 @@ function initializeFirebase() {
 }
 
 // Tentar inicializar quando o script carregar
-if (typeof firebase !== 'undefined') {
+if(typeof firebase !== 'undefined') {
   initializeFirebase();
 } else {
   // Se Firebase não estiver disponível ainda, aguardar
@@ -72,19 +72,19 @@ function saveDataToFirebase(date, shift, data) {
     console.log(' FIREBASE: Tentando salvar dados', {date, shift, dataLength: data ? data.length : 'undefined'});
     
     // Verificar se Firebase está inicializado
-    if (!isFirebaseReady()) {
+    if(!isFirebaseReady()) {
         console.error(' FIREBASE: Database não inicializado');
         return Promise.reject('Database não inicializado');
     }
     
     // Verificar se data é válido
-    if (!data || !Array.isArray(data)) {
+    if(!data || !Array.isArray(data)) {
         console.error(' FIREBASE: Dados inválidos recebidos:', data);
         return Promise.reject('Dados inválidos');
     }
     
     // Verificar se data não está vazio
-    if (data.length === 0) {
+    if(data.length === 0) {
         console.warn(' FIREBASE: Array vazio recebido - isso pode causar exclusão de dados!');
         console.warn(' FIREBASE: Abortando salvamento para evitar exclusão acidental');
         return Promise.reject('Array vazio - abortando para evitar exclusão');
@@ -92,7 +92,7 @@ function saveDataToFirebase(date, shift, data) {
     
     // Limpar dados removendo valores undefined antes de salvar
     const cleanData = data.map(item => {
-        if (!item || typeof item !== 'object') {
+        if(!item || typeof item !== 'object') {
             console.warn(' FIREBASE: Item inválido encontrado:', item);
             return null;
         }
@@ -101,7 +101,7 @@ function saveDataToFirebase(date, shift, data) {
         
         // Copiar todas as propriedades, substituindo undefined por string vazia
         Object.keys(item).forEach(key => {
-            if (item[key] === undefined || item[key] === null) {
+            if(item[key] === undefined || item[key] === null) {
                 cleanItem[key] = '';
             } else {
                 cleanItem[key] = item[key];
@@ -115,7 +115,7 @@ function saveDataToFirebase(date, shift, data) {
     console.log(' FIREBASE: Quantidade de registros válidos:', cleanData.length);
     
     // Verificar novamente se ainda temos dados válidos após limpeza
-    if (cleanData.length === 0) {
+    if(cleanData.length === 0) {
         console.error(' FIREBASE: Nenhum dado válido após limpeza - abortando');
         return Promise.reject('Nenhum dado válido após limpeza');
     }
@@ -134,7 +134,7 @@ function saveDataToFirebase(date, shift, data) {
 
 // Função para carregar dados do Firebase
 function loadDataFromFirebase(date, shift) {
-    if (!isFirebaseReady()) {
+    if(!isFirebaseReady()) {
         console.error(' FIREBASE: Database não inicializado para carregamento');
         return Promise.reject('Database não inicializado');
     }
@@ -152,7 +152,7 @@ function loadDataFromFirebase(date, shift) {
 function syncDataRealtime(date, shift) {
     console.log(` SYNC: Iniciando sincronização para ${date}/${shift}`);
     
-    if (!isFirebaseReady()) {
+    if(!isFirebaseReady()) {
         console.error(' SYNC: Database não disponível para sincronização');
         return;
     }
@@ -164,31 +164,31 @@ function syncDataRealtime(date, shift) {
         const data = snapshot.val() || [];
         console.log(`� SYNC [ADMIN]: Dados recebidos do Firebase para ${date}/${shift}:`, data);
         
-        if (typeof dataByDateAndShift !== 'undefined' && dataByDateAndShift[date]) {
+        if(typeof dataByDateAndShift !== 'undefined' && dataByDateAndShift[date]) {
             const oldData = JSON.stringify(dataByDateAndShift[date][shift] || []);
             const newData = JSON.stringify(data);
             
-            if (oldData !== newData) {
+            if(oldData !== newData) {
                 console.log(` SYNC [ADMIN]: Dados diferentes detectados, atualizando interface...`);
                 
                 // Atualizar estrutura de dados local
-                if (!dataByDateAndShift[date]) {
+                if(!dataByDateAndShift[date]) {
                     dataByDateAndShift[date] = {};
                 }
                 dataByDateAndShift[date][shift] = data;
                 
                 // Atualizar interface se estivermos visualizando esta data/turno
-                if (typeof selectedDate !== 'undefined' && typeof activeShift !== 'undefined') {
-                    if (selectedDate === date && activeShift === shift) {
+                if(typeof selectedDate !== 'undefined' && typeof activeShift !== 'undefined') {
+                    if(selectedDate === date && activeShift === shift) {
                         console.log(` SYNC [ADMIN]: Atualizando tabela para ${date}/${shift}`);
-                        if (typeof updateTable === 'function') {
+                        if(typeof updateTable === 'function') {
                             updateTable();
                         }
                     }
                 }
                 
                 // Disparar evento personalizado para outras partes do sistema
-                if (typeof window !== 'undefined') {
+                if(typeof window !== 'undefined') {
                     window.dispatchEvent(new CustomEvent('firebaseDataUpdated', {
                         detail: { date, shift, data }
                     }));
@@ -202,7 +202,7 @@ function syncDataRealtime(date, shift) {
 
 // Função para parar sincronização
 function stopSyncDataRealtime(date, shift) {
-    if (!isFirebaseReady()) {
+    if(!isFirebaseReady()) {
         console.warn(' SYNC: Database não disponível para parar sincronização');
         return;
     }
@@ -216,7 +216,7 @@ function stopSyncDataRealtime(date, shift) {
 async function loadAllDataForDate(date) {
     console.log(`� Carregando todos os dados para ${date}...`);
     
-    if (!isFirebaseReady()) {
+    if(!isFirebaseReady()) {
         console.error(' FIREBASE: Database não inicializado');
         return {};
     }
@@ -246,7 +246,7 @@ async function loadAllDataForDate(date) {
 function syncTeacherDataRealtime(date, shift) {
     console.log(` [PROFESSOR]: Iniciando sincronização para ${date}/${shift}`);
     
-    if (!isFirebaseReady()) {
+    if(!isFirebaseReady()) {
         console.error(' [PROFESSOR]: Database não disponível para sincronização');
         return;
     }
@@ -258,17 +258,17 @@ function syncTeacherDataRealtime(date, shift) {
         console.log(`� [PROFESSOR]: Dados recebidos do Firebase para ${date}/${shift}:`, data);
         
         // Atualizar dados locais se existir a estrutura
-        if (typeof dataByDateAndShift !== 'undefined') {
-            if (!dataByDateAndShift[date]) {
+        if(typeof dataByDateAndShift !== 'undefined') {
+            if(!dataByDateAndShift[date]) {
                 dataByDateAndShift[date] = {};
             }
             dataByDateAndShift[date][shift] = data;
             
             // Atualizar interface se estivermos no turno correto
-            if (typeof selectedDate !== 'undefined' && typeof activeShift !== 'undefined') {
-                if (selectedDate === date && activeShift === shift) {
+            if(typeof selectedDate !== 'undefined' && typeof activeShift !== 'undefined') {
+                if(selectedDate === date && activeShift === shift) {
                     console.log(` [PROFESSOR]: Atualizando interface para ${date}/${shift}`);
-                    if (typeof loadShiftData === 'function') {
+                    if(typeof loadShiftData === 'function') {
                         loadShiftData(shift);
                     }
                 }
@@ -283,7 +283,7 @@ function syncTeacherDataRealtime(date, shift) {
 async function loadTeacherDataFromFirebase(date) {
     console.log(`� [PROFESSOR]: Carregando dados para ${date}...`);
     
-    if (!isFirebaseReady()) {
+    if(!isFirebaseReady()) {
         console.error(' [PROFESSOR]: Database não disponível');
         return false;
     }
@@ -292,7 +292,7 @@ async function loadTeacherDataFromFirebase(date) {
         const allData = await loadAllDataForDate(date);
         
         // Atualizar estrutura de dados local
-        if (typeof dataByDateAndShift !== 'undefined') {
+        if(typeof dataByDateAndShift !== 'undefined') {
             dataByDateAndShift[date] = allData;
         }
         
@@ -308,13 +308,13 @@ async function loadTeacherDataFromFirebase(date) {
 function initializeFirebaseSync() {
     console.log(' [PROFESSOR]: Inicializando sincronização Firebase...');
     
-    if (!isFirebaseReady()) {
+    if(!isFirebaseReady()) {
         console.error(' [PROFESSOR]: Database não disponível para sincronização');
         return;
     }
     
     // Sincronizar dados para a data atual e turno atual
-    if (typeof selectedDate !== 'undefined' && typeof activeShift !== 'undefined') {
+    if(typeof selectedDate !== 'undefined' && typeof activeShift !== 'undefined') {
         console.log(` [PROFESSOR]: Iniciando sincronização para ${selectedDate}/${activeShift}`);
         
         // Sincronizar todos os turnos da data atual usando a função específica do professor

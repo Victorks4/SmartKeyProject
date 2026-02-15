@@ -27,7 +27,7 @@ const ConstantManager = {
 
 // Função para adicionar novo professor ao mapeamento docentesCodprof
 function addProfessorToMapping(professorName, fast) {
-    if (!professorName || !fast) {
+    if(!professorName || !fast) {
         console.warn('Nome do professor e FAST são obrigatórios para adicionar ao mapeamento');
         return false;
     }
@@ -37,14 +37,14 @@ function addProfessorToMapping(professorName, fast) {
     const normalizedName = professorName.trim();
     
     // Verifica se o professor já existe
-    if (window.docentesCodprof[normalizedName]) {
+    if(window.docentesCodprof[normalizedName]) {
         console.warn(`Professor ${normalizedName} já existe no mapeamento com FAST: ${window.docentesCodprof[normalizedName]}`);
         return false;
     }
     
     // Verifica se o FAST já está sendo usado por outro professor
     for (const [existingName, existingFast] of Object.entries(window.docentesCodprof)) {
-        if (existingFast === normalizedFast) {
+        if(existingFast === normalizedFast) {
             console.warn(`FAST ${normalizedFast} já está sendo usado pelo professor: ${existingName}`);
             return false;
         }
@@ -57,7 +57,7 @@ function addProfessorToMapping(professorName, fast) {
     saveDocentesCodprofToStorage();
     
     // Salva no Firestore
-    if (typeof addOrUpdateTeacherInFirestore === 'function') {
+    if(typeof addOrUpdateTeacherInFirestore === 'function') {
         addOrUpdateTeacherInFirestore(normalizedName, normalizedFast)
             .then(() => console.log(`✅ Professor ${normalizedName} salvo no Firestore`))
             .catch(err => console.error('❌ Erro ao salvar professor no Firestore:', err));
@@ -81,12 +81,12 @@ function saveDocentesCodprofToStorage() {
 function loadDocentesCodprofFromStorage() {
     try {
         const saved = localStorage.getItem('docentesCodprof');
-        if (saved) {
+        if(saved) {
             const savedMapping = JSON.parse(saved);
             // Atualizar window.docentesCodprof com dados do localStorage
             window.docentesCodprof = savedMapping;
             console.log('✅ Mapeamento docentesCodprof carregado do localStorage:', Object.keys(window.docentesCodprof).length, 'professores');
-        } else if (window.docentesCodprof) {
+        } else if(window.docentesCodprof) {
             // Se não há dados salvos mas window.docentesCodprof existe, usar ele
             console.log('✅ Usando mapeamento docentesCodprof de utilis.js:', Object.keys(window.docentesCodprof).length, 'professores');
         }
@@ -103,7 +103,7 @@ window.addNewProfessorToTeacherPanel = function(professorName, fast) {
 // Função para buscar professor por FAST
 window.findProfessorByFast = function(fast) {
     for (const [name, professorFast] of Object.entries(window.docentesCodprof)) {
-        if (professorFast === fast) {
+        if(professorFast === fast) {
             return name;
         }
     }
@@ -123,7 +123,7 @@ window.exportDocentesCodprof = function() {
     console.log(exportCode);
     
     // Copiar para clipboard se disponível
-    if (navigator.clipboard) {
+    if(navigator.clipboard) {
         navigator.clipboard.writeText(exportCode).then(() => {
             console.log(' Código copiado para a área de transferência!');
         }).catch(err => {
@@ -142,17 +142,17 @@ window.addEventListener('storage', function(e) {
         newValue: e.newValue ? 'presente' : 'null'
     });
     
-    if (e.key === 'docentesCodprof') {
+    if(e.key === 'docentesCodprof') {
         console.log(' Detectada atualização no mapeamento docentesCodprof de outra página');
         loadDocentesCodprofFromStorage();
     }
     
-    if (e.key === 'allDateShiftData') {
+    if(e.key === 'allDateShiftData') {
         console.log(' Detectada atualização nos dados de turnos de outra página');
         loadSharedData();
     }
     
-    if (e.key === 'allShiftData') {
+    if(e.key === 'allShiftData') {
         console.log(' Detectada atualização no allShiftData de outra página');
         loadSharedData();
     }
@@ -168,7 +168,7 @@ window.addEventListener('teacherAdded', function(e) {
 window.addEventListener('dataUpdated', function(e) {
     console.log('� Evento dataUpdated recebido:', e.detail);
     
-    if (e.detail && e.detail.type === 'recordUpdated') {
+    if(e.detail && e.detail.type === 'recordUpdated') {
         console.log(' Detectada atualização de registro específico:', e.detail);
         
         // Recarregar dados e atualizar a tabela
@@ -204,7 +204,7 @@ function showUpdateNotification(updateDetail) {
     
     // Remover após 5 segundos
     setTimeout(() => {
-        if (notification.parentNode) {
+        if(notification.parentNode) {
             notification.remove();
         }
     }, 5000);
@@ -232,7 +232,7 @@ function getDataForDate(date) {
     console.log(`[PROFESSOR] ==> getDataForDate chamada para: ${date}`);
     console.log(`[PROFESSOR] ==> dataByDateAndShift[${date}] existe?`, !!dataByDateAndShift[date]);
     
-    if (!dataByDateAndShift[date]) {
+    if(!dataByDateAndShift[date]) {
         console.log(`[PROFESSOR] ==> Criando estrutura vazia para data ${date}`);
         dataByDateAndShift[date] = {
             'manhã': [],
@@ -252,10 +252,10 @@ function convertAdminDataToTeacherFormat(data) {
     for (let date in data) {
         convertedData[date] = {};
         for (let turno in data[date]) {
-            if (Array.isArray(data[date][turno])) {
+            if(Array.isArray(data[date][turno])) {
                 convertedData[date][turno] = data[date][turno].map(item => {
                     // Se está no formato do painel administrativo, converter
-                    if (item.room && item.professorName) {
+                    if(item.room && item.professorName) {
                         return {
                             sala: item.room || 'Sala não especificada',
                             professor: item.professorName || 'Professor não especificado',
@@ -277,7 +277,7 @@ function convertAdminDataToTeacherFormat(data) {
                         };
                     }
                     // Se já está no formato do professor, manter
-                    else if (item.sala && item.professor) {
+                    else if(item.sala && item.professor) {
                         return {
                             ...item,
                             // Adicionar campos do formato admin para compatibilidade
@@ -332,7 +332,7 @@ function getCurrentShiftData() {
     console.log(`[PROFESSOR] ==> dataByDateAndShift completo:`, dataByDateAndShift);
     
     // Validar se selectedDate e activeShift estão definidos
-    if (!selectedDate || !activeShift) {
+    if(!selectedDate || !activeShift) {
         console.error(`[PROFESSOR] ==> ERRO: selectedDate (${selectedDate}) ou activeShift (${activeShift}) não definidos`);
         return [];
     }
@@ -346,14 +346,14 @@ function getCurrentShiftData() {
     let result = dateData[activeShift] || [];
     
     // Garantir que result é sempre um array válido
-    if (!Array.isArray(result)) {
+    if(!Array.isArray(result)) {
         console.warn(`[PROFESSOR] ==> AVISO: dateData[${activeShift}] não é um array, convertendo:`, result);
         result = [];
     }
     
     // Filtrar dados inválidos
     result = result.filter(item => {
-        if (!item || typeof item !== 'object') {
+        if(!item || typeof item !== 'object') {
             console.warn(`[PROFESSOR] ==> Item inválido removido:`, item);
             return false;
         }
@@ -372,15 +372,15 @@ async function loadSharedData() {
     
     // Primeiro, tentar carregar dados do Firebase
     let firebaseLoaded = false;
-    if (typeof loadTeacherDataFromFirebase === 'function') {
+    if(typeof loadTeacherDataFromFirebase === 'function') {
         console.log('[PROFESSOR]  Tentando carregar dados do Firebase...');
         try {
             firebaseLoaded = await loadTeacherDataFromFirebase(selectedDate);
-            if (firebaseLoaded) {
+            if(firebaseLoaded) {
                 console.log('[PROFESSOR]  Dados carregados do Firebase com sucesso!');
                 
                 // Iniciar sincronização em tempo real para todos os turnos
-                if (typeof syncTeacherDataRealtime === 'function') {
+                if(typeof syncTeacherDataRealtime === 'function') {
                     console.log('[PROFESSOR]  Iniciando sincronização em tempo real...');
                     syncTeacherDataRealtime(selectedDate, 'manhã');
                     syncTeacherDataRealtime(selectedDate, 'tarde');
@@ -396,7 +396,7 @@ async function loadSharedData() {
     }
     
     // Fallback: tentar carregar dados do localStorage se Firebase falhou
-    if (!firebaseLoaded) {
+    if(!firebaseLoaded) {
         console.log('[PROFESSOR] � Carregando dados do localStorage como fallback...');
         
         const newFormatData = localStorage.getItem('allDateShiftData');
@@ -425,7 +425,7 @@ async function loadSharedData() {
     
     // Fallback: tentar carregar dados no formato antigo e migrar
     const oldFormatData = localStorage.getItem('allShiftData');
-    if (oldFormatData) {
+    if(oldFormatData) {
         try {
             const parsedData = JSON.parse(oldFormatData);
             console.log('Migrando dados do formato antigo...');
@@ -433,7 +433,7 @@ async function loadSharedData() {
             // Migrar dados antigos para a data atual
             const dateData = getDataForDate(selectedDate);
             
-            if (Array.isArray(parsedData)) {
+            if(Array.isArray(parsedData)) {
                 // Formato muito antigo
                 dateData['manhã'] = parsedData.filter(item => item && item.turno === 'manhã');
                 dateData['tarde'] = parsedData.filter(item => item && item.turno === 'tarde');
@@ -448,11 +448,11 @@ async function loadSharedData() {
             // Converter dados do formato do painel administrativo para o formato do professor
             console.log('[PROFESSOR] Convertendo dados do formato administrativo...');
             for (let turno in dateData) {
-                if (Array.isArray(dateData[turno])) {
+                if(Array.isArray(dateData[turno])) {
                     console.log(`[PROFESSOR] Convertendo ${dateData[turno].length} registros do turno ${turno}`);
                     dateData[turno] = dateData[turno].map(item => {
                         // Se o item já está no formato do professor, manter
-                        if (item.sala && item.professor) {
+                        if(item.sala && item.professor) {
                             return {
                                 ...item,
                                 // Garantir que tenha ID único
@@ -460,7 +460,7 @@ async function loadSharedData() {
                             };
                         }
                         // Se está no formato do painel administrativo, converter
-                        else if (item.room && item.professorName) {
+                        else if(item.room && item.professorName) {
                             console.log('[PROFESSOR] Convertendo item do formato admin:', item);
                             return {
                                 id: item.id || item.room || `record_${Math.random().toString(36).substr(2, 9)}`,
@@ -526,7 +526,7 @@ async function loadSharedData() {
 // Escutar por atualizações de dados
 window.addEventListener('shiftDataUpdated', function(event) {
     console.log('[PROFESSOR] Evento de atualização recebido:', event.detail);
-    if (event.detail && event.detail.data) {
+    if(event.detail && event.detail.data) {
         // Atualizar estrutura de dados completa
         const oldData = JSON.stringify(dataByDateAndShift);
         
@@ -550,11 +550,11 @@ window.addEventListener('shiftDataUpdated', function(event) {
 
 // Listener para detectar mudanças no localStorage (para sincronização entre abas)
 window.addEventListener('storage', function(e) {
-    if (e.key === 'allDateShiftData' || e.key === 'allShiftData' || e.key === 'dataUpdateTimestamp') {
+    if(e.key === 'allDateShiftData' || e.key === 'allShiftData' || e.key === 'dataUpdateTimestamp') {
         console.log('[PROFESSOR] Detectada atualização de dados em outra aba/janela, chave:', e.key);
         console.log('[PROFESSOR] Novo valor:', e.newValue);
         
-        if (e.key === 'allDateShiftData' && e.newValue) {
+        if(e.key === 'allDateShiftData' && e.newValue) {
             try {
                 const newData = JSON.parse(e.newValue);
                 console.log('[PROFESSOR] Dados brutos recebidos via storage:', newData);
@@ -579,7 +579,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Configurar seletor de data
     const dateSelector = document.getElementById('teacherDateSelector');
-    if (dateSelector) {
+    if(dateSelector) {
         // Definir data atual como padrão
         dateSelector.value = selectedDate;
         
@@ -590,7 +590,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log(`Data alterada de ${oldDate} para ${selectedDate}`);
             
             // Parar sincronização da data anterior
-            if (typeof stopSyncDataRealtime === 'function') {
+            if(typeof stopSyncDataRealtime === 'function') {
                 console.log('[PROFESSOR]  Parando sincronização da data anterior...');
                 stopSyncDataRealtime(oldDate, 'manhã');
                 stopSyncDataRealtime(oldDate, 'tarde');
@@ -599,15 +599,15 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Carregar dados da nova data do Firebase
             let firebaseLoaded = false;
-            if (typeof loadTeacherDataFromFirebase === 'function') {
+            if(typeof loadTeacherDataFromFirebase === 'function') {
                 console.log(`[PROFESSOR]  Carregando dados do Firebase para nova data: ${selectedDate}`);
                 try {
                     firebaseLoaded = await loadTeacherDataFromFirebase(selectedDate);
-                    if (firebaseLoaded) {
+                    if(firebaseLoaded) {
                         console.log('[PROFESSOR]  Dados da nova data carregados do Firebase!');
                         
                         // Iniciar sincronização para a nova data
-                        if (typeof syncTeacherDataRealtime === 'function') {
+                        if(typeof syncTeacherDataRealtime === 'function') {
                             console.log('[PROFESSOR]  Iniciando sincronização para nova data...');
                             syncTeacherDataRealtime(selectedDate, 'manhã');
                             syncTeacherDataRealtime(selectedDate, 'tarde');
@@ -620,7 +620,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Se não conseguiu carregar do Firebase, verificar localStorage
-            if (!firebaseLoaded) {
+            if(!firebaseLoaded) {
                 console.log('[PROFESSOR] � Verificando localStorage para nova data...');
                 const dateData = getDataForDate(selectedDate);
                 const shiftData = dateData[activeShift] || [];
@@ -651,7 +651,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
         console.log('[PROFESSOR] ==> TESTE: Verificando localStorage após 1 segundo...');
         const testData = localStorage.getItem('allDateShiftData');
-        if (testData) {
+        if(testData) {
             console.log('[PROFESSOR] ==> TESTE: Dados encontrados no localStorage');
             const parsed = JSON.parse(testData);
             console.log('[PROFESSOR] ==> TESTE: Dados parseados:', parsed);
@@ -670,7 +670,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentTimestamp = localStorage.getItem('dataUpdateTimestamp');
         const lastChecked = window.lastDataCheck || '0';
         
-        if (currentTimestamp && currentTimestamp !== lastChecked) {
+        if(currentTimestamp && currentTimestamp !== lastChecked) {
             console.log('[PROFESSOR] Detectada atualização via polling, recarregando dados...');
             window.lastDataCheck = currentTimestamp;
             loadSharedData();
@@ -734,7 +734,7 @@ function getActionButton(recordId, record) {
 }
 
 function getStatusBadgeTP(record) {
-    if (!record || typeof record !== 'object') {
+    if(!record || typeof record !== 'object') {
         return `<span class="status-badge disponivel">Disponível</span>`;
     }
 
@@ -742,8 +742,8 @@ function getStatusBadgeTP(record) {
     let label = 'Disponível';
 
     // Verificar status usando campos do professor
-    if (record.horaRetirada) {
-        if (!record.horaDevolucao) {
+    if(record.horaRetirada) {
+        if(!record.horaDevolucao) {
             status = 'em_uso';
             label = 'Em Uso';
         } else {
@@ -752,8 +752,8 @@ function getStatusBadgeTP(record) {
         }
     }
     // Verificar status usando campos do administrador se os do professor não estiverem disponíveis
-    else if (record.withdrawalTime) {
-        if (!record.returnTime) {
+    else if(record.withdrawalTime) {
+        if(!record.returnTime) {
             status = 'em_uso';
             label = 'Em Uso';
         } else {
@@ -762,7 +762,7 @@ function getStatusBadgeTP(record) {
         }
     }
     // Verificar status direto se disponível
-    else if (record.status) {
+    else if(record.status) {
         status = record.status;
         switch (record.status) {
             case 'em_uso':
@@ -806,14 +806,14 @@ function renderTabs() {
 }
 
 function sorted(data) {
-    if (!Array.isArray(data)) {
+    if(!Array.isArray(data)) {
         console.error('Dados inválidos para ordenação:', data);
         return [];
     }
 
     try {
         const validData = data.filter(item => item && typeof item === 'object');
-        if (validData.length !== data.length) {
+        if(validData.length !== data.length) {
             console.warn('Alguns itens foram removidos por serem inválidos:', data);
         }
 
@@ -821,7 +821,7 @@ function sorted(data) {
         return validData.sort((a, b) => {
             const professorA = (a.professor || '').trim();
             const professorB = (b.professor || '').trim();
-            if (!professorA || !professorB) return 0;
+            if(!professorA || !professorB) return 0;
             return professorA.localeCompare(professorB, 'pt-BR');
         });
     } catch (error) {
@@ -835,7 +835,7 @@ function renderTableForShift(shift) {
     console.log('[PROFESSOR] ==> Estado atual de dataByDateAndShift:', dataByDateAndShift);
     
     const container = document.getElementById('shiftContent');
-    if (!container) {
+    if(!container) {
         console.error('[PROFESSOR] ==> Elemento shiftContent não encontrado!');
         return;
     }
@@ -845,7 +845,7 @@ function renderTableForShift(shift) {
     console.log('[PROFESSOR] ==> Dados brutos obtidos de getCurrentShiftData():', shiftData);
     console.log('[PROFESSOR] ==> Tipo dos dados:', typeof shiftData, 'É array?', Array.isArray(shiftData));
     
-    if (!Array.isArray(shiftData)) {
+    if(!Array.isArray(shiftData)) {
         console.warn('[PROFESSOR] ==> Dados do turno não são um array:', shift);
         shiftData = [];
     }
@@ -854,15 +854,15 @@ function renderTableForShift(shift) {
     
     // PRIMEIRO: Converter dados do formato admin para professor se necessário
     shiftData = shiftData.map(item => {
-        if (!item || typeof item !== 'object') return item;
+        if(!item || typeof item !== 'object') return item;
         
         // Garantir que cada registro tenha um ID único
-        if (!item.id) {
+        if(!item.id) {
             item.id = item.sala || item.room || `record_${Math.random().toString(36).substr(2, 9)}`;
         }
         
         // Se está no formato admin (room, professorName), converter
-        if (item.room && item.professorName && !item.sala && !item.professor) {
+        if(item.room && item.professorName && !item.sala && !item.professor) {
             console.log('[PROFESSOR] ==> Convertendo item do formato admin:', item);
             return {
                 id: item.id,
@@ -895,7 +895,7 @@ function renderTableForShift(shift) {
     // SEGUNDO: Filtrar dados inválidos
     const originalLength = shiftData.length;
     shiftData = shiftData.filter(item => {
-        if (!item || typeof item !== 'object') {
+        if(!item || typeof item !== 'object') {
             console.log('[PROFESSOR] ==> Item rejeitado (não é objeto):', item);
             return false;
         }
@@ -904,7 +904,7 @@ function renderTableForShift(shift) {
                item.professor && typeof item.professor === 'string' &&
                item.sala.trim() !== '' && item.professor.trim() !== '';
         
-        if (!valid) {
+        if(!valid) {
             console.log('[PROFESSOR] ==> Item rejeitado (dados inválidos):');
             console.log('[PROFESSOR] ==> - Objeto completo:', item);
             console.log('[PROFESSOR] ==> - Propriedades do objeto:', Object.keys(item));
@@ -924,7 +924,7 @@ function renderTableForShift(shift) {
     
     // Se não há dados, mostrar mensagem
     let rows = '';
-    if (records.length === 0) {
+    if(records.length === 0) {
         const [year, month, day] = selectedDate.split('-');
         const formattedDate = `${day}/${month}/${year}`;
         const shiftCapitalized = shift.charAt(0).toUpperCase() + shift.slice(1);
@@ -951,7 +951,7 @@ function renderTableForShift(shift) {
         const horaDevolucao = record.horaDevolucao || '-';
         
         // Garantir que cada registro tenha um ID único
-        if (!record.id) {
+        if(!record.id) {
             record.id = record.sala || `record_${Math.random().toString(36).substr(2, 9)}`;
         }
 
@@ -1068,28 +1068,28 @@ function executeKeyAction(record, action) {
     console.log(' [DEBUG] - currentShiftData:', currentShiftData);
     
     // Validar se currentShiftData é válido
-    if (!Array.isArray(currentShiftData)) {
+    if(!Array.isArray(currentShiftData)) {
         console.error(' [DEBUG] currentShiftData não é um array válido:', currentShiftData);
         return;
     }
     
-    if (currentShiftData.length === 0) {
+    if(currentShiftData.length === 0) {
         console.warn(' [DEBUG] currentShiftData está vazio - isso pode causar problemas no Firebase');
     }
     
     // Tentar encontrar por ID primeiro, depois por sala
     let recordIndex = currentShiftData.findIndex(r => r.id === record.id);
-    if (recordIndex === -1) {
+    if(recordIndex === -1) {
         recordIndex = currentShiftData.findIndex(r => r.sala === record.sala);
     }
-    if (recordIndex === -1) {
+    if(recordIndex === -1) {
         recordIndex = currentShiftData.findIndex(r => r.curso === record.curso);
     }
     
     console.log(' [DEBUG] recordIndex encontrado:', recordIndex);
     
-    if (recordIndex !== -1) {
-        if (action === 'remove') {
+    if(recordIndex !== -1) {
+        if(action === 'remove') {
 
             // if(currentShiftData[recordIndex].horaDevolucao != '-') {
             //     showMensageConfirmationModal();
@@ -1106,7 +1106,7 @@ function executeKeyAction(record, action) {
             
             // Mostrar notificação de sucesso
             showNotification(`Chave retirada por ${record.professor} às ${hm}`, 'success');
-        } else if (action === 'return') {
+        } else if(action === 'return') {
             // Atualizar campos do professor
             currentShiftData[recordIndex].horaDevolucao = hm;
             
@@ -1249,7 +1249,7 @@ function showNotification(message, type = 'info') {
     
     // Remover automaticamente após 5 segundos
     setTimeout(() => {
-        if (notification.parentNode) {
+        if(notification.parentNode) {
             notification.remove();
         }
     }, 5000);
@@ -1345,11 +1345,11 @@ function confirmLogin() {
     }
 
     // 1) Aceita o FATS geral para qualquer registro e executa imediatamente
-    if (ConstantManager.validate(fastId)) {
+    if(ConstantManager.validate(fastId)) {
         document.getElementById('loginModal').style.display = 'none';
         document.getElementById('msg-erro').textContent = '';
         document.getElementById('loginFast').value = '';
-        if (activeAction) {
+        if(activeAction) {
             executeKeyAction(activeAction.record, activeAction.action);
             activeAction = null;
         }
@@ -1426,7 +1426,7 @@ function closeThirdPartyForm() {
     
     // Limpar indicador visual
     const indicator = document.getElementById('mode-indicator');
-    if (indicator) {
+    if(indicator) {
         indicator.innerHTML = '<i class="bi bi-key"></i> Modo Ativo';
         indicator.className = 'badge bg-primary';
     }
@@ -1471,7 +1471,7 @@ function selectKeyMode(mode) {
     updateModeIndicator(mode);
     
     // Configurar modo
-    if (mode === 'multiple') {
+    if(mode === 'multiple') {
         multipleSelectionMode = true;
         // No modo múltiplo, esconder dropdowns de sala e número da sala
         document.getElementById('room-dropdown').style.display = 'none';
@@ -1494,11 +1494,11 @@ function selectKeyMode(mode) {
 
 function updateModeIndicator(mode) {
     const indicator = document.getElementById('mode-indicator');
-    if (indicator) {
-        if (mode === 'single') {
+    if(indicator) {
+        if(mode === 'single') {
             indicator.innerHTML = '<i class="bi bi-key"></i> Chave Específica';
             indicator.className = 'badge bg-primary';
-        } else if (mode === 'multiple') {
+        } else if(mode === 'multiple') {
             indicator.innerHTML = '<i class="bi bi-key-fill"></i> Múltiplas Chaves';
             indicator.className = 'badge bg-success';
         }
@@ -1543,7 +1543,7 @@ function goBackToKeyQuantity() {
     
     // Limpar indicador visual
     const indicator = document.getElementById('mode-indicator');
-    if (indicator) {
+    if(indicator) {
         indicator.innerHTML = '<i class="bi bi-key"></i> Modo Ativo';
         indicator.className = 'badge bg-primary';
     }
@@ -1575,7 +1575,7 @@ function populateAvailableKeys() {
     const block = currentSelections.block;
     const dropdownData = getDropdownData();
 
-    if (!block) {
+    if(!block) {
         container.innerHTML = '<div class="empty-keys-message">Selecione um bloco primeiro</div>';
         return;
     }
@@ -1589,11 +1589,11 @@ function populateAvailableKeys() {
     
     container.innerHTML = '';
     
-    if (currentKeyMode === 'multiple') {
+    if(currentKeyMode === 'multiple') {
         // Modo múltiplo: mostrar todas as chaves do bloco
         const blockRooms = dropdownData.filter(item => item.bloco === block);
         
-        if (!blockRooms || blockRooms.length === 0) {
+        if(!blockRooms || blockRooms.length === 0) {
             container.innerHTML = '<div class="empty-keys-message">Nenhuma sala encontrada neste bloco</div>';
             return;
         }
@@ -1623,7 +1623,7 @@ function populateAvailableKeys() {
         // Modo single: funcionalidade original (baseada em room selecionada)
         const room = currentSelections.room;
         
-        if (!room) {
+        if(!room) {
             container.innerHTML = '<div class="empty-keys-message">Selecione uma sala primeiro</div>';
             return;
         }
@@ -1631,7 +1631,7 @@ function populateAvailableKeys() {
         // Encontrar as salas/números disponíveis    
         const numbers = getRoomNumbers(dropdownData, block, room);
 
-        if (numbers.length === 0) {
+        if(numbers.length === 0) {
             // Sala sem numeração - apenas uma chave
             const salaIdentifier = `${block} - ${room}`;
             const isInUse = currentShiftData.some(record => record.sala === salaIdentifier);
@@ -1688,9 +1688,9 @@ function createKeySelectionItem(salaIdentifier, isInUse, roomDetails) {
     item.appendChild(checkbox);
     item.appendChild(keyInfo);
     
-    if (!isInUse) {
+    if(!isInUse) {
         item.addEventListener('click', (e) => {
-            if (e.target !== checkbox) {
+            if(e.target !== checkbox) {
                 checkbox.checked = !checkbox.checked;
                 toggleKeySelection(salaIdentifier, roomDetails, checkbox.checked);
             }
@@ -1701,8 +1701,8 @@ function createKeySelectionItem(salaIdentifier, isInUse, roomDetails) {
 }
 
 function toggleKeySelection(salaIdentifier, roomDetails, isSelected) {
-    if (isSelected) {
-        if (!selectedKeys.find(key => key.identifier === salaIdentifier)) {
+    if(isSelected) {
+        if(!selectedKeys.find(key => key.identifier === salaIdentifier)) {
             selectedKeys.push({
                 identifier: salaIdentifier,
                 roomDetails: roomDetails
@@ -1720,7 +1720,7 @@ function updateKeyItemAppearance() {
     const items = document.querySelectorAll('.key-selection-item');
     items.forEach(item => {
         const checkbox = item.querySelector('input[type="checkbox"]');
-        if (checkbox && checkbox.checked) {
+        if(checkbox && checkbox.checked) {
             item.classList.add('selected');
         } else {
             item.classList.remove('selected');
@@ -1730,7 +1730,7 @@ function updateKeyItemAppearance() {
 
 function updateSelectedKeysCount() {
     const countElement = document.getElementById('selected-count');
-    if (countElement) {
+    if(countElement) {
         countElement.textContent = selectedKeys.length;
     }
 }
@@ -1738,7 +1738,7 @@ function updateSelectedKeysCount() {
 function selectAllAvailableKeys() {
     const checkboxes = document.querySelectorAll('.key-selection-item:not(.unavailable) input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
-        if (!checkbox.checked) {
+        if(!checkbox.checked) {
             checkbox.checked = true;
             const item = checkbox.closest('.key-selection-item');
             const salaIdentifier = checkbox.value;
@@ -1977,7 +1977,7 @@ function clearFormAndClose() {
     
     // Limpar indicador visual
     const indicator = document.getElementById('mode-indicator');
-    if (indicator) {
+    if(indicator) {
         indicator.innerHTML = '<i class="bi bi-key"></i> Modo Ativo';
         indicator.className = 'badge bg-primary';
     }
@@ -2155,7 +2155,7 @@ function populateBlockDropdown() {
             document.getElementById('room-number-dropdown').classList.remove('invisible');
             document.getElementById('room-number-dropdown').classList.add('hidden');
             
-            if (currentKeyMode === 'multiple') {
+            if(currentKeyMode === 'multiple') {
                 // Modo múltiplo: mostrar imediatamente todas as chaves do bloco
                 showMultipleSelectionSection();
                 document.getElementById('room-dropdown').style.display = 'none';
@@ -2248,7 +2248,7 @@ function populateRoomDropdown(selectedBlock) {
                 populateRoomNumberDropdown(selectedBlock, selectedRoom);
             } else {
                 // Se não há números de sala, considerar completo para modo single
-                if (currentKeyMode === 'single') {
+                if(currentKeyMode === 'single') {
                     // Sala sem numeração - não precisamos mostrar seleção múltipla
                     resetDropdown('room-number-dropdown', 'Sem numeração', true);
                     currentSelections.roomNumber = null;
@@ -2310,7 +2310,7 @@ function populateRoomNumberDropdown(selectedBlock, selectedRoom) {
             document.getElementById('room-number-dropdown').closest('.drop-down-item').classList.remove('dropdown-active');
             
             // No modo single, a seleção está completa - não mostrar seleção múltipla
-            if (currentKeyMode === 'multiple') {
+            if(currentKeyMode === 'multiple') {
                 // Mostrar seção de seleção múltipla apenas no modo múltiplo
                 showMultipleSelectionSection();
             }

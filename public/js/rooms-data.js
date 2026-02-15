@@ -100,7 +100,7 @@ const RoomsData = {
    * @returns {number}
    */
   generateNextRoomId(existingRooms) {
-    if (!Array.isArray(existingRooms) || existingRooms.length === 0) {
+    if(!Array.isArray(existingRooms) || existingRooms.length === 0) {
       return 1;
     }
     const maxId = Math.max(...existingRooms.map(r => Number(r.id) || 0));
@@ -116,10 +116,10 @@ const RoomsData = {
       const storedRaw = localStorage.getItem('rooms');
       let existing = [];
 
-      if (storedRaw) {
+      if(storedRaw) {
         try {
           existing = JSON.parse(storedRaw);
-          if (!Array.isArray(existing)) {
+          if(!Array.isArray(existing)) {
             console.warn('Dados de salas corrompidos, resetando...');
             existing = [];
           }
@@ -145,7 +145,7 @@ const RoomsData = {
         };
         const key = this.normalizeRoomKey(seedObj);
 
-        if (!index.has(key)) {
+        if(!index.has(key)) {
           // Novo registro
           const nextId = this.generateNextRoomId(existing);
           seedObj.id = seedObj.id ?? nextId;
@@ -155,18 +155,18 @@ const RoomsData = {
         }
       }
 
-      if (!storedRaw || mutated) {
+      if(!storedRaw || mutated) {
         localStorage.setItem('rooms', JSON.stringify(existing));
       }
     } catch (error) {
-      if (typeof ErrorHandler !== 'undefined') {
+      if(typeof ErrorHandler !== 'undefined') {
         ErrorHandler.handle(error, 'RoomsData.ensureRoomsSeeded');
       } else {
         console.error('Erro ao mesclar salas no localStorage:', error);
       }
 
       // Fallback
-      if (!localStorage.getItem('rooms')) {
+      if(!localStorage.getItem('rooms')) {
         localStorage.setItem('rooms', JSON.stringify(ROOMS_BASE_DATA));
       }
     }
@@ -181,7 +181,7 @@ const RoomsData = {
       const stored = localStorage.getItem('rooms');
       return stored ? JSON.parse(stored) : ROOMS_BASE_DATA;
     } catch (error) {
-      if (typeof ErrorHandler !== 'undefined') {
+      if(typeof ErrorHandler !== 'undefined') {
         ErrorHandler.handle(error, 'RoomsData.getDropdownData');
       }
       return ROOMS_BASE_DATA;
@@ -194,7 +194,7 @@ const RoomsData = {
    * @returns {Array<string>}
    */
   getUniqueBlocks(data) {
-    if (!Array.isArray(data)) return [];
+    if(!Array.isArray(data)) return [];
     const blocks = [...new Set(data.map(item => item.bloco))];
     return blocks.sort();
   },
@@ -206,7 +206,7 @@ const RoomsData = {
    * @returns {Array<string>}
    */
   getUniqueRoomsForBlock(data, selectedBlock) {
-    if (!Array.isArray(data)) return [];
+    if(!Array.isArray(data)) return [];
     const rooms = data
       .filter(item => item.bloco === selectedBlock)
       .map(item => item.sala);
@@ -221,7 +221,7 @@ const RoomsData = {
    * @returns {Array<string>}
    */
   getRoomNumbers(data, selectedBlock, selectedRoom) {
-    if (!Array.isArray(data)) return [];
+    if(!Array.isArray(data)) return [];
     return data
       .filter(item => item.bloco === selectedBlock && item.sala === selectedRoom)
       .map(item => item.numero)
@@ -230,11 +230,11 @@ const RoomsData = {
 };
 
 // Inicializa seed ao carregar
-if (typeof document !== 'undefined') {
+if(typeof document !== 'undefined') {
   RoomsData.ensureRoomsSeeded();
 }
 
 // Exportar
-if (typeof module !== 'undefined' && module.exports) {
+if(typeof module !== 'undefined' && module.exports) {
   module.exports = RoomsData;
 }
