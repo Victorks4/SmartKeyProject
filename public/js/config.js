@@ -40,7 +40,7 @@ function validateConfig() {
 
   const missing = required.filter(key => !CONFIG.firebase[key]);
 
-  if(missing.length > 0) {
+  if (missing.length > 0) {
     console.error('❌ Configurações Firebase faltando:', missing);
     console.error('Configure as variáveis de ambiente no Vercel ou crie .env.local');
     return false;
@@ -50,6 +50,6 @@ function validateConfig() {
 }
 
 // Exportar configuração
-if(typeof module !== 'undefined' && module.exports) {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = { CONFIG, validateConfig };
 }

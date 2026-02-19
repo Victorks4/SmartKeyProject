@@ -11,15 +11,19 @@ const firebaseConfig = {
 
 // Inicializar Firebase
 let database;
+let firestore;
 try {
     // Verificar se Firebase já foi inicializado
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
     database = firebase.database();
+    firestore = firebase.firestore();
+    console.log('✅ Firebase inicializado com sucesso (Realtime Database + Firestore)');
 } catch (error) {
-    console.error(' Erro ao inicializar Firebase:', error);
+    console.error('❌ Erro ao inicializar Firebase:', error);
     database = null;
+    firestore = null;
 }
 
 // Função para salvar dados no Firebase
@@ -315,4 +319,173 @@ function initializeFirebaseSync() {
     }
 }
 
+// ============================================
+// FUNÇÕES PARA GERENCIAR PROFESSORES NO FIRESTORE
+// ============================================
 
+/**
+ * Salva todos os dados dos professores (codprof) no Firestore
+ * @param {Object} teachersData - Objeto com mapeamento nome -> codprof
+ * @returns {Promise<boolean>}
+ */
+async function saveTeachersToFirestore(teachersData) {
+    console.log('💾 [FIRESTORE]: Salvando dados dos professores...');
+    
+    if (!firestore) {
+        console.error('❌ [FIRESTORE]: Firestore não inicializado');
+        return false;
+    }
+    
+    if (!teachersData || typeof teachersData !== 'object') {
+        console.error('❌ [FIRESTORE]: Dados inválidos recebidos');
+        return false;
+    }
+    
+    try {
+        await firestore.collection('teachers').doc('codprof').set({
+            mapping: teachersData,
+            lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+            totalTeachers: Object.keys(teachersData).length
+        });
+        
+        console.log(`✅ [FIRESTORE]: ${Object.keys(teachersData).length} professores salvos com sucesso!`);
+        return true;
+    } catch (error) {
+        console.error('❌ [FIRESTORE]: Erro ao salvar professores:', error);
+        return false;
+    }
+}
+
+/**
+ * Carrega todos os dados dos professores (codprof) do Firestore
+ * @returns {Promise<Object|null>}
+ */
+async function loadTeachersFromFirestore() {
+    console.log('📥 [FIRESTORE]: Carregando dados dos professores...');
+    
+    if (!firestore) {
+        console.error('❌ [FIRESTORE]: Firestore não inicializado');
+        return null;
+    }
+    
+    try {
+        const doc = await firestore.collection('teachers').doc('codprof').get();
+        
+        if (doc.exists) {
+            const data = doc.data();
+            console.log(`✅ [FIRESTORE]: ${data.totalTeachers || 0} professores carregados com sucesso!`);
+            return data.mapping || {};
+        } else {
+            console.warn('⚠️ [FIRESTORE]: Nenhum dado de professores encontrado');
+            return null;
+        }
+    } catch (error) {
+        console.error('❌ [FIRESTORE]: Erro ao carregar professores:', error);
+        return null;
+    }
+}
+
+/**
+ * Adiciona ou atualiza um professor no Firestore
+ * @param {string} name - Nome do professor
+ * @param {string} code - Código do professor (CODPROF)
+ * @returns {Promise<boolean>}
+ */
+async function addOrUpdateTeacherInFirestore(name, code) {
+    console.log(`💾 [FIRESTORE]: Atualizando professor: ${name} -> ${code}`);
+    
+    if (!firestore) {
+        console.error('❌ [FIRESTORE]: Firestore não inicializado');
+        return false;
+    }
+    
+    if (!name || !code) {
+        console.error('❌ [FIRESTORE]: Nome ou código inválido');
+        return false;
+    }
+    
+    try {
+        await firestore.collection('teachers').doc('codprof').update({
+            [`mapping.${name}`]: code,
+            lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        console.log(`✅ [FIRESTORE]: Professor ${name} atualizado com sucesso!`);
+        return true;
+    } catch (error) {
+        if (error.code === 'not-found') {
+            console.log('📝 [FIRESTORE]: Criando novo documento de professores...');
+            return await saveTeachersToFirestore({ [name]: code });
+        }
+        console.error('❌ [FIRESTORE]: Erro ao adicionar/atualizar professor:', error);
+        return false;
+    }
+}
+
+/**
+ * Remove um professor do Firestore
+ * @param {string} name - Nome do professor a ser removido
+ * @returns {Promise<boolean>}
+ */
+async function removeTeacherFromFirestore(name) {
+    console.log(`🗑️ [FIRESTORE]: Removendo professor: ${name}`);
+    
+    if (!firestore) {
+        console.error('❌ [FIRESTORE]: Firestore não inicializado');
+        return false;
+    }
+    
+    if (!name) {
+        console.error('❌ [FIRESTORE]: Nome inválido');
+        return false;
+    }
+    
+    try {
+        await firestore.collection('teachers').doc('codprof').update({
+            [`mapping.${name}`]: firebase.firestore.FieldValue.delete(),
+            lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        console.log(`✅ [FIRESTORE]: Professor ${name} removido com sucesso!`);
+        return true;
+    } catch (error) {
+        console.error('❌ [FIRESTORE]: Erro ao remover professor:', error);
+        return false;
+    }
+}
+
+/**
+ * Sincroniza dados dos professores em tempo real
+ * @param {Function} callback - Função chamada quando os dados são atualizados
+ * @returns {Function} - Função para parar a sincronização
+ */
+function syncTeachersRealtime(callback) {
+    console.log('🔄 [FIRESTORE]: Iniciando sincronização em tempo real dos professores...');
+    
+    if (!firestore) {
+        console.error('❌ [FIRESTORE]: Firestore não inicializado');
+        return () => {};
+    }
+    
+    if (typeof callback !== 'function') {
+        console.error('❌ [FIRESTORE]: Callback inválido');
+        return () => {};
+    }
+    
+    const unsubscribe = firestore.collection('teachers').doc('codprof')
+        .onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                console.log(`🔄 [FIRESTORE]: Dados dos professores atualizados (${data.totalTeachers || 0} professores)`);
+                callback(data.mapping || {});
+            } else {
+                console.warn('⚠️ [FIRESTORE]: Documento de professores não encontrado');
+                callback({});
+            }
+        }, (error) => {
+            console.error('❌ [FIRESTORE]: Erro na sincronização:', error);
+        });
+    
+    console.log('✅ [FIRESTORE]: Sincronização em tempo real ativada');
+    return unsubscribe;
+}

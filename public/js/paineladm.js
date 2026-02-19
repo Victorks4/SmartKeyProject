@@ -21,7 +21,7 @@ function getCurrentShiftByTime() {
 
 // Função para obter ou criar estrutura de dados para uma data
 function getDataForDate(date) {
-    if(!dataByDateAndShift[date]) {
+    if (!dataByDateAndShift[date]) {
         dataByDateAndShift[date] = {
             'manhã': [],
             'tarde': [],
@@ -52,7 +52,7 @@ function initializeFirebaseSync() {
 
 // Função para mudar o turno ativo
 function changeShift(newShift) {
-    if(newShift !== activeShift && ['manhã', 'tarde', 'noite'].includes(newShift)) {
+    if (newShift !== activeShift && ['manhã', 'tarde', 'noite'].includes(newShift)) {
         console.log(`Mudando turno de ${activeShift} para ${newShift} na data ${selectedDate}`);
         activeShift = newShift;
         
@@ -68,7 +68,7 @@ function changeShift(newShift) {
         showNotification(`Visualizando turno da ${shiftCapitalized} - ${formattedDate}`, 'info');
         
         // Sincronizar dados do novo turno com Firebase
-        if(typeof syncDataRealtime === 'function') {
+        if (typeof syncDataRealtime === 'function') {
             syncDataRealtime(selectedDate, newShift);
         }
     }
@@ -80,14 +80,14 @@ function showShiftSelectionModal(file) {
     selectedFileForImport = file;
     
     const modalElement = document.getElementById('shiftSelectionModal');
-    if(!modalElement) {
+    if (!modalElement) {
         console.error('Modal shiftSelectionModal não encontrado!');
         return;
     }
     
     // Verificar se já existe uma instância do modal e destruí-la
     const existingModal = bootstrap.Modal.getInstance(modalElement);
-    if(existingModal) {
+    if (existingModal) {
         existingModal.dispose();
     }
     
@@ -98,7 +98,7 @@ function showShiftSelectionModal(file) {
 
 // Função para processar arquivo importado
 async function handleFileImport(file) {
-    if(!file) return;
+    if (!file) return;
     
     console.log('� Iniciando importação de arquivo:', file.name);
     
@@ -106,14 +106,14 @@ async function handleFileImport(file) {
     selectedFileForImport = file;
     
     const modalElement = document.getElementById('shiftSelectionModal');
-    if(!modalElement) {
+    if (!modalElement) {
         console.error('Modal shiftSelectionModal não encontrado!');
         return;
     }
     
     // Verificar se já existe uma instância do modal e destruí-la
     const existingModal = bootstrap.Modal.getInstance(modalElement);
-    if(existingModal) {
+    if (existingModal) {
         console.log('Removendo instância anterior do modal');
         existingModal.dispose();
     }
@@ -135,7 +135,7 @@ async function processFileImport(file, selectedShift) {
     const validCSVFormats = ['csv', 'tsv', 'txt'];
     const allValidFormats = [...validExcelFormats, ...validCSVFormats];
     
-    if(!allValidFormats.includes(fileExt)) {
+    if (!allValidFormats.includes(fileExt)) {
         showNotification(`Formato de arquivo não suportado: .${fileExt}\nFormatos aceitos: Excel (${validExcelFormats.join(', ')}) e CSV/texto (${validCSVFormats.join(', ')})`, 'warning');
         return;
     }
@@ -225,17 +225,17 @@ async function processFileImport(file, selectedShift) {
                     const isValidRoom = !(isDivider || isFalse || isEmpty);
 
                     // Normalização leve
-                    if(isValidRoom) {
+                    if (isValidRoom) {
                         item.room = roomTrim;
-                        if(item.course) item.course = item.course.toString().trim();
-                        if(item.subject) item.subject = item.subject.toString().trim();
-                        if(item.disciplina) item.disciplina = item.disciplina.toString().trim();
-                        if(item.professorName) item.professorName = item.professorName.toString().trim();
-                        if(item.turmaNumber) item.turmaNumber = item.turmaNumber.toString().trim();
+                        if (item.course) item.course = item.course.toString().trim();
+                        if (item.subject) item.subject = item.subject.toString().trim();
+                        if (item.disciplina) item.disciplina = item.disciplina.toString().trim();
+                        if (item.professorName) item.professorName = item.professorName.toString().trim();
+                        if (item.turmaNumber) item.turmaNumber = item.turmaNumber.toString().trim();
                         item.status = 'disponivel';
                         
                         // Debug: verificar campos de disciplina
-                        if(!item.subject && !item.disciplina) {
+                        if (!item.subject && !item.disciplina) {
                             console.warn(' Registro sem disciplina:', item);
                         } else {
                             console.log(' Disciplina encontrada:', { subject: item.subject, disciplina: item.disciplina });
@@ -246,7 +246,7 @@ async function processFileImport(file, selectedShift) {
                     return isValidRoom;
                 });
 
-                if(validData.length === 0) {
+                if (validData.length === 0) {
                     throw new Error('Nenhum registro válido encontrado no arquivo. Verifique o formato dos dados.');
                 }
 
@@ -254,7 +254,7 @@ async function processFileImport(file, selectedShift) {
                 const sortedData = validData.sort((a, b) => {
                     const professorA = (a.professorName || '').trim();
                     const professorB = (b.professorName || '').trim();
-                    if(!professorA || !professorB) return 0;
+                    if (!professorA || !professorB) return 0;
                     return professorA.localeCompare(professorB, 'pt-BR');
                 });
 
@@ -264,7 +264,7 @@ async function processFileImport(file, selectedShift) {
                 console.log(`Dados importados e ordenados com sucesso para o turno ${selectedShift}. Total de registros:`, sortedData.length);
             
                 // Salvar no Firebase imediatamente após importação
-                if(typeof saveDataToFirebase === 'function') {
+                if (typeof saveDataToFirebase === 'function') {
                     console.log(' Salvando dados importados no Firebase...');
                     saveDataToFirebase(selectedDate, selectedShift, sortedData).then(() => {
                         console.log(' Dados importados salvos no Firebase com sucesso!');
@@ -274,7 +274,7 @@ async function processFileImport(file, selectedShift) {
                 }
             
                 // Atualizar as visualizações se estivermos no turno selecionado
-                if(activeShift === selectedShift) {
+                if (activeShift === selectedShift) {
                     updateTable();
                 }
             
@@ -323,7 +323,7 @@ async function processFileImport(file, selectedShift) {
         
         // Limpar o input de arquivo para permitir importar o mesmo arquivo novamente
         const fileInput = document.getElementById('fileInput');
-        if(fileInput) {
+        if (fileInput) {
             fileInput.value = '';
         }
         
@@ -334,7 +334,7 @@ async function processFileImport(file, selectedShift) {
 
 // Função para determinar o turno baseado na sala (pode ser customizada conforme necessário)
 function getShiftFromRoom(room) {
-    if(!room) return '';
+    if (!room) return '';
     // Aqui você pode adicionar lógica específica para determinar o turno
     // baseado no número ou nome da sala, se necessário
     return '';
@@ -342,18 +342,18 @@ function getShiftFromRoom(room) {
 
 // Função para decodificar texto com caracteres especiais
 function decodeText(text) {
-    if(!text) return '';
+    if (!text) return '';
     // Tenta decodificar caracteres especiais que podem ter sido mal interpretados
     try {
         const originalText = text.toString();
         let decodedText = originalText;
         
         // Primeiro, tentar decodificar caracteres de substituição ()
-        if(decodedText.includes('')) {
+        if (decodedText.includes('')) {
             try {
                 // Tentar UTF-8
                 const utf8Text = decodeURIComponent(escape(decodedText));
-                if(!utf8Text.includes('')) {
+                if (!utf8Text.includes('')) {
                     decodedText = utf8Text;
                 }
             } catch (e) {
@@ -401,7 +401,7 @@ function decodeText(text) {
             .trim();
         
         // Debug: mostrar apenas se o texto foi alterado
-        if(originalText !== decodedText) {
+        if (originalText !== decodedText) {
             console.log('Texto decodificado:', { original: originalText, decoded: decodedText });
         }
         
@@ -431,12 +431,12 @@ function readFileData(file) {
         reader.onload = function(e) {
             try {
                 // Verificar se o arquivo está vazio
-                if(!e.target.result) {
+                if (!e.target.result) {
                     throw new Error('Arquivo vazio ou inválido');
                 }
 
                 let workbook;
-                if(isCSVType) {
+                if (isCSVType) {
                     // Processar CSV/TSV/TXT com encoding correto para caracteres especiais
                     const content = e.target.result;
                     console.log(`Processando como arquivo de texto (${fileExt})`);
@@ -495,13 +495,13 @@ function readFileData(file) {
                         }
                     }
                     
-                    if(!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
+                    if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
                         throw new Error(`Arquivo ${fileExt.toUpperCase()} inválido ou vazio`);
                     }
-                } else if(isExcelType) {
+                } else if (isExcelType) {
                     // Processar qualquer formato Excel
                     const data = new Uint8Array(e.target.result);
-                    if(!data || data.length === 0) {
+                    if (!data || data.length === 0) {
                         throw new Error('Arquivo vazio ou corrompido');
                     }
 
@@ -524,7 +524,7 @@ function readFileData(file) {
                         WTF: false // Modo de compatibilidade
                     });
 
-                    if(!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
+                    if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
                         throw new Error(`Arquivo Excel (${fileExt}) inválido ou sem planilhas`);
                     }
                 } else {
@@ -532,7 +532,7 @@ function readFileData(file) {
                 }
                 
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                if(!firstSheet) {
+                if (!firstSheet) {
                     throw new Error('Primeira planilha está vazia ou inválida');
                 }
                 
@@ -550,7 +550,7 @@ function readFileData(file) {
                 console.log('Dados brutos lidos do arquivo (com células mescladas):', allData);
 
                 // Processar células mescladas - propagar valores das células mescladas
-                if(firstSheet['!merges']) {
+                if (firstSheet['!merges']) {
                     console.log(' Detectadas células mescladas:', firstSheet['!merges']);
                     
                     // Para cada região mesclada, propagar o valor da primeira célula para todas as células da região
@@ -564,14 +564,14 @@ function readFileData(file) {
                         const firstCellRef = XLSX.utils.encode_cell({r: startRow, c: startCol});
                         const firstCellValue = firstSheet[firstCellRef] ? firstSheet[firstCellRef].v : '';
                         
-                        if(firstCellValue) {
+                        if (firstCellValue) {
                             console.log(`� Propagando valor "${firstCellValue}" da célula mesclada ${firstCellRef}`);
                             
                             // Propagar para todas as linhas e colunas afetadas no array allData
                             for (let row = startRow; row <= endRow; row++) {
                                 for (let col = startCol; col <= endCol; col++) {
-                                    if(allData[row] && col < allData[row].length) {
-                                        if(!allData[row][col] || allData[row][col] === '') {
+                                    if (allData[row] && col < allData[row].length) {
+                                        if (!allData[row][col] || allData[row][col] === '') {
                                             allData[row][col] = firstCellValue;
                                         }
                                     }
@@ -590,7 +590,7 @@ function readFileData(file) {
                 // Procurar por uma linha que contenha termos de cabeçalho esperados
                 for (let i = 0; i < allData.length; i++) {
                     const row = allData[i];
-                    if(!Array.isArray(row) || row.length === 0) continue;
+                    if (!Array.isArray(row) || row.length === 0) continue;
                     
                     // Verificar se esta linha contém cabeçalhos típicos
                     const rowStr = row.join('').toUpperCase();
@@ -601,7 +601,7 @@ function readFileData(file) {
                     // Verificar se pelo menos 3 células não estão vazias
                     const nonEmptyCells = row.filter(cell => cell && String(cell).trim() !== '').length;
                     
-                    if(hasHeaderTerms && nonEmptyCells >= 3) {
+                    if (hasHeaderTerms && nonEmptyCells >= 3) {
                         headerRowIndex = i;
                         // Limpar headers vazios e normalizar
                         headers = row.map(cell => {
@@ -614,7 +614,7 @@ function readFileData(file) {
                         
                         // Debug das colunas identificadas
                         headers.forEach((header, index) => {
-                            if(header) {
+                            if (header) {
                                 console.log(`Coluna ${index}: "${header}"`);
                             }
                         });
@@ -622,7 +622,7 @@ function readFileData(file) {
                     }
                 }
 
-                if(headerRowIndex === -1) {
+                if (headerRowIndex === -1) {
                     throw new Error('Não foi possível detectar automaticamente o cabeçalho do arquivo. Verifique se o arquivo contém colunas como SALA, CURSO, PROFESSOR, etc.');
                 }
 
@@ -636,9 +636,9 @@ function readFileData(file) {
                     .filter(row => {
                         // Incluir linhas que tenham pelo menos uma célula com conteúdo
                         const hasContent = Array.isArray(row) && row.some(cell => cell && String(cell).trim() !== '');
-                        if(!hasContent && dataRows.indexOf(row) < 5) {
+                        if (!hasContent && dataRows.indexOf(row) < 5) {
                             console.log(` Linha ${dataRows.indexOf(row) + 1} filtrada (sem conteúdo):`, row);
-                        } else if(hasContent && dataRows.indexOf(row) < 5) {
+                        } else if (hasContent && dataRows.indexOf(row) < 5) {
                             console.log(` Linha ${dataRows.indexOf(row) + 1} aprovada:`, row);
                         }
                         return hasContent;
@@ -675,7 +675,7 @@ function readFileData(file) {
                 // Debug adicional: mostrar estrutura completa dos primeiros registros
                 console.log(' ANÁLISE DETALHADA DA ESTRUTURA:');
                 console.log('Headers detectados:', headers);
-                if(mappedData.length > 0) {
+                if (mappedData.length > 0) {
                     console.log('Primeiro registro completo:', mappedData[0]);
                     console.log('Chaves disponíveis:', Object.keys(mappedData[0]));
                     console.log('Valores do primeiro registro:');
@@ -692,10 +692,10 @@ function readFileData(file) {
                     
                     // Para cada campo, se estiver vazio, tentar usar o valor da linha anterior
                     Object.keys(currentRow).forEach(key => {
-                        if(key !== '_rowIndex' && (!currentRow[key] || currentRow[key] === '')) {
-                            if(previousRow[key] && previousRow[key] !== '') {
+                        if (key !== '_rowIndex' && (!currentRow[key] || currentRow[key] === '')) {
+                            if (previousRow[key] && previousRow[key] !== '') {
                                 currentRow[key] = previousRow[key];
-                                if(i < 3) console.log(`� Preenchendo campo vazio "${key}" com valor "${previousRow[key]}" da linha anterior`);
+                                if (i < 3) console.log(`� Preenchendo campo vazio "${key}" com valor "${previousRow[key]}" da linha anterior`);
                             }
                         }
                     });
@@ -707,7 +707,7 @@ function readFileData(file) {
                         // Tentar identificar as colunas por nome (flexível)
                         const findColumn = (patterns, excludePatterns = []) => {
                             // Debug detalhado apenas para o primeiro registro
-                            if(index === 0) {
+                            if (index === 0) {
                                 console.log(` [Registro ${index + 1}] Procurando coluna para padrões: ${patterns.join(', ')}`);
                                 console.log(` [Registro ${index + 1}] Excluir padrões: ${excludePatterns.join(', ')}`);
                                 console.log(` [Registro ${index + 1}] Objeto disponível:`, obj);
@@ -723,34 +723,34 @@ function readFileData(file) {
                                     const shouldExclude = excludePatterns.some(exclude => 
                                         keyUpper.includes(exclude.toUpperCase())
                                     );
-                                    if(shouldExclude) {
-                                        if(index === 0) console.log(`   Excluindo coluna "${key}" (contém: ${excludePatterns.join(', ')})`);
+                                    if (shouldExclude) {
+                                        if (index === 0) console.log(`   Excluindo coluna "${key}" (contém: ${excludePatterns.join(', ')})`);
                                         continue;
                                     }
                                     
                                     // Busca exata primeiro
-                                    if(keyUpper === patternUpper) {
+                                    if (keyUpper === patternUpper) {
                                         const value = obj[key];
-                                        if(value && String(value).trim() !== '') {
-                                            if(index === 0) console.log(`   Encontrado por correspondência exata: "${key}" = "${value}"`);
+                                        if (value && String(value).trim() !== '') {
+                                            if (index === 0) console.log(`   Encontrado por correspondência exata: "${key}" = "${value}"`);
                                             return String(value).trim();
                                         }
                                     }
                                     
                                     // Busca por inclusão
-                                    if(keyUpper.includes(patternUpper)) {
+                                    if (keyUpper.includes(patternUpper)) {
                                         const value = obj[key];
-                                        if(value && String(value).trim() !== '') {
-                                            if(index === 0) console.log(`   Encontrado por inclusão: "${key}" = "${value}"`);
+                                        if (value && String(value).trim() !== '') {
+                                            if (index === 0) console.log(`   Encontrado por inclusão: "${key}" = "${value}"`);
                                             return String(value).trim();
                                         }
                                     }
                                 }
                             }
-                            if(index === 0) console.log(`   Nenhuma coluna encontrada para: ${patterns.join(', ')}`);
+                            if (index === 0) console.log(`   Nenhuma coluna encontrada para: ${patterns.join(', ')}`);
                             
                             // Debug extra: se for sala e não encontrou nada, mostrar todas as colunas
-                            if(index === 0 && patterns.includes('SALA')) {
+                            if (index === 0 && patterns.includes('SALA')) {
                                 console.log('� SALA NÃO ENCONTRADA! Analisando todas as colunas disponíveis:');
                                 Object.keys(obj).forEach((key, idx) => {
                                     const value = obj[key];
@@ -775,7 +775,7 @@ function readFileData(file) {
                         const registro = findColumn(['REGISTRO', 'ID', 'CODIGO', 'CÓDIGO']);
 
                         // Debug especial: mostrar todos os valores encontrados
-                        if(index < 5) {
+                        if (index < 5) {
                             console.log(` VALORES ENCONTRADOS ${index + 1}:`, {
                                 sala: `"${sala}" (${typeof sala})`,
                                 curso: `"${curso}" (${typeof curso})`,
@@ -788,8 +788,8 @@ function readFileData(file) {
 
                         // Fallback: se disciplina não foi encontrada, procurar manualmente
                         let disciplinaFinal = disciplina;
-                        if(!disciplinaFinal) {
-                            if(index === 0) {
+                        if (!disciplinaFinal) {
+                            if (index === 0) {
                                 console.log(' Procurando disciplina manualmente - TODAS as colunas disponíveis:');
                                 Object.keys(obj).forEach((key, idx) => {
                                     console.log(`  ${idx}: "${key}" = "${obj[key]}"`);
@@ -800,17 +800,17 @@ function readFileData(file) {
                             const knownFields = [sala, curso, turma, professor, registro].filter(f => f);
                             for (let key in obj) {
                                 const value = obj[key];
-                                if(value && String(value).trim() !== '') {
+                                if (value && String(value).trim() !== '') {
                                     const valueTrim = String(value).trim();
                                     
                                     // Se não é nenhum dos campos conhecidos
-                                    if(!knownFields.includes(valueTrim)) {
+                                    if (!knownFields.includes(valueTrim)) {
                                         // Verificar se não é código de turma (padrão G + números)
-                                        if(!valueTrim.match(/^G\d+/) && 
+                                        if (!valueTrim.match(/^G\d+/) && 
                                             !valueTrim.match(/^\d+$/) && 
                                             valueTrim.length > 2) {
                                             disciplinaFinal = valueTrim;
-                                            if(index === 0) console.log(`� Disciplina encontrada por eliminação na coluna "${key}": "${disciplinaFinal}"`);
+                                            if (index === 0) console.log(`� Disciplina encontrada por eliminação na coluna "${key}": "${disciplinaFinal}"`);
                                             break;
                                         }
                                     }
@@ -818,25 +818,25 @@ function readFileData(file) {
                             }
                             
                             // Estratégia 2: Se ainda não encontrou, pegar a primeira coluna não identificada
-                            if(!disciplinaFinal) {
+                            if (!disciplinaFinal) {
                                 const allKeys = Object.keys(obj);
                                 for (let i = 0; i < allKeys.length; i++) {
                                     const key = allKeys[i];
                                     const value = obj[key];
                                     
-                                    if(value && String(value).trim() !== '') {
+                                    if (value && String(value).trim() !== '') {
                                         const valueTrim = String(value).trim();
                                         
                                         // Pular campos já identificados
-                                        if(valueTrim !== sala && valueTrim !== curso && 
+                                        if (valueTrim !== sala && valueTrim !== curso && 
                                             valueTrim !== turma && valueTrim !== professor && 
                                             valueTrim !== registro) {
                                             
                                             // Se parece com uma disciplina (não é código)
-                                            if(!valueTrim.match(/^(G\d+|\d+|SALA|LAB)$/i) && 
+                                            if (!valueTrim.match(/^(G\d+|\d+|SALA|LAB)$/i) && 
                                                 valueTrim.length > 3) {
                                                 disciplinaFinal = valueTrim;
-                                                if(index === 0) console.log(`� Disciplina encontrada por tentativa na coluna "${key}": "${disciplinaFinal}"`);
+                                                if (index === 0) console.log(`� Disciplina encontrada por tentativa na coluna "${key}": "${disciplinaFinal}"`);
                                                 break;
                                             }
                                         }
@@ -846,7 +846,7 @@ function readFileData(file) {
                         }
 
                         // Debug: mostrar mapeamento para os primeiros registros
-                        if(index < 3) {
+                        if (index < 3) {
                             console.log(`Registro ${index + 1} mapeado:`, {
                                 sala, curso, turma, professor, 
                                 disciplina: disciplinaFinal, 
@@ -856,19 +856,19 @@ function readFileData(file) {
                             });
                             
                             // Debug específico para disciplina
-                            if(!disciplinaFinal) {
+                            if (!disciplinaFinal) {
                                 console.log(' Debug disciplina vazia - verificando todas as colunas:');
                                 Object.keys(obj).forEach((key, idx) => {
                                     const keyUpper = key.toUpperCase();
                                     const isDisciplinaCol = keyUpper.includes('DISCIPLINA') || keyUpper.includes('MATERIA') || keyUpper.includes('MATÉRIA');
                                     console.log(`  Coluna ${idx} "${key}": "${obj[key]}" ${isDisciplinaCol ? '← POSSÍVEL DISCIPLINA' : ''}`);
                                 });
-                            } else if(disciplinaFinal === professor) {
+                            } else if (disciplinaFinal === professor) {
                                 console.warn(' Disciplina igual ao professor:', {
                                     disciplina: disciplinaFinal,
                                     professor: professor
                                 });
-                            } else if(disciplinaFinal === curso) {
+                            } else if (disciplinaFinal === curso) {
                                 console.warn(' Disciplina igual ao curso:', {
                                     disciplina: disciplinaFinal,
                                     curso: curso
@@ -879,7 +879,7 @@ function readFileData(file) {
                         }
 
                         // Debug: mostrar todos os valores de sala para entender o problema
-                        if(index < 5) {
+                        if (index < 5) {
                             console.log(` Debug Sala ${index + 1}:`, {
                                 sala: sala,
                                 salaType: typeof sala,
@@ -901,17 +901,17 @@ function readFileData(file) {
                                            /^sala(s)?$/i.test(salaStr) ||
                                            salaStr.startsWith('---');
 
-                        if(salaInvalida) {
-                            if(index < 5) console.log(` Registro ${index + 1} rejeitado por sala inválida: "${sala}" (string: "${salaStr}")`);
+                        if (salaInvalida) {
+                            if (index < 5) console.log(` Registro ${index + 1} rejeitado por sala inválida: "${sala}" (string: "${salaStr}")`);
                             return null;
                         }
 
-                        if(index < 5) console.log(` Registro ${index + 1} aprovado com sala: "${sala}" (string: "${salaStr}")`);
+                        if (index < 5) console.log(` Registro ${index + 1} aprovado com sala: "${sala}" (string: "${salaStr}")`);
 
                         // Validar disciplina: evitar confusão com curso, professor, etc.
-                        if(disciplinaFinal) {
+                        if (disciplinaFinal) {
                             // Se disciplina for igual ao curso, procurar a verdadeira disciplina
-                            if(disciplinaFinal === curso) {
+                            if (disciplinaFinal === curso) {
                                 console.warn(` Disciplina "${disciplinaFinal}" é igual ao curso, procurando disciplina real...`);
                                 disciplinaFinal = '';
                                 
@@ -921,10 +921,10 @@ function readFileData(file) {
                                     const value = obj[key];
                                     
                                     // Buscar especificamente colunas que parecem ser de disciplina
-                                    if((keyUpper.includes('DISCIPLINA') || keyUpper.includes('MATERIA') || keyUpper.includes('MATÉRIA')) &&
+                                    if ((keyUpper.includes('DISCIPLINA') || keyUpper.includes('MATERIA') || keyUpper.includes('MATÉRIA')) &&
                                         !keyUpper.includes('PROFESSOR') && !keyUpper.includes('CURSO')) {
                                         
-                                        if(value && String(value).trim() !== '' && 
+                                        if (value && String(value).trim() !== '' && 
                                             value !== professor && value !== sala && value !== curso && value !== turma) {
                                             const valorTrim = String(value).trim();
                                             disciplinaFinal = valorTrim;
@@ -936,17 +936,17 @@ function readFileData(file) {
                             }
                             
                             // Se ainda for igual ao professor, procurar alternativa
-                            if(disciplinaFinal === professor) {
+                            if (disciplinaFinal === professor) {
                                 console.warn(` Disciplina "${disciplinaFinal}" é igual ao professor, procurando disciplina real...`);
                                 disciplinaFinal = '';
                                 
                                 for (let key in obj) {
                                     const value = obj[key];
-                                    if(value && String(value).trim() !== '' && 
+                                    if (value && String(value).trim() !== '' && 
                                         value !== professor && value !== sala && value !== curso && value !== turma) {
                                         const valorTrim = String(value).trim();
                                         // Verificar se parece com disciplina (não é número, não é sala)
-                                        if(!valorTrim.match(/^(SALA|A\d+|B\d+|C\d+|\d+)$/i) && valorTrim.length > 2) {
+                                        if (!valorTrim.match(/^(SALA|A\d+|B\d+|C\d+|\d+)$/i) && valorTrim.length > 2) {
                                             disciplinaFinal = valorTrim;
                                             console.log(` Disciplina corrigida: "${disciplinaFinal}" (encontrada na coluna "${key}")`);
                                             break;
@@ -973,7 +973,7 @@ function readFileData(file) {
                 console.log(`- Registros formatados: ${formattedData.length}`);
                 console.log(`- Registros rejeitados: ${mappedData.length - formattedData.length}`);
                 
-                if(formattedData.length === 0) {
+                if (formattedData.length === 0) {
                     console.error('� ERRO: Nenhum registro válido encontrado!');
                     console.log('Debug completo das últimas etapas:');
                     console.log('1. Headers detectados:', headers);
@@ -995,10 +995,10 @@ Verifique se há dados válidos após a linha de cabeçalho.`);
         };
 
         // Iniciar a leitura do arquivo depois de configurar os handlers
-        if(isCSVType) {
+        if (isCSVType) {
             // Ler como texto para CSV/TSV/TXT
             reader.readAsText(file, 'UTF-8');
-        } else if(isExcelType) {
+        } else if (isExcelType) {
             // Ler como array buffer para Excel
             reader.readAsArrayBuffer(file);
         } else {
@@ -1009,7 +1009,7 @@ Verifique se há dados válidos após a linha de cabeçalho.`);
 
 // Função para validar o formato dos dados
 function isValidDataFormat(data) {
-    if(!data || data.length === 0) return false;
+    if (!data || data.length === 0) return false;
     
     // Verifica se cada linha tem pelo menos os 5 campos obrigatórios
     return data.every(row => row && row.length >= 5);
@@ -1025,7 +1025,7 @@ const shifts = [
 // Renderiza as abas de turno
 function renderShiftTabs() {
     const el = document.getElementById('shiftTabs');
-    if(!el) {
+    if (!el) {
         console.error('Elemento shiftTabs não encontrado!');
         return;
     }
@@ -1060,7 +1060,7 @@ let dateUpdateInterval;
 
 // Limpar o intervalo quando a página for fechada
 window.addEventListener('unload', function() {
-    if(dateUpdateInterval) {
+    if (dateUpdateInterval) {
         clearInterval(dateUpdateInterval);
     }
 });
@@ -1070,30 +1070,30 @@ function loadSavedData() {
     // Limpar IDs duplicados antes de tudo
     console.log(' [INIT] Limpando IDs duplicados...');
     const wasCleared = cleanDuplicateIds();
-    if(wasCleared) {
+    if (wasCleared) {
         console.log(' [INIT] IDs duplicados foram limpos');
     }
     
     // Tentar carregar dados no novo formato (por data)
     const newFormatData = localStorage.getItem('allDateShiftData');
-    if(newFormatData) {
+    if (newFormatData) {
         try {
             dataByDateAndShift = JSON.parse(newFormatData);
             
             // Converter dados para garantir compatibilidade com o painel do professor
             for (let date in dataByDateAndShift) {
                 for (let turno in dataByDateAndShift[date]) {
-                    if(Array.isArray(dataByDateAndShift[date][turno])) {
+                    if (Array.isArray(dataByDateAndShift[date][turno])) {
                         dataByDateAndShift[date][turno] = dataByDateAndShift[date][turno].map(item => {
-                            if(!item || typeof item !== 'object') return item;
+                            if (!item || typeof item !== 'object') return item;
                             
                             // Garantir que cada registro tenha um ID único
-                            if(!item.id) {
+                            if (!item.id) {
                                 item.id = item.room || item.sala || `record_${Math.random().toString(36).substr(2, 9)}`;
                             }
                             
                             // Se está no formato do professor, adicionar campos do admin
-                            if(item.sala && item.professor && !item.room) {
+                            if (item.sala && item.professor && !item.room) {
                                 return {
                                     ...item,
                                     room: item.sala,
@@ -1118,11 +1118,11 @@ function loadSavedData() {
             // Ordenar dados de todos os turnos alfabeticamente por nome do professor
             for (let date in dataByDateAndShift) {
                 for (let turno in dataByDateAndShift[date]) {
-                    if(Array.isArray(dataByDateAndShift[date][turno])) {
+                    if (Array.isArray(dataByDateAndShift[date][turno])) {
                         dataByDateAndShift[date][turno] = dataByDateAndShift[date][turno].sort((a, b) => {
                             const professorA = (a.professorName || '').trim();
                             const professorB = (b.professorName || '').trim();
-                            if(!professorA || !professorB) return 0;
+                            if (!professorA || !professorB) return 0;
                             return professorA.localeCompare(professorB, 'pt-BR');
                         });
                     }
@@ -1139,7 +1139,7 @@ function loadSavedData() {
     
     // Fallback: tentar carregar dados no formato antigo e migrar
     const oldFormatData = localStorage.getItem('allShiftData');
-    if(oldFormatData) {
+    if (oldFormatData) {
         try {
             const oldData = JSON.parse(oldFormatData);
             console.log('Migrando dados do formato antigo...');
@@ -1170,7 +1170,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Configurar seletor de data
     const dateSelector = document.getElementById('dateSelector');
-    if(dateSelector) {
+    if (dateSelector) {
         // Definir data atual como padrão
         dateSelector.value = selectedDate;
         
@@ -1181,7 +1181,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log(`Data alterada de ${oldDate} para ${selectedDate}`);
             
             // Parar sincronização da data anterior
-            if(typeof stopSyncDataRealtime === 'function') {
+            if (typeof stopSyncDataRealtime === 'function') {
                 stopSyncDataRealtime(oldDate, 'manhã');
                 stopSyncDataRealtime(oldDate, 'tarde');
                 stopSyncDataRealtime(oldDate, 'noite');
@@ -1194,22 +1194,22 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Estrutura completa de dados por data:', dataByDateAndShift);
             
             // Carregar dados do Firebase para a nova data
-            if(typeof loadAllDataForDate === 'function') {
+            if (typeof loadAllDataForDate === 'function') {
                 loadAllDataForDate(selectedDate).then(() => {
                     // Ordenar dados de todos os turnos alfabeticamente por nome do professor
                     for (let turno in dataByDateAndShift[selectedDate]) {
-                        if(Array.isArray(dataByDateAndShift[selectedDate][turno])) {
+                        if (Array.isArray(dataByDateAndShift[selectedDate][turno])) {
                             dataByDateAndShift[selectedDate][turno] = dataByDateAndShift[selectedDate][turno].sort((a, b) => {
                                 const professorA = (a.professorName || '').trim();
                                 const professorB = (b.professorName || '').trim();
-                                if(!professorA || !professorB) return 0;
+                                if (!professorA || !professorB) return 0;
                                 return professorA.localeCompare(professorB, 'pt-BR');
                             });
                         }
                     }
                     
                     // Iniciar sincronização em tempo real para a nova data
-                    if(typeof syncDataRealtime === 'function') {
+                    if (typeof syncDataRealtime === 'function') {
                         syncDataRealtime(selectedDate, 'manhã');
                         syncDataRealtime(selectedDate, 'tarde');
                         syncDataRealtime(selectedDate, 'noite');
@@ -1241,13 +1241,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Configurar evento do botão de confirmação de importação
     const confirmImportBtn = document.getElementById('confirmImportShift');
-    if(confirmImportBtn && !confirmImportBtn.hasAttribute('data-listener-added')) {
+    if (confirmImportBtn && !confirmImportBtn.hasAttribute('data-listener-added')) {
         confirmImportBtn.setAttribute('data-listener-added', 'true');
         confirmImportBtn.addEventListener('click', async function() {
             console.log(' Botão de confirmar importação clicado');
             
             const checkedInput = document.querySelector('input[name="importShift"]:checked');
-            if(!checkedInput) {
+            if (!checkedInput) {
                 console.warn(' Nenhum turno selecionado');
                 return;
             }
@@ -1256,22 +1256,22 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('� Turno selecionado:', selectedShift);
             
             const modalElement = document.getElementById('shiftSelectionModal');
-            if(modalElement && typeof bootstrap !== 'undefined') {
+            if (modalElement && typeof bootstrap !== 'undefined') {
                 const modal = bootstrap.Modal.getInstance(modalElement);
-                if(modal) {
+                if (modal) {
                     console.log('� Fechando modal');
                     modal.hide();
                 }
             }
             
-            if(selectedFileForImport) {
+            if (selectedFileForImport) {
                 console.log('� Processando arquivo:', selectedFileForImport.name);
                 await processFileImport(selectedFileForImport, selectedShift);
                 selectedFileForImport = null;
                 
                 // Limpar o input de arquivo para permitir nova importação
                 const fileInput = document.getElementById('fileInput');
-                if(fileInput) {
+                if (fileInput) {
                     fileInput.value = '';
                     console.log(' Input de arquivo limpo');
                 }
@@ -1281,11 +1281,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Listener para detectar mudanças no localStorage (sincronização entre abas)
     window.addEventListener('storage', function(e) {
-        if(e.key === 'allDateShiftData' || e.key === 'allShiftData' || e.key === 'dataUpdateTimestamp') {
+        if (e.key === 'allDateShiftData' || e.key === 'allShiftData' || e.key === 'dataUpdateTimestamp') {
             console.log('[ADMIN] Detectada atualização de dados em outra aba/janela, chave:', e.key);
             console.log('[ADMIN] Novo valor:', e.newValue);
             
-            if(e.key === 'allDateShiftData' && e.newValue) {
+            if (e.key === 'allDateShiftData' && e.newValue) {
                 try {
                     const newData = JSON.parse(e.newValue);
                     console.log('[ADMIN] Dados brutos recebidos via storage:', newData);
@@ -1293,11 +1293,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Ordenar dados de todos os turnos alfabeticamente por nome do professor
                     for (let date in newData) {
                         for (let turno in newData[date]) {
-                            if(Array.isArray(newData[date][turno])) {
+                            if (Array.isArray(newData[date][turno])) {
                                 newData[date][turno] = newData[date][turno].sort((a, b) => {
                                     const professorA = (a.professorName || '').trim();
                                     const professorB = (b.professorName || '').trim();
-                                    if(!professorA || !professorB) return 0;
+                                    if (!professorA || !professorB) return 0;
                                     return professorA.localeCompare(professorB, 'pt-BR');
                                 });
                             }
@@ -1327,14 +1327,14 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 function openRegisterTeacherModal() {
     const modal = document.getElementById('registerTeacherModal');
-    if(!modal) {
+    if (!modal) {
         console.error('❌ Modal não encontrado');
         return;
     }
     modal.style.display = 'flex';
     setTimeout(() => {
         const nameInput = document.getElementById('tpFullName');
-        if(nameInput) nameInput.focus();
+        if (nameInput) nameInput.focus();
     }, 100);
 }
 
@@ -1343,12 +1343,12 @@ function openRegisterTeacherModal() {
  */
 function closeRegisterTeacherModal() {
     const modal = document.getElementById('registerTeacherModal');
-    if(!modal) return;
+    if (!modal) return;
     modal.style.display = 'none';
     const nameInput = document.getElementById('tpFullName');
     const fatsInput = document.getElementById('tpFast');
-    if(nameInput) nameInput.value = '';
-    if(fatsInput) fatsInput.value = '';
+    if (nameInput) nameInput.value = '';
+    if (fatsInput) fatsInput.value = '';
 }
 
 // Inicializar campo FATS com uppercase automático
@@ -1358,7 +1358,7 @@ if(inputFast) {
         inputFast.value = inputFast.value.toUpperCase();
     });
     inputFast.addEventListener('keypress', (e) => {
-        if(e.key === 'Enter') {
+        if (e.key === 'Enter') {
             e.preventDefault();
             saveNewTeacher();
         }
@@ -1374,7 +1374,7 @@ function saveNewTeacher() {
     const nameInput = document.getElementById('tpFullName');
     const fatsInput = document.getElementById('tpFast');
     
-    if(!nameInput || !fatsInput) {
+    if (!nameInput || !fatsInput) {
         console.error('❌ Campos não encontrados');
         showNotification('Erro: Campos do formulário não encontrados!', 'danger');
         return false;
@@ -1429,25 +1429,21 @@ function saveNewTeacher() {
         localStorage.setItem('teacherNames', JSON.stringify(existingTeacherNames));
         
         // Sincronizar com TeachersData se disponível
-        if(typeof TeachersData !== 'undefined' && TeachersData.addTeacher) {
+        if (typeof TeachersData !== 'undefined' && TeachersData.addTeacher) {
             TeachersData.addTeacher(name, fats);
             console.log('✅ Sincronizado com TeachersData');
         }
         
         // Sincronizar com teacherPanel se disponível
-        if(typeof window.addNewProfessorToTeacherPanel === 'function') {
+        if (typeof window.addNewProfessorToTeacherPanel === 'function') {
             window.addNewProfessorToTeacherPanel(name, fats);
             console.log('✅ Sincronizado com teacherPanel');
         }
         
         // Atualizar variável global docentesCodprof
-        if(typeof window.docentesCodprof !== 'undefined') {
+        if (typeof window.docentesCodprof !== 'undefined') {
             window.docentesCodprof[name] = fats;
-<<<<<<< HEAD
-<<<<<<< HEAD:public/src/modules/admin/paineladm.js
-=======
             console.log('✅ Atualizado em window.docentesCodprof');
->>>>>>> parent of 7fbd170 (♻️ refactor: Remove logs de debug e padroniza organização de arquivos JavaScript.)
             
             // Salvar no Firestore
             console.log('🔍 DEBUG: Verificando Firestore...', {
@@ -1457,7 +1453,7 @@ function saveNewTeacher() {
                 fats: fats
             });
             
-            if(typeof addOrUpdateTeacherInFirestore === 'function') {
+            if (typeof addOrUpdateTeacherInFirestore === 'function') {
                 console.log('💾 Chamando addOrUpdateTeacherInFirestore...');
                 addOrUpdateTeacherInFirestore(name, fats)
                     .then(() => {
@@ -1472,9 +1468,6 @@ function saveNewTeacher() {
                 console.error('❌ Função addOrUpdateTeacherInFirestore não encontrada!');
                 showProfessorErrorModal('Firestore não está disponível. Professor salvo apenas localmente.');
             }
-=======
-            console.log('✅ Atualizado em window.docentesCodprof');
->>>>>>> parent of 0f45289 (🔥 Atualização cadastro dos professores):public/js/paineladm.js
         }
         
         // Disparar evento para outras partes do sistema
@@ -1482,20 +1475,6 @@ function saveNewTeacher() {
             detail: { name, fats, timestamp: new Date().toISOString() }
         }));
         console.log('✅ Evento disparado');
-        
-        // Salvar no Firebase (opcional)
-        if (typeof database !== 'undefined' && database) {
-            database.ref('teachers').push({
-                name,
-                fats,
-                createdAt: new Date().toISOString(),
-                createdBy: 'admin'
-            }).then(() => {
-                console.log('✅ Salvo no Firebase');
-            }).catch(err => {
-                console.warn('⚠️ Erro Firebase:', err);
-            });
-        }
         
         // Atualizar interface
         updateTeacherTable();
@@ -1507,7 +1486,7 @@ function saveNewTeacher() {
         
     } catch(error) {
         console.error('❌ Erro ao cadastrar professor:', error);
-        if(typeof ErrorHandler !== 'undefined') {
+        if (typeof ErrorHandler !== 'undefined') {
             ErrorHandler.handle(error, 'saveNewTeacher', { name, fats });
         }
         showNotification('Erro ao cadastrar professor. Verifique os dados e tente novamente.', 'danger');
@@ -1518,13 +1497,13 @@ function saveNewTeacher() {
 function initializeAll() {
     // Inicializar mapeamento de professores se não existir
     let storedTeachers = localStorage.getItem('docentesCodprof');
-    if(!storedTeachers) {
+    if (!storedTeachers) {
         console.log(' Inicializando mapeamento docentesCodprof no localStorage...');
         localStorage.setItem('docentesCodprof', JSON.stringify({}));
     } else {
         try {
             const parsed = JSON.parse(storedTeachers);
-            if(typeof parsed !==  "object" || Array.isArray(parsed)) {
+            if (typeof parsed !==  "object" || Array.isArray(parsed)) {
                 throw new Error('Formato inválido para docentesCodprof');
             }
             console.log(' Mapeamento docentesCodprof carregado com sucesso:', Object.keys(parsed).length, 'professores');
@@ -1538,7 +1517,7 @@ function initializeAll() {
         // Verificar se o botão existe
         const addButton = document.querySelector('button[title="Adicionar Nova Chave"]');
         
-        if(addButton) {
+        if (addButton) {
             console.log('✅ Botão Adicionar encontrado');
             addButton.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -1549,7 +1528,7 @@ function initializeAll() {
             console.warn('⚠️ Botão Adicionar não encontrado!');
             // Buscar por outros seletores possíveis
             const alternativeButton = document.querySelector('[data-action="add-teacher"], .btn-add-teacher, #addTeacherBtn');
-            if(alternativeButton) {
+            if (alternativeButton) {
                 console.log('✅ Botão alternativo encontrado');
                 alternativeButton.addEventListener('click', openRegisterTeacherModal);
             }
@@ -1557,7 +1536,7 @@ function initializeAll() {
         
         // Verificar se o modal existe
         const modal = document.getElementById('registerTeacherModal');
-        if(!modal) {
+        if (!modal) {
             console.error('❌ Modal registerTeacherModal não encontrado no DOM!');
         } else {
             console.log('✅ Modal de cadastro encontrado');
@@ -1570,7 +1549,7 @@ function initializeAll() {
         const nameInput = document.getElementById('tpFullName');
         const fatsInput = document.getElementById('tpFast');
         
-        if(!nameInput || !fatsInput) {
+        if (!nameInput || !fatsInput) {
             console.error('❌ Campos de input não encontrados:', { nameInput, fatsInput });
             showNotification('Erro: Campos do formulário não encontrados!', 'danger');
             return;
@@ -1647,7 +1626,7 @@ function initializeAll() {
     // localStorage.setItem("docentesCodprof", JSON.stringify(docentesCodprof));
    
 
-    if(!localStorage.getItem('docentesCodprof')) {
+    if (!localStorage.getItem('docentesCodprof')) {
         console.log(' Inicializando mapeamento docentesCodprof no localStorage...');
         localStorage.setItem('docentesCodprof', JSON.stringify({}));
     }
@@ -1822,14 +1801,14 @@ function updateSharedDataRecord(recordId, updatedFields) {
                 });
                 
                 // Verificar se records é um array
-                if(!Array.isArray(records)) {
+                if (!Array.isArray(records)) {
                     console.warn(` records não é um array em ${date}/${shift}:`, records);
                     continue;
                 }
                 
                 const recordIndex = records.findIndex(record => record && record.id === recordId);
                 
-                if(recordIndex !== -1) {
+                if (recordIndex !== -1) {
                     // Atualizar o registro com os novos dados
                     Object.assign(records[recordIndex], updatedFields);
                     
@@ -1845,12 +1824,12 @@ function updateSharedDataRecord(recordId, updatedFields) {
                     
                     // Também atualizar na estrutura allShiftData se existir
                     const currentDateData = dataByDateAndShift[date];
-                    if(currentDateData) {
+                    if (currentDateData) {
                         localStorage.setItem('allShiftData', JSON.stringify(currentDateData));
                     }
                     
                     // Sincronizar via Firebase se disponível
-                    if(typeof saveDataToFirebase === 'function') {
+                    if (typeof saveDataToFirebase === 'function') {
                         // DEBUG: Verificar dados antes de enviar ao Firebase
                         console.log(' [ADMIN] Edição de registro - Dados antes de enviar ao Firebase:');
                         console.log(' [ADMIN] - date:', date);
@@ -1858,7 +1837,7 @@ function updateSharedDataRecord(recordId, updatedFields) {
                         console.log(' [ADMIN] - records length:', records.length);
                         
                         // Sempre sincronizar com Firebase após atualização, mesmo se o array ficar vazio
-                        if(records && Array.isArray(records)) {
+                        if (records && Array.isArray(records)) {
                             console.log(' [ADMIN] Sincronizando atualização com Firebase...', {
                                 date,
                                 shift,
@@ -1893,25 +1872,25 @@ function updateSharedDataRecord(recordId, updatedFields) {
                     break;
                 }
             }
-            if(recordFound) break;
+            if (recordFound) break;
         }
         
         // Se não encontrou na estrutura principal, tentar na estrutura legacy
-        if(!recordFound) {
+        if (!recordFound) {
             console.log(' Tentando encontrar na estrutura legacy allShiftData...');
             
             const allShiftDataStr = localStorage.getItem('allShiftData');
-            if(allShiftDataStr) {
+            if (allShiftDataStr) {
                 try {
                     const allShiftData = JSON.parse(allShiftDataStr);
                     
                     for (const shift in allShiftData) {
                         const shiftRecords = allShiftData[shift];
                         
-                        if(Array.isArray(shiftRecords)) {
+                        if (Array.isArray(shiftRecords)) {
                             const recordIndex = shiftRecords.findIndex(record => record && record.id === recordId);
                             
-                            if(recordIndex !== -1) {
+                            if (recordIndex !== -1) {
                                 Object.assign(shiftRecords[recordIndex], updatedFields);
                                 shiftRecords[recordIndex].lastEdited = new Date().toISOString();
                                 shiftRecords[recordIndex].editedBy = 'admin';
@@ -1942,7 +1921,7 @@ function updateSharedDataRecord(recordId, updatedFields) {
             }
         }
         
-        if(!recordFound) {
+        if (!recordFound) {
             console.warn(` Registro com ID ${recordId} não encontrado em nenhuma estrutura`);
         }
         
@@ -2292,7 +2271,7 @@ function deleteSharedDataRecord(recordId) {
                     console.log(' [ADMIN] - records length:', records.length);
                     
                     // Sempre sincronizar com Firebase após exclusão, mesmo se o array ficar vazio
-                    if(records && Array.isArray(records)) {
+                    if (records && Array.isArray(records)) {
                         console.log(' [ADMIN] Sincronizando exclusão com Firebase...', {
                             date,
                             shift,
@@ -2494,7 +2473,7 @@ function login(){
 
 // Botão cancelar (voltar para a tela anterior FUNCIONANDOOOO)
 function cancel(){
-    if(window.history.length > 1) {
+    if (window.history.length > 1) {
         window.history.back();
     } else {
         window.location.href = 'teacherPanel.html';
@@ -2519,7 +2498,7 @@ function getStatusBadge(status) {
 
 // Função para gerar o botão de ação baseado no status da chave
 function getActionButton(recordId, status) {
-    if(status === 'disponivel') {
+    if (status === 'disponivel') {
         // Chave disponível - botão "Retirar" ativo
         return `
             <button 
@@ -2531,7 +2510,7 @@ function getActionButton(recordId, status) {
                 Retirar
             </button>
         `;
-    } else if(status === 'em_uso') {
+    } else if (status === 'em_uso') {
         // Chave em uso - botão "Devolver" ativo
         return `
             <button 
@@ -2543,7 +2522,7 @@ function getActionButton(recordId, status) {
                 Devolver
             </button>
         `;
-    } else if(status === 'retirada' || status === 'devolvida') {
+    } else if (status === 'retirada' || status === 'devolvida') {
         // Chave disponível - botão "Retirar" ativo
         return `
             <button 
@@ -2572,7 +2551,7 @@ function getActionButton(recordId, status) {
 // Função para atualizar a data atual
 function updateCurrentDate() {
     const dateElement = document.getElementById('currentDate');
-    if(dateElement) {
+    if (dateElement) {
         const now = new Date();
         const formattedDate = now.toLocaleDateString('pt-BR', {
             weekday: 'long',
@@ -2912,21 +2891,21 @@ function generateEmptyRow(shiftCapitalized, formattedDate) {
 // Geração de linha de tabela com dados
 function generateTableRow(record) {
     // Debug para alocações manuais
-    if(record.tipo === 'manual_allocation') {
+    if (record.tipo === 'manual_allocation') {
         console.log(' [DEBUG] Gerando linha para alocação manual:', { id: record.id, sala: record.sala, bloco: record.bloco, numero: record.numero, professor: record.professor });
     }
     
     // Para alocações manuais, concatenar bloco + sala + número
     let room;
-    if(record.tipo === 'manual_allocation') {
+    if (record.tipo === 'manual_allocation') {
         const bloco = record.bloco || '';
         const sala = record.sala || record.room || '';
         const numero = record.numero || '';
         
         // Formatar: "Bloco Sala Número" ou variações dependendo do que está disponível
-        if(bloco && sala && numero) {
+        if (bloco && sala && numero) {
             room = `${bloco} ${sala} ${numero}`;
-        } else if(bloco && sala) {
+        } else if (bloco && sala) {
             room = `${bloco} ${sala}`;
         } else {
             room = sala || record.room || '-';
@@ -3439,9 +3418,9 @@ function generateUniqueRecordId() {
     // Coletar todos os IDs existentes
     for (const date in allData) {
         for (const shift in allData[date]) {
-            if(Array.isArray(allData[date][shift])) {
+            if (Array.isArray(allData[date][shift])) {
                 allData[date][shift].forEach(record => {
-                    if(record.id) existingIds.add(record.id);
+                    if (record.id) existingIds.add(record.id);
                 });
             }
         }
@@ -3467,13 +3446,13 @@ function cleanDuplicateIds() {
     
     for (const date in allData) {
         for (const shift in allData[date]) {
-            if(Array.isArray(allData[date][shift])) {
+            if (Array.isArray(allData[date][shift])) {
                 const seenIds = new Set();
                 const cleanArray = [];
                 
                 allData[date][shift].forEach(record => {
-                    if(!record.id || !seenIds.has(record.id)) {
-                        if(!record.id) {
+                    if (!record.id || !seenIds.has(record.id)) {
+                        if (!record.id) {
                             record.id = generateUniqueRecordId();
                             console.log(' [CLEAN] ID criado para registro sem ID:', record.id);
                         }
@@ -3490,7 +3469,7 @@ function cleanDuplicateIds() {
         }
     }
     
-    if(cleaned) {
+    if (cleaned) {
         localStorage.setItem('allDateShiftData', JSON.stringify(allData));
         dataByDateAndShift = allData;
         console.log(' [CLEAN] Dados limpos e salvos');
@@ -3778,7 +3757,7 @@ function handleKeyAction(recordId, currentStatus) {
     let currentData = getCurrentShiftData();
     
     // Garantir que currentData é um array
-    if(!Array.isArray(currentData)) {
+    if (!Array.isArray(currentData)) {
         currentData = [];
     }
     
@@ -3792,7 +3771,7 @@ function handleKeyAction(recordId, currentStatus) {
     let targetData = currentData; // Array onde o registro foi encontrado
     
     // Se não encontrou no turno atual, procurar em todos os dados da variável global
-    if(!record) {
+    if (!record) {
         console.log(' [DEBUG] Não encontrado no turno atual, procurando globalmente...');
         // Garantir que dataByDateAndShift está atualizada
         dataByDateAndShift = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
@@ -3800,9 +3779,9 @@ function handleKeyAction(recordId, currentStatus) {
         for (const date in dataByDateAndShift) {
             for (const shift in dataByDateAndShift[date]) {
                 const shiftData = dataByDateAndShift[date][shift];
-                if(Array.isArray(shiftData)) {
+                if (Array.isArray(shiftData)) {
                     const foundRecord = shiftData.find(r => String(r.id) === String(recordId));
-                    if(foundRecord) {
+                    if (foundRecord) {
                         console.log(' [DEBUG] Registro encontrado em', date, shift, ':', foundRecord);
                         record = foundRecord;
                         targetData = shiftData;
@@ -3810,11 +3789,11 @@ function handleKeyAction(recordId, currentStatus) {
                     }
                 }
             }
-            if(record) break;
+            if (record) break;
         }
     }
     
-    if(!record) {
+    if (!record) {
         console.error(' [DEBUG] Registro não encontrado:', recordId);
         return;
     }
@@ -3827,7 +3806,7 @@ function handleKeyAction(recordId, currentStatus) {
         minute: '2-digit' 
     });
 
-    if(currentStatus === 'em_uso') {
+    if (currentStatus === 'em_uso') {
         // Devolver a chave
         record.status = 'devolvida';
         record.returnTime = timeString;
@@ -3837,7 +3816,7 @@ function handleKeyAction(recordId, currentStatus) {
         
         // Mostrar notificação Bootstrap
         showNotification(`Chave devolvida por ${record.professorName} às ${record.returnTime}`, 'success');
-    } else if(currentStatus === 'retirada' || currentStatus === 'devolvida' || currentStatus === 'disponivel') {
+    } else if (currentStatus === 'retirada' || currentStatus === 'devolvida' || currentStatus === 'disponivel') {
         // Retirar a chave
         record.status = 'em_uso';
         record.withdrawalTime = timeString;
@@ -3852,7 +3831,7 @@ function handleKeyAction(recordId, currentStatus) {
     }
 
     // Salvar no Firebase para sincronização em tempo real
-    if(typeof saveDataToFirebase === 'function') {
+    if (typeof saveDataToFirebase === 'function') {
         // Encontrar a data e turno corretos para salvar no Firebase
         let saveDate = selectedDate;
         let saveShift = activeShift;
@@ -3860,7 +3839,7 @@ function handleKeyAction(recordId, currentStatus) {
         // Se o registro foi encontrado em outra data/turno, usar essa informação
         for (const date in dataByDateAndShift) {
             for (const shift in dataByDateAndShift[date]) {
-                if(dataByDateAndShift[date][shift] === targetData) {
+                if (dataByDateAndShift[date][shift] === targetData) {
                     saveDate = date;
                     saveShift = shift;
                     break;
@@ -3868,7 +3847,7 @@ function handleKeyAction(recordId, currentStatus) {
             }
         }
         
-        if(targetData && Array.isArray(targetData) && targetData.length > 0) {
+        if (targetData && Array.isArray(targetData) && targetData.length > 0) {
             saveDataToFirebase(saveDate, saveShift, targetData).then(() => {
                 console.log(' [ADMIN] Dados salvos no Firebase após ação de chave');
             }).catch(error => {
@@ -3915,7 +3894,7 @@ function showNotification(message, type = 'info') {
     
     // Remover automaticamente após 5 segundos
     setTimeout(() => {
-        if(notification.parentNode) {
+        if (notification.parentNode) {
             notification.remove();
         }
     }, 5000);
@@ -3937,7 +3916,7 @@ function initializePainelAdm() {
     initializeDropdowns();
     
     // Inicializar sincronização Firebase se estiver disponível
-    if(typeof initializeFirebaseSync === 'function') {
+    if (typeof initializeFirebaseSync === 'function') {
         console.log('Inicializando sincronização Firebase...');
         initializeFirebaseSync();
     }
@@ -3945,7 +3924,7 @@ function initializePainelAdm() {
     // Verificar se as abas foram renderizadas
     setTimeout(() => {
         const tabsElement = document.getElementById('shiftTabs');
-        if(tabsElement) {
+        if (tabsElement) {
             console.log('Conteúdo das abas após renderização:', tabsElement.innerHTML);
         }
     }, 200);
@@ -3960,15 +3939,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const usernameInput = document.getElementById('username');
     const senhaInput = document.getElementById('senha');
     
-    if(usernameInput && senhaInput) {
+    if (usernameInput && senhaInput) {
         usernameInput.addEventListener('keypress', function(e) {
-            if(e.key === 'Enter') {
+            if (e.key === 'Enter') {
                 senhaInput.focus();
             }
         });
         
         senhaInput.addEventListener('keypress', function(e) {
-            if(e.key === 'Enter') {
+            if (e.key === 'Enter') {
                 login();
             }
         });
@@ -3979,7 +3958,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Botão Adicionar
     // const addButton = document.querySelector('button[title="Adicionar Nova Chave"]');
-    // if(addButton) {
+    // if (addButton) {
     //     addButton.addEventListener('click', function() {
     //         showNotification('Funcionalidade de adicionar será implementada em breve!', 'warning');
     //     });
@@ -3987,7 +3966,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Botão Editar
     const editButton = document.querySelector('button[title="Editar Configurações"]');
-    if(editButton) {
+    if (editButton) {
         editButton.addEventListener('click', function() {
             showNotification('Funcionalidade de editar será implementada em breve!', 'warning');
         });
@@ -3995,7 +3974,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Botão Cancelar do overlay (evita duplicidade se já houver onclick inline)
     const cancelButton = document.getElementById('cancel-btn');
-    if(cancelButton && !cancelButton.getAttribute('onclick')) {
+    if (cancelButton && !cancelButton.getAttribute('onclick')) {
         cancelButton.addEventListener('click', cancel);
     }
 });
@@ -4003,13 +3982,13 @@ document.addEventListener('DOMContentLoaded', function() {
 // Impede foco/tab no conteúdo fora do overlay e mantém foco em ciclo dentro do popup
 function trapFocusInOverlay() {
     const overlay = document.getElementById('overlay');
-    if(!overlay || overlay.style.display === 'none') return;
+    if (!overlay || overlay.style.display === 'none') return;
 
     document.body.classList.add('overlay-open');
 
     const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
     const popup = overlay.querySelector('.popup');
-    if(!popup) return;
+    if (!popup) return;
 
     const focusable = Array.from(popup.querySelectorAll(focusableSelectors))
         .filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1);
@@ -4018,36 +3997,36 @@ function trapFocusInOverlay() {
     const lastEl = focusable[focusable.length - 1];
 
     // Força foco inicial
-    if(firstEl) firstEl.focus();
+    if (firstEl) firstEl.focus();
 
     function handleKeydown(e) {
-        if(e.key === 'Tab') {
-            if(focusable.length === 0) {
+        if (e.key === 'Tab') {
+            if (focusable.length === 0) {
                 e.preventDefault();
                 return;
             }
-            if(e.shiftKey) {
-                if(document.activeElement === firstEl) {
+            if (e.shiftKey) {
+                if (document.activeElement === firstEl) {
                     e.preventDefault();
                     lastEl.focus();
                 }
             } else {
-                if(document.activeElement === lastEl) {
+                if (document.activeElement === lastEl) {
                     e.preventDefault();
                     firstEl.focus();
                 }
             }
-        } else if(e.key === 'Escape') {
+        } else if (e.key === 'Escape') {
             // Permite fechar com ESC
             cancel();
         }
     }
 
     function preventFocusOutside(e) {
-        if(!popup.contains(e.target)) {
+        if (!popup.contains(e.target)) {
             e.stopPropagation();
             e.preventDefault();
-            if(firstEl) firstEl.focus();
+            if (firstEl) firstEl.focus();
         }
     }
 
@@ -4056,7 +4035,7 @@ function trapFocusInOverlay() {
 
     // Remover handlers ao fechar
     const observer = new MutationObserver(() => {
-        if(overlay.style.display === 'none') {
+        if (overlay.style.display === 'none') {
             document.removeEventListener('keydown', handleKeydown, true);
             document.removeEventListener('focusin', preventFocusOutside, true);
             observer.disconnect();
@@ -4068,7 +4047,7 @@ function trapFocusInOverlay() {
 // Ativar trapFocus se o overlay iniciar visível (sem login)
 document.addEventListener('DOMContentLoaded', function() {
     const overlay = document.getElementById('overlay');
-    if(overlay && overlay.style.display !== 'none') {
+    if (overlay && overlay.style.display !== 'none') {
         trapFocusInOverlay();
     }
 });
@@ -4339,7 +4318,7 @@ function loadManualAllocationsTable() {
                 console.log(` [DEBUG] Processando ${date} - ${shift}:`, shiftData);
                 
                 // Verificar se é um array ou objeto
-                if(Array.isArray(shiftData)) {
+                if (Array.isArray(shiftData)) {
                     // Se for array, iterar diretamente
                     shiftData.forEach(record => {
                         if(record && record.tipo === 'manual_allocation') {
@@ -4347,7 +4326,7 @@ function loadManualAllocationsTable() {
                             manualAllocations.push(record);
                         }
                     });
-                } else if(shiftData && typeof shiftData === 'object') {
+                } else if (shiftData && typeof shiftData === 'object') {
                     // Se for objeto, iterar pelas chaves
                     Object.keys(shiftData).forEach(recordKey => {
                         const record = shiftData[recordKey];
@@ -4392,9 +4371,9 @@ function loadManualAllocationsTable() {
             const numero = allocation.numero || '';
             
             let salaCompleta;
-            if(bloco && sala && numero) {
+            if (bloco && sala && numero) {
                 salaCompleta = `${bloco} ${sala} ${numero}`;
-            } else if(bloco && sala) {
+            } else if (bloco && sala) {
                 salaCompleta = `${bloco} ${sala}`;
             } else {
                 salaCompleta = sala || '-';
@@ -4444,17 +4423,17 @@ function deleteManualAllocation(allocationId, dataAlocacao, periodo) {
         console.log(' [DEBUG] Excluindo alocação:', allocationId, 'de', dataAlocacao, periodo);
         console.log(' [DEBUG] Dados antes da exclusão:', dataByDateAndShift[dataAlocacao]?.[periodo]);
         
-        if(dataByDateAndShift[dataAlocacao] && dataByDateAndShift[dataAlocacao][periodo]) {
+        if (dataByDateAndShift[dataAlocacao] && dataByDateAndShift[dataAlocacao][periodo]) {
             const shiftData = dataByDateAndShift[dataAlocacao][periodo];
             
             // Verificar se é um array ou objeto
-            if(Array.isArray(shiftData)) {
+            if (Array.isArray(shiftData)) {
                 // Se for array, filtrar diretamente
                 dataByDateAndShift[dataAlocacao][periodo] = shiftData.filter(record => record.id !== allocationId);
-            } else if(typeof shiftData === 'object') {
+            } else if (typeof shiftData === 'object') {
                 // Se for objeto, iterar e remover pela chave
                 Object.keys(shiftData).forEach(key => {
-                    if(shiftData[key] && shiftData[key].id === allocationId) {
+                    if (shiftData[key] && shiftData[key].id === allocationId) {
                         delete shiftData[key];
                     }
                 });
@@ -4474,7 +4453,7 @@ function deleteManualAllocation(allocationId, dataAlocacao, periodo) {
             if(typeof saveDataToFirebase === 'function') {
                 // Converter objeto para array se necessário
                 let dataToSync = updatedShiftData;
-                if(!Array.isArray(updatedShiftData) && typeof updatedShiftData === 'object') {
+                if (!Array.isArray(updatedShiftData) && typeof updatedShiftData === 'object') {
                     dataToSync = Object.values(updatedShiftData).filter(item => item != null);
                 }
                 
@@ -4489,7 +4468,7 @@ function deleteManualAllocation(allocationId, dataAlocacao, periodo) {
             }
             
             // Se for a data atual sendo visualizada, atualizar a tabela principal
-            if(dataAlocacao === selectedDate) {
+            if (dataAlocacao === selectedDate) {
                 renderTable();
             }
         }
@@ -4525,7 +4504,7 @@ function getAvailableShiftsText(currentShift) {
     
     const availableShifts = allShifts.filter(shift => shiftOrder[shift] >= currentOrder);
     
-    if(availableShifts.length === 0) {
+    if (availableShifts.length === 0) {
         return 'nenhum (todos os turnos já passaram)';
     }
     
@@ -4789,7 +4768,7 @@ async function handleManualAllocation() {
         }
         
         // Garantir que a estrutura da data existe
-        if(!dataByDateAndShift[dataAlocacao]) {
+        if (!dataByDateAndShift[dataAlocacao]) {
             dataByDateAndShift[dataAlocacao] = {};
         }
         
@@ -4800,7 +4779,7 @@ async function handleManualAllocation() {
         // Verificar se já existem dados no localStorage para esta data/turno
         const hasLocalData = dataByDateAndShift[dataAlocacao][turno] && Array.isArray(dataByDateAndShift[dataAlocacao][turno]) && dataByDateAndShift[dataAlocacao][turno].length > 0;
         
-        if(hasLocalData) {
+        if (hasLocalData) {
             console.log(` [ALOCAÇÃO MANUAL] Dados locais encontrados (${dataByDateAndShift[dataAlocacao][turno].length} registros). Adicionando nova alocação...`);
             // Se já temos dados locais, assumimos que estão sincronizados
             dataByDateAndShift[dataAlocacao][turno].push(manualAllocation);
@@ -4808,13 +4787,13 @@ async function handleManualAllocation() {
             console.log(' [ALOCAÇÃO MANUAL] Sem dados locais. Buscando dados do Firebase...');
             
             // Tentar buscar dados do Firebase antes de criar um array vazio
-            if(typeof loadDataFromFirebase === 'function') {
+            if (typeof loadDataFromFirebase === 'function') {
                 try {
                     const firebaseData = await loadDataFromFirebase(dataAlocacao, turno);
                     console.log(` [ALOCAÇÃO MANUAL] Dados do Firebase carregados: ${firebaseData ? firebaseData.length : 0} registros`);
                     
                     // Se o Firebase retornou dados, usar esses dados como base
-                    if(firebaseData && Array.isArray(firebaseData) && firebaseData.length > 0) {
+                    if (firebaseData && Array.isArray(firebaseData) && firebaseData.length > 0) {
                         console.log(` [ALOCAÇÃO MANUAL] Usando ${firebaseData.length} registros existentes do Firebase`);
                         dataByDateAndShift[dataAlocacao][turno] = [...firebaseData];
                         dataByDateAndShift[dataAlocacao][turno].push(manualAllocation);
@@ -4867,7 +4846,7 @@ async function handleManualAllocation() {
         showNotification(`Alocação manual registrada com sucesso para ${formatDate(dataAlocacao)} - ${capitalizeFirst(turno)}!`, 'success');
         
         // Se a alocação foi feita para a data atual sendo visualizada, atualizar a tabela
-        if(dataAlocacao === selectedDate) {
+        if (dataAlocacao === selectedDate) {
             console.log(' [ALOCAÇÃO MANUAL] Atualizando tabela pois a alocação foi feita para a data atual');
             renderTable();
         } else {

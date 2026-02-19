@@ -63,7 +63,7 @@
         const originalAddEventListener = EventTarget.prototype.addEventListener;
         EventTarget.prototype.addEventListener = function(type, listener, options) {
             // Permite apenas eventos internos do navegador
-            if(this === window && type === 'load') {
+            if (this === window && type === 'load') {
                 return originalAddEventListener.call(this, type, listener, options);
             }
             // Bloqueia todos os outros eventos
@@ -259,7 +259,7 @@
      * Inicializa o bloqueio para dispositivos móveis
      */
     function initMobileBlocker() {
-        if(isMobileDevice()) {
+        if (isMobileDevice()) {
             console.warn('[Mobile Blocker] Dispositivo móvel detectado - Bloqueando funcionalidades');
             
             // Injeta estilos
@@ -269,7 +269,7 @@
             disableScripts();
             
             // Cria overlay quando o DOM estiver pronto
-            if(document.readyState === 'loading') {
+            if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', createBlockOverlay);
             } else {
                 createBlockOverlay();

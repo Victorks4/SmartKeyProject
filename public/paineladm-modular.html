@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartKey System - Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/pages-styles.css">
+</head>
+<body>
+    <!-- Content here -->
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+    <!-- ⚠️ CRITICAL: Configure environment variables in Vercel -->
+    <!-- For local development, create .env.local file -->
+    <script>
+        // Inject environment variables for Firebase config
+        window.__FIREBASE_API_KEY__ = '{{ VITE_FIREBASE_API_KEY }}';
+        window.__FIREBASE_AUTH_DOMAIN__ = '{{ VITE_FIREBASE_AUTH_DOMAIN }}';
+        window.__FIREBASE_DATABASE_URL__ = '{{ VITE_FIREBASE_DATABASE_URL }}';
+        window.__FIREBASE_PROJECT_ID__ = '{{ VITE_FIREBASE_PROJECT_ID }}';
+        window.__FIREBASE_STORAGE_BUCKET__ = '{{ VITE_FIREBASE_STORAGE_BUCKET }}';
+        window.__FIREBASE_MESSAGING_SENDER_ID__ = '{{ VITE_FIREBASE_MESSAGING_SENDER_ID }}';
+        window.__FIREBASE_APP_ID__ = '{{ VITE_FIREBASE_APP_ID }}';
+    </script>
+    
+    <!-- Core Modules (load first) -->
+    <script src="/js/config.js"></script>
+    <script src="/js/error-handler.js"></script>
+    <script src="/js/validators.js"></script>
+    
+    <!-- Data Modules -->
+    <script src="/js/rooms-data.js"></script>
+    <script src="/js/teachers-data.js"></script>
+    
+    <!-- Legacy Utils (backward compatibility) -->
+    <script src="/js/utilis.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="/js/firebase-config.js"></script>
+    
+    <!-- Page Script -->
+    <script src="/js/paineladm.js"></script>
+    
+    <!-- Bootstrap Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

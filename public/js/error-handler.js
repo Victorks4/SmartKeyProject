@@ -39,14 +39,14 @@ const ErrorHandler = {
 
     // Adicionar ao log
     this.errorLog.push(errorData);
-    if(this.errorLog.length > this.MAX_LOG_SIZE) {
+    if (this.errorLog.length > this.MAX_LOG_SIZE) {
       this.errorLog.shift();
     }
 
     // Log no console (apenas em desenvolvimento)
-    if(this.isDevelopment()) {
+    if (this.isDevelopment()) {
       console.error(`[${errorData.type}] ${context}:`, error);
-      if(metadata && Object.keys(metadata).length > 0) {
+      if (metadata && Object.keys(metadata).length > 0) {
         console.error('Metadata:', metadata);
       }
     }
@@ -55,7 +55,7 @@ const ErrorHandler = {
     this.notifyUser(errorData);
 
     // Em produção, enviar para serviço de monitoramento (ex: Sentry)
-    if(!this.isDevelopment()) {
+    if (!this.isDevelopment()) {
       this.reportToMonitoring(errorData);
     }
 
@@ -70,16 +70,16 @@ const ErrorHandler = {
   classifyError(error) {
     const message = error?.message || String(error);
 
-    if(message.includes('Firebase') || message.includes('database')) {
+    if (message.includes('Firebase') || message.includes('database')) {
       return this.ErrorTypes.FIREBASE;
     }
-    if(message.includes('network') || message.includes('fetch') || message.includes('timeout')) {
+    if (message.includes('network') || message.includes('fetch') || message.includes('timeout')) {
       return this.ErrorTypes.NETWORK;
     }
-    if(message.includes('validação') || message.includes('inválido')) {
+    if (message.includes('validação') || message.includes('inválido')) {
       return this.ErrorTypes.VALIDATION;
     }
-    if(message.includes('localStorage') || message.includes('storage')) {
+    if (message.includes('localStorage') || message.includes('storage')) {
       return this.ErrorTypes.STORAGE;
     }
 
@@ -92,7 +92,7 @@ const ErrorHandler = {
    */
   notifyUser(errorData) {
     // Verificar se função showNotification existe (do paineladm.js)
-    if(typeof showNotification === 'function') {
+    if (typeof showNotification === 'function') {
       const userMessage = this.getUserFriendlyMessage(errorData);
       showNotification(userMessage, 'error');
     }
@@ -195,6 +195,6 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 // Exportar
-if(typeof module !== 'undefined' && module.exports) {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = ErrorHandler;
 }

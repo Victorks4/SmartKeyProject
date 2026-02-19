@@ -10,7 +10,7 @@ const Validators = {
    * @returns {string}
    */
   sanitizeString(input) {
-    if(typeof input !== 'string') return '';
+    if (typeof input !== 'string') return '';
     
     return input
       .trim()
@@ -36,9 +36,9 @@ const Validators = {
    * @returns {boolean}
    */
   isValidDate(date) {
-    if(typeof date !== 'string') return false;
+    if (typeof date !== 'string') return false;
     const regex = /^\d{4}-\d{2}-\d{2}$/;
-    if(!regex.test(date)) return false;
+    if (!regex.test(date)) return false;
     
     const dateObj = new Date(date);
     return dateObj instanceof Date && !isNaN(dateObj);
@@ -59,7 +59,7 @@ const Validators = {
    * @returns {boolean}
    */
   isValidRoom(room) {
-    if(!room || typeof room !== 'object') return false;
+    if (!room || typeof room !== 'object') return false;
     
     return (
       typeof room.sala === 'string' &&
@@ -75,7 +75,7 @@ const Validators = {
    * @returns {boolean}
    */
   isValidAllocationRecord(record) {
-    if(!record || typeof record !== 'object') return false;
+    if (!record || typeof record !== 'object') return false;
 
     return (
       record.id &&
@@ -91,11 +91,11 @@ const Validators = {
    * @returns {Object}
    */
   cleanObject(obj) {
-    if(!obj || typeof obj !== 'object') return {};
+    if (!obj || typeof obj !== 'object') return {};
     
     const cleaned = {};
     for (const [key, value] of Object.entries(obj)) {
-      if(value !== undefined && value !== null) {
+      if (value !== undefined && value !== null) {
         cleaned[key] = value;
       }
     }
@@ -133,6 +133,6 @@ const Validators = {
 };
 
 // Exportar para uso em outros módulos
-if(typeof module !== 'undefined' && module.exports) {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = Validators;
 }

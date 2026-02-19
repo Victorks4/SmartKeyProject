@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemplo de Uso das Imagens - SENAI Key System</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="imgs/icon-chave.png">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="paineladm.css">
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid">
+            <div class="navbar-brand d-flex align-items-center">
+                <img src="public/senailogo.png" alt="Logo SENAI" class="me-2" style="height: 40px;">
+                <div class="d-flex flex-column">
+                    <span class="fw-bold fs-5">SENAIKey</span>
+                    <span class="small text-light">Sistema de Chaves</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex align-items-center mb-4">
+                    <i class="bi bi-images fs-1 text-primary me-3"></i>
+                    <div>
+                        <h1 class="h2 mb-1 fw-bold">Exemplo de Uso das Imagens</h1>
+                        <p class="text-muted mb-0">Como referenciar corretamente as imagens na pasta public</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Exemplo da Logo SENAI -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-image me-2"></i>
+                            Logo SENAI
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="public/imgs/senailogo.png" alt="Logo SENAI" class="img-fluid mb-3" style="max-height: 200px;">
+                        <h6 class="fw-bold">Caminho da Imagem:</h6>
+                        <code class="bg-light p-2 rounded d-block">public/senailogo.png</code>
+                        <p class="text-muted mt-2 mb-0">
+                            Esta é a logo oficial do SENAI que aparece no cabeçalho do sistema.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exemplo da Chave Animada -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-key me-2"></i>
+                            Chave Animada (GIF)
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="public/chave-unscreen.gif" alt="Chave animada" class="img-fluid mb-3" style="max-height: 200px;">
+                        <h6 class="fw-bold">Caminho da Imagem:</h6>
+                        <code class="bg-light p-2 rounded d-block">public/chave-unscreen.gif</code>
+                        <p class="text-muted mt-2 mb-0">
+                            GIF animado da chave que aparece no título principal do sistema.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exemplo do Placeholder -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-image me-2"></i>
+                            Imagem Placeholder
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="public/placeholder.svg" alt="Placeholder" class="img-fluid mb-3" style="max-height: 200px;">
+                        <h6 class="fw-bold">Caminho da Imagem:</h6>
+                        <code class="bg-light p-2 rounded d-block">public/placeholder.svg</code>
+                        <p class="text-muted mt-2 mb-0">
+                            Imagem SVG placeholder para uso em desenvolvimento e testes.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações sobre a Estrutura -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-folder me-2"></i>
+                            Estrutura de Pastas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="fw-bold">Organização do Projeto:</h6>
+                        <div class="bg-light p-3 rounded">
+                            <pre class="mb-0"><code>SmartKeyProject/
+├── paineladm.html
+├── paineladm.css
+├── paineladm.js
+├── public/
+│   ├── senailogo.png
+│   ├── chave-unscreen.gif
+│   └── placeholder.svg
+└── README-conversao.md</code></pre>
+                        </div>
+                        <p class="text-muted mt-3 mb-0">
+                            Todas as imagens devem estar na pasta <code>public/</code> e serem referenciadas com caminhos relativos.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botão de Voltar -->
+        <div class="row">
+            <div class="col-12 text-center">
+                <a href="paineladm.html" class="btn btn-primary btn-lg">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    Voltar para o Painel Administrativo
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
