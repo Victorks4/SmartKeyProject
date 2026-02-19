@@ -438,40 +438,27 @@ function readFileData(file) {
                     if(!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) 
                         throw new Error(`Arquivo ${fileExt.toUpperCase()} inválido ou vazio`);
                 } else if(isExcelType) {
-                    // Processar qualquer formato Excel (xlsx, xls, xlsm, etc.)
+                    // Processar qualquer formato Excel
                     const data = new Uint8Array(e.target.result);
                     if(!data || data.length === 0) 
                         throw new Error('Arquivo vazio ou corrompido');
 
                     // Configuração robusta para diferentes formatos Excel
-                    try {
-                        workbook = XLSX.read(data, { 
-                            type:       'array',
-                            raw:        false, // Permitir conversão de tipos para melhor compatibilidade com .xls
-                            cellText:   true,  // Converter células para texto
-                            cellDates:  true,
-                            cellNF:     false,
-                            codepage:   65001, // UTF-8
-                            cellStyles: true,
-                            sheetStubs: true, // Incluir células vazias
-                            defval:     '',   // Valor padrão string vazia para células vazias
-                            WTF:        false
-                        });
-                    } catch(xlsError) {
-                        // Fallback para formato .xls antigo (BIFF)
-                        try {
-                            workbook = XLSX.read(data, { 
-                                type:       'array',
-                                raw:        true,
-                                cellDates:  true,
-                                codepage:   1252, // Windows-1252 (comum em .xls antigos)
-                                sheetStubs: true,
-                                defval:     ''
-                            });
-                        } catch(xlsFallbackError) {
-                            throw new Error(`Não foi possível ler o arquivo Excel (.${fileExt}). Tente salvar como .xlsx e importar novamente.`);
-                        }
-                    }
+                    workbook = XLSX.read(data, { 
+                        type:       'array',
+                        raw:        true, // Mantém os dados brutos
+                        cellText:   false, // Não converte para texto ainda
+                        cellDates:  true,
+                        cellNF:     false,
+                        codepage:   65001, // UTF-8
+                        // Opções para lidar com células mescladas
+                        cellStyles: true,
+                        sheetStubs: true, // Incluir células vazias
+                        defval:     null, // Valor padrão para células vazias
+                        // Opções para diferentes formatos Excel
+                        password:   "", // Para arquivos protegidos (vazio = sem senha)
+                        WTF:        false // Modo de compatibilidade
+                    });
 
                     if(!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) 
                         throw new Error(`Arquivo Excel (${fileExt}) inválido ou sem planilhas`);
@@ -628,7 +615,7 @@ function readFileData(file) {
                                     if(keyUpper === patternUpper) {
                                         const value = obj[key];
                                         if(value && String(value).trim() !== '') {
-                                            return String(value).trim();
+                                            if(index === 0) return String(value).trim();
                                         }
                                     }
                                     
@@ -636,10 +623,18 @@ function readFileData(file) {
                                     if(keyUpper.includes(patternUpper)) {
                                         const value = obj[key];
                                         if(value && String(value).trim() !== '') {
-                                            return String(value).trim();
+                                            if(index === 0) return String(value).trim();
                                         }
                                     }
                                 }
+                            }
+                            
+                            // Debug extra: se for sala e não encontrou nada, mostrar todas as colunas
+                            if(index === 0 && patterns.includes('SALA')) {
+                                Object.keys(obj).forEach((key, idx) => {
+                                    const value      = obj[key];
+                                    const hasContent = value && String(value).trim() !== '';
+                                });
                             }
                             
                             return '';
@@ -680,7 +675,8 @@ function readFileData(file) {
                                             valueTrim.length > 2
                                         ) {
                                             disciplinaFinal = valueTrim;
-                                            break;
+
+                                            if(index === 0) break;
                                         }
                                     }
                                 }
@@ -706,7 +702,7 @@ function readFileData(file) {
                                             if(!valueTrim.match(/^(G\d+|\d+|SALA|LAB)$/i) && 
                                                 valueTrim.length > 3) {
                                                 disciplinaFinal = valueTrim;
-                                                break;
+                                                if(index === 0) break;
                                             }
                                         }
                                     }
@@ -798,8 +794,7 @@ function readFileData(file) {
 
                 resolve(formattedData);
             } catch (error) {
-                console.error('[SmartKey] Erro ao processar arquivo:', error);
-                reject(new Error(`Erro ao processar o arquivo: ${error.message || 'Verifique se o formato está correto e se há dados válidos.'}`));
+                reject(new Error('Erro ao processar o arquivo. Verifique se o formato está correto e se há dados válidos.'));
             }
         };
 
