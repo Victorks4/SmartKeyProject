@@ -45,10 +45,14 @@ function addProfessorToMapping(professorName, fast) {
     // Salva no localStorage para persistência
     saveDocentesCodprofToStorage();
     
+<<<<<<< HEAD:public/src/modules/teacher/teacherPanel.js
     // Salva no Firestore
     if(typeof addOrUpdateTeacherInFirestore === 'function')
         addOrUpdateTeacherInFirestore(normalizedName, normalizedFast)
     
+=======
+    console.log(`✅ Professor ${normalizedName} adicionado ao mapeamento com FAST: ${normalizedFast}`);
+>>>>>>> parent of 0f45289 (🔥 Atualização cadastro dos professores):public/js/teacherPanel.js
     return true;
 }
 

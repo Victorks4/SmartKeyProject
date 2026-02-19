@@ -1208,6 +1208,7 @@ function saveNewTeacher() {
         // Atualizar variável global docentesCodprof
         if(typeof window.docentesCodprof !== 'undefined') {
             window.docentesCodprof[name] = fats;
+<<<<<<< HEAD:public/src/modules/admin/paineladm.js
             
             // Salvar no Firestore
             if(typeof addOrUpdateTeacherInFirestore === 'function') {
@@ -1221,12 +1222,29 @@ function saveNewTeacher() {
             } else {
                 showProfessorErrorModal('Firestore não está disponível. Professor salvo apenas localmente.');
             }
+=======
+            console.log('✅ Atualizado em window.docentesCodprof');
+>>>>>>> parent of 0f45289 (🔥 Atualização cadastro dos professores):public/js/paineladm.js
         }
         
         // Disparar evento para outras partes do sistema
         window.dispatchEvent(new CustomEvent('teacherAdded', {
             detail: { name, fats, timestamp: new Date().toISOString() }
         }));
+        
+        // Salvar no Firebase (opcional)
+        if (typeof database !== 'undefined' && database) {
+            database.ref('teachers').push({
+                name,
+                fats,
+                createdAt: new Date().toISOString(),
+                createdBy: 'admin'
+            }).then(() => {
+                console.log('✅ Salvo no Firebase');
+            }).catch(err => {
+                console.warn('⚠️ Erro Firebase:', err);
+            });
+        }
         
         // Atualizar interface
         updateTeacherTable();
