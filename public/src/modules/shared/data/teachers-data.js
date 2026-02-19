@@ -17,14 +17,18 @@ const TeachersData = {
    */
   _getMapping() {
     // Prioridade: window.docentesCodprof (carregado do Firebase/localStorage)
-    if (typeof window !== 'undefined' && window.docentesCodprof) return window.docentesCodprof;
+    if (typeof window !== 'undefined' && window.docentesCodprof) {
+      return window.docentesCodprof;
+    }
     
     // Fallback: tentar carregar do localStorage
     try {
       const stored = localStorage.getItem('docentesCodprof');
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        return JSON.parse(stored);
+      }
     } catch (error) {
-      // Silent fail - fallback to empty object
+      console.warn('[TeachersData] Erro ao carregar dados do localStorage:', error);
     }
     
     return {};

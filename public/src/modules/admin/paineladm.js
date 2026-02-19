@@ -1,20 +1,22 @@
 ﻿// Variáveis globais
 let teacherModalActive = false;
-let selectedDate       = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD
+let selectedDate = new Date().toISOString().split('T')[0]; // Data atual no formato YYYY-MM-DD 
+// let selectedDate = "2025-08-31";
 let dataByDateAndShift = {}; // Estrutura: { "2024-01-15": { manhã: [], tarde: [], noite: [] } }
-let activeShift        = getCurrentShiftByTime();
+let activeShift = getCurrentShiftByTime();
 
 // Função para determinar o turno atual com base no horário
 function getCurrentShiftByTime() {
-    const now  = new Date();
+    const now = new Date();
     const hour = now.getHours();
 
-    if(hour >= 6 && hour < 12)
+    if(hour >= 6 && hour < 12) {
         return 'manhã';
-    else if(hour >= 12 && hour < 18)  
+    } else if(hour >= 12 && hour < 18) {
         return 'tarde';
-    else
+    } else {
         return 'noite';
+    }
 }
 
 // Função para obter ou criar estrutura de dados para uma data
@@ -32,6 +34,7 @@ function getDataForDate(date) {
 // Função para obter dados do turno atual na data selecionada
 function getCurrentShiftData() {
     const dateData = getDataForDate(selectedDate);
+    console.log(`Obtendo dados para data: ${selectedDate}, turno: ${activeShift}`, dateData[activeShift]);
     return dateData[activeShift] || [];
 }
 
@@ -50,6 +53,7 @@ function initializeFirebaseSync() {
 // Função para mudar o turno ativo
 function changeShift(newShift) {
     if(newShift !== activeShift && ['manhã', 'tarde', 'noite'].includes(newShift)) {
+        console.log(`Mudando turno de ${activeShift} para ${newShift} na data ${selectedDate}`);
         activeShift = newShift;
         
         // Atualizar interface visual de seleção de turno
@@ -58,15 +62,15 @@ function changeShift(newShift) {
         // Atualizar tabela com dados do novo turno
         updateTable();
         
-        const shiftCapitalized   = newShift.charAt(0).toUpperCase() + newShift.slice(1);
+        const shiftCapitalized = newShift.charAt(0).toUpperCase() + newShift.slice(1);
         const [year, month, day] = selectedDate.split('-');
-        const formattedDate      = `${day}/${month}/${year}`;
-
+        const formattedDate = `${day}/${month}/${year}`;
         showNotification(`Visualizando turno da ${shiftCapitalized} - ${formattedDate}`, 'info');
         
         // Sincronizar dados do novo turno com Firebase
-        if(typeof syncDataRealtime === 'function')
+        if(typeof syncDataRealtime === 'function') {
             syncDataRealtime(selectedDate, newShift);
+        }
     }
 }
 let selectedFileForImport = null;
@@ -76,12 +80,16 @@ function showShiftSelectionModal(file) {
     selectedFileForImport = file;
     
     const modalElement = document.getElementById('shiftSelectionModal');
-    if(!modalElement) return;
+    if(!modalElement) {
+        console.error('Modal shiftSelectionModal não encontrado!');
+        return;
+    }
     
     // Verificar se já existe uma instância do modal e destruí-la
     const existingModal = bootstrap.Modal.getInstance(modalElement);
-    if(existingModal)
+    if(existingModal) {
         existingModal.dispose();
+    }
     
     // Criar nova instância e mostrar
     const modal = new bootstrap.Modal(modalElement);
@@ -92,20 +100,29 @@ function showShiftSelectionModal(file) {
 async function handleFileImport(file) {
     if(!file) return;
     
+    console.log('� Iniciando importação de arquivo:', file.name);
+    
     // Mostrar modal de seleção de turno
     selectedFileForImport = file;
     
     const modalElement = document.getElementById('shiftSelectionModal');
-    if(!modalElement) return;
+    if(!modalElement) {
+        console.error('Modal shiftSelectionModal não encontrado!');
+        return;
+    }
     
     // Verificar se já existe uma instância do modal e destruí-la
     const existingModal = bootstrap.Modal.getInstance(modalElement);
-    if(existingModal)
+    if(existingModal) {
+        console.log('Removendo instância anterior do modal');
         existingModal.dispose();
+    }
     
     // Criar nova instância e mostrar
+    console.log(' Criando nova instância do modal');
     const modal = new bootstrap.Modal(modalElement);
     modal.show();
+    console.log(' Modal exibido');
 }
 
 // Função para processar o arquivo após seleção do turno
@@ -115,48 +132,54 @@ async function processFileImport(file, selectedShift) {
     // Verificar extensão do arquivo - aceitar todos os formatos Excel e CSV
     const fileExt = file.name.split('.').pop().toLowerCase();
     const validExcelFormats = ['xlsx', 'xls', 'xlsm', 'xlsb', 'xltx', 'xltm', 'xlam'];
-    const validCSVFormats   = ['csv', 'tsv', 'txt'];
-    const allValidFormats   = [...validExcelFormats, ...validCSVFormats];
+    const validCSVFormats = ['csv', 'tsv', 'txt'];
+    const allValidFormats = [...validExcelFormats, ...validCSVFormats];
     
     if(!allValidFormats.includes(fileExt)) {
         showNotification(`Formato de arquivo não suportado: .${fileExt}\nFormatos aceitos: Excel (${validExcelFormats.join(', ')}) e CSV/texto (${validCSVFormats.join(', ')})`, 'warning');
         return;
     }
+    
+    console.log(`Processando arquivo ${file.name} (formato: .${fileExt})`);
 
     // Mostrar indicador de carregamento
-    const importBtn     = document.querySelector('button[title="Importar Arquivo"]');
-    const originalText  = importBtn.innerHTML;
+    const importBtn = document.querySelector('button[title="Importar Arquivo"]');
+    const originalText = importBtn.innerHTML;
     importBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Importando...';
-    importBtn.disabled  = true;
+    importBtn.disabled = true;
 
     try {
         // Pegar o turno atual antes de processar o arquivo
         // const currentShift = activeShift.charAt(0).toUpperCase() + activeShift.slice(1); // Capitaliza o turno - *Não está sendo usado
+
         const data = await readFileData(file);
 
         if(data && data.length > 0) {
             // Converter os dados para o formato do mockData
             const convertedData = data.map((row, index) => {
                 // Extrair informações da linha e limpar valores FALSE
-                const sala          = decodeText(row[0]);
-                const curso         = decodeText(row[1]);
-                const turmaStr      = decodeText(row[2]);
+                const sala = decodeText(row[0]);
+                const curso = decodeText(row[1]);
+                const turmaStr = decodeText(row[2]);
                 const professorName = decodeText(row[3]);
-                const disciplina    = decodeText(row[4]);
-                const registro      = decodeText(row[5]);
+                const disciplina = decodeText(row[4]);
+                const registro = decodeText(row[5]);
 
                 // Ignorar somente quando a sala for claramente inválida
-                if(sala === 'FALSE' || sala === '---' || !sala || !sala.trim()) 
+                if(sala === 'FALSE' || sala === '---' || !sala || !sala.trim()) {
                     return null;
+                }
                 
                 // Pular somente linhas que são claramente cabeçalho/divisória
                 // (exatamente "SALA"/"SALAS" ou linhas com separadores), mas
                 // NÃO descartar salas válidas como "SALA 01", "SALA A01", etc.
-                const salaTrim     = (sala || '').trim();
+                const salaTrim = (sala || '').trim();
                 const isHeaderSala = /^sala(s)?$/i.test(salaTrim);
-                const isDivider    = salaTrim.startsWith('---');
+                const isDivider = salaTrim.startsWith('---');
 
-                if(!salaTrim || isHeaderSala || isDivider) return null;
+                if(!salaTrim || isHeaderSala || isDivider) {
+                    return null;
+                }
 
                 // Usar o turno ativo atual para o novo registro
                 const defaultShift = activeShift;
@@ -165,110 +188,130 @@ async function processFileImport(file, selectedShift) {
                 const uniqueId = registro || `import_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`;
 
                 return {
-                    id:             uniqueId,
-                    room:           sala,
-                    course:         curso,
-                    turmaNumber:    turmaStr,
-                    professorName:  professorName,
-                    subject:        disciplina,
-                    time:           '',          // Será preenchido quando a chave for retirada
-                    status:         'disponivel',
-                    withdrawalTime: '',          // Será preenchido quando a chave for retirada
-                    returnTime:     '',          // Será preenchido quando a chave for devolvida
-                    requiresLogin:  true,
-                    shift:          defaultShift,
+                    id: uniqueId,
+                    room: sala,
+                    course: curso,
+                    turmaNumber: turmaStr,
+                    professorName: professorName,
+                    subject: disciplina,
+                    time: '',             // Será preenchido quando a chave for retirada
+                    status: 'disponivel',
+                    withdrawalTime: '',   // Será preenchido quando a chave for retirada
+                    returnTime: '',       // Será preenchido quando a chave for devolvida
+                    requiresLogin: true,
+                    shift: defaultShift,
                     // Campos de compatibilidade com o painel do professor
-                    sala:           sala,
-                    professor:      professorName,
-                    disciplina:     disciplina,
-                    curso:          curso,
-                    turma:          turmaStr,
-                    horaRetirada:   null,
-                    horaDevolucao:  null
+                    sala: sala,
+                    professor: professorName,
+                    disciplina: disciplina,
+                    curso: curso,
+                    turma: turmaStr,
+                    horaRetirada: null,
+                    horaDevolucao: null
                 };
             });
 
-            // Filtrar e validar os dados convertidos
-            const validData = convertedData.filter(item => {
-                // Verificar se é um registro válido
-                if(!item || !item.room) return false;
+                // Filtrar e validar os dados convertidos
+                const validData = convertedData.filter(item => {
+                    // Verificar se é um registro válido
+                    if(!item || !item.room) return false;
 
-                const room = item.room.toString();
-                const roomTrim  = room.trim();
-                const isDivider = roomTrim.startsWith('---');
-                const isFalse   = roomTrim.toUpperCase() === 'FALSE';
-                const isEmpty   = roomTrim === '';
-                // Aceitar qualquer sala não vazia (inclusive "SALA 01" e afins)
-                const isValidRoom = !(isDivider || isFalse || isEmpty);
+                    const room = item.room.toString();
+                    const roomTrim = room.trim();
+                    const isDivider = roomTrim.startsWith('---');
+                    const isFalse = roomTrim.toUpperCase() === 'FALSE';
+                    const isEmpty = roomTrim === '';
+                    // Aceitar qualquer sala não vazia (inclusive "SALA 01" e afins)
+                    const isValidRoom = !(isDivider || isFalse || isEmpty);
 
-                // Normalização leve
-                if(isValidRoom) {
-                    item.room = roomTrim;
+                    // Normalização leve
+                    if(isValidRoom) {
+                        item.room = roomTrim;
+                        if(item.course) item.course = item.course.toString().trim();
+                        if(item.subject) item.subject = item.subject.toString().trim();
+                        if(item.disciplina) item.disciplina = item.disciplina.toString().trim();
+                        if(item.professorName) item.professorName = item.professorName.toString().trim();
+                        if(item.turmaNumber) item.turmaNumber = item.turmaNumber.toString().trim();
+                        item.status = 'disponivel';
+                        
+                        // Debug: verificar campos de disciplina
+                        if(!item.subject && !item.disciplina) {
+                            console.warn(' Registro sem disciplina:', item);
+                        } else {
+                            console.log(' Disciplina encontrada:', { subject: item.subject, disciplina: item.disciplina });
+                        }
+                    }
 
-                    if(item.course) item.course               = item.course.toString().trim();
-                    if(item.subject) item.subject             = item.subject.toString().trim();
-                    if(item.disciplina) item.disciplina       = item.disciplina.toString().trim();
-                    if(item.professorName) item.professorName = item.professorName.toString().trim();
-                    if(item.turmaNumber) item.turmaNumber     = item.turmaNumber.toString().trim();
+                    // Não obrigar curso/disciplinas/professor para manter a linha; serão mostrados como "-"
+                    return isValidRoom;
+                });
 
-                    item.status = 'disponivel';
+                if(validData.length === 0) {
+                    throw new Error('Nenhum registro válido encontrado no arquivo. Verifique o formato dos dados.');
                 }
 
-                // Não obrigar curso/disciplinas/professor para manter a linha; serão mostrados como "-"
-                return isValidRoom;
-            });
+                // Ordenar dados alfabeticamente por nome do professor antes de salvar
+                const sortedData = validData.sort((a, b) => {
+                    const professorA = (a.professorName || '').trim();
+                    const professorB = (b.professorName || '').trim();
+                    if(!professorA || !professorB) return 0;
+                    return professorA.localeCompare(professorB, 'pt-BR');
+                });
 
-            if(validData.length === 0) throw new Error('Nenhum registro válido encontrado no arquivo. Verifique o formato dos dados.');
+                // Atualizar os dados do turno selecionado na data atual
+                const dateData = getDataForDate(selectedDate);
+                dateData[selectedShift] = sortedData;
+                console.log(`Dados importados e ordenados com sucesso para o turno ${selectedShift}. Total de registros:`, sortedData.length);
+            
+                // Salvar no Firebase imediatamente após importação
+                if(typeof saveDataToFirebase === 'function') {
+                    console.log(' Salvando dados importados no Firebase...');
+                    saveDataToFirebase(selectedDate, selectedShift, sortedData).then(() => {
+                        console.log(' Dados importados salvos no Firebase com sucesso!');
+                    }).catch(error => {
+                        console.error(' Erro ao salvar dados importados no Firebase:', error);
+                    });
+                }
+            
+                // Atualizar as visualizações se estivermos no turno selecionado
+                if(activeShift === selectedShift) {
+                    updateTable();
+                }
+            
+                // Mostrar notificação de sucesso
+                const shiftCapitalized = selectedShift.charAt(0).toUpperCase() + selectedShift.slice(1);
+                showNotification(
+                    `Dados importados com sucesso para o turno da ${shiftCapitalized}!\nTotal de registros: ${validData.length}`,
+                    'success'
+                );
+                
+                // Salvar todos os dados no localStorage para persistência e compartilhamento
+                console.log('Salvando dados no localStorage:', dataByDateAndShift);
+                localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
+                console.log('Dados salvos com sucesso no localStorage');
+                
+                // Também salvar no formato antigo para compatibilidade
+                const currentDateData = getDataForDate(selectedDate);
+                localStorage.setItem('allShiftData', JSON.stringify(currentDateData));
+                
+                // Emitir evento de atualização de dados para sincronizar com o painel do professor
+                // Não incluir date para não forçar mudança de data no professor
+                console.log('Disparando evento shiftDataUpdated...');
+                const updateEvent = new CustomEvent('shiftDataUpdated', { 
+                    detail: { shift: selectedShift, data: dataByDateAndShift }
+                });
+                window.dispatchEvent(updateEvent);
+                console.log('Evento disparado com sucesso');
+                
+                // Forçar atualização em outras abas/janelas
+                localStorage.setItem('dataUpdateTimestamp', Date.now().toString());
+            
 
-            // Ordenar dados alfabeticamente por nome do professor antes de salvar
-            const sortedData = validData.sort((a, b) => {
-                const professorA = (a.professorName || '').trim();
-                const professorB = (b.professorName || '').trim();
-
-                if(!professorA || !professorB) return 0;
-                return professorA.localeCompare(professorB, 'pt-BR');
-            });
-
-            // Atualizar os dados do turno selecionado na data atual
-            const dateData = getDataForDate(selectedDate);
-            dateData[selectedShift] = sortedData;
-        
-            // Salvar no Firebase imediatamente após importação
-            if(typeof saveDataToFirebase === 'function') {
-                saveDataToFirebase(selectedDate, selectedShift, sortedData).then(() => {}).catch(() => {});
-            }
-        
-            // Atualizar as visualizações se estivermos no turno selecionado
-            if(activeShift === selectedShift)
-                updateTable();
-        
-            // Mostrar notificação de sucesso
-            const shiftCapitalized = selectedShift.charAt(0).toUpperCase() + selectedShift.slice(1);
-            showNotification(
-                `Dados importados com sucesso para o turno da ${shiftCapitalized}!\nTotal de registros: ${validData.length}`,
-                'success'
-            );
-            
-            // Salvar todos os dados no localStorage para persistência e compartilhamento
-            localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
-            
-            // Também salvar no formato antigo para compatibilidade
-            const currentDateData = getDataForDate(selectedDate);
-            localStorage.setItem('allShiftData', JSON.stringify(currentDateData));
-            
-            // Emitir evento de atualização de dados para sincronizar com o painel do professor
-            // Não incluir date para não forçar mudança de data no professor
-            const updateEvent = new CustomEvent('shiftDataUpdated', { 
-                detail: { shift: selectedShift, data: dataByDateAndShift }
-            });
-            window.dispatchEvent(updateEvent);
-            
-            // Forçar atualização em outras abas/janelas
-            localStorage.setItem('dataUpdateTimestamp', Date.now().toString());
         } else {
             throw new Error('Nenhum dado válido encontrado no arquivo');
         }
     } catch (error) {
+        console.error('Erro ao importar arquivo:', error);
         showNotification(
             `Erro ao importar arquivo: ${error.message || 'Verifique se o formato está correto e tente novamente.'}`,
             'error'
@@ -276,11 +319,13 @@ async function processFileImport(file, selectedShift) {
     } finally {
         // Restaurar botão
         importBtn.innerHTML = originalText;
-        importBtn.disabled  = false;
+        importBtn.disabled = false;
         
         // Limpar o input de arquivo para permitir importar o mesmo arquivo novamente
         const fileInput = document.getElementById('fileInput');
-        if(fileInput) fileInput.value = '';
+        if(fileInput) {
+            fileInput.value = '';
+        }
         
         // Limpar variável global
         selectedFileForImport = null;
@@ -298,18 +343,19 @@ function getShiftFromRoom(room) {
 // Função para decodificar texto com caracteres especiais
 function decodeText(text) {
     if(!text) return '';
-    
     // Tenta decodificar caracteres especiais que podem ter sido mal interpretados
     try {
         const originalText = text.toString();
-        let decodedText    = originalText;
+        let decodedText = originalText;
         
         // Primeiro, tentar decodificar caracteres de substituição ()
         if(decodedText.includes('')) {
             try {
                 // Tentar UTF-8
                 const utf8Text = decodeURIComponent(escape(decodedText));
-                if(!utf8Text.includes('')) decodedText = utf8Text;
+                if(!utf8Text.includes('')) {
+                    decodedText = utf8Text;
+                }
             } catch (e) {
                 // Se falhar, continuar com as substituições manuais
             }
@@ -353,9 +399,15 @@ function decodeText(text) {
             // Caracteres de substituição () - tentar mapear baseado no contexto
             .replace(/\uFFFD/g, 'é')   // Substituir por é (mais comum)
             .trim();
-
+        
+        // Debug: mostrar apenas se o texto foi alterado
+        if(originalText !== decodedText) {
+            console.log('Texto decodificado:', { original: originalText, decoded: decodedText });
+        }
+        
         return decodedText;
     } catch (e) {
+        console.warn('Erro ao decodificar texto:', e, 'Texto original:', text);
         return text.toString().trim();
     }
 }
@@ -366,8 +418,11 @@ function readFileData(file) {
         const fileExt = file.name.split('.').pop().toLowerCase();
         
         // Detectar se é CSV/texto ou Excel
-        const isCSVType   = ['csv', 'tsv', 'txt'].includes(fileExt);
+        const isCSVType = ['csv', 'tsv', 'txt'].includes(fileExt);
         const isExcelType = ['xlsx', 'xls', 'xlsm', 'xlsb', 'xltx', 'xltm', 'xlam'].includes(fileExt);
+        
+        console.log(`Processando arquivo: ${file.name}`);
+        console.log(`Tipo detectado: ${isCSVType ? 'CSV/Texto' : isExcelType ? 'Excel' : 'Desconhecido'}`);
         
         reader.onerror = function(e) {
             reject(new Error('Erro ao ler o arquivo: ' + e.target.error));
@@ -376,12 +431,15 @@ function readFileData(file) {
         reader.onload = function(e) {
             try {
                 // Verificar se o arquivo está vazio
-                if(!e.target.result) throw new Error('Arquivo vazio ou inválido');
+                if(!e.target.result) {
+                    throw new Error('Arquivo vazio ou inválido');
+                }
 
                 let workbook;
                 if(isCSVType) {
                     // Processar CSV/TSV/TXT com encoding correto para caracteres especiais
                     const content = e.target.result;
+                    console.log(`Processando como arquivo de texto (${fileExt})`);
                     
                     // Configurar separador baseado na extensão
                     const separator = fileExt === 'tsv' ? '\t' : fileExt === 'txt' ? '\t' : ',';
@@ -390,111 +448,124 @@ function readFileData(file) {
                     try {
                         // Primeira tentativa: UTF-8
                         workbook = XLSX.read(content, { 
-                            type:       'string',
-                            raw:        true,
-                            cellText:   false,
-                            cellDates:  true,
-                            codepage:   65001, // UTF-8
-                            charset:    'UTF-8',
+                            type: 'string',
+                            raw: true,
+                            cellText: false,
+                            cellDates: true,
+                            codepage: 65001, // UTF-8
+                            charset: 'UTF-8',
                             // Opções para lidar com células mescladas
                             cellStyles: true,
                             sheetStubs: true,
-                            defval:     '',
+                            defval: '',
                             // Separador personalizado
-                            FS:         separator
+                            FS: separator
                         });
                     } catch (e) {
+                        console.log('Tentativa UTF-8 falhou, tentando ISO-8859-1...');
                         try {
                             // Segunda tentativa: ISO-8859-1 (Latin-1)
                             workbook = XLSX.read(content, { 
-                                type:       'string',
-                                raw:        true,
-                                cellText:   false,
-                                cellDates:  true,
-                                codepage:   28591, // ISO-8859-1
-                                charset:    'ISO-8859-1',
+                                type: 'string',
+                                raw: true,
+                                cellText: false,
+                                cellDates: true,
+                                codepage: 28591, // ISO-8859-1
+                                charset: 'ISO-8859-1',
                                 cellStyles: true,
                                 sheetStubs: true,
-                                defval:     '',
-                                FS:         separator
+                                defval: '',
+                                FS: separator
                             });
                         } catch (e2) {
+                            console.log('Tentativa ISO-8859-1 falhou, tentando Windows-1252...');
                             // Terceira tentativa: Windows-1252
                             workbook = XLSX.read(content, { 
-                                type:       'string',
-                                raw:        true,
-                                cellText:   false,
-                                cellDates:  true,
-                                codepage:   1252, // Windows-1252
-                                charset:    'Windows-1252',
+                                type: 'string',
+                                raw: true,
+                                cellText: false,
+                                cellDates: true,
+                                codepage: 1252, // Windows-1252
+                                charset: 'Windows-1252',
                                 cellStyles: true,
                                 sheetStubs: true,
-                                defval:     '',
-                                FS:         separator
+                                defval: '',
+                                FS: separator
                             });
                         }
                     }
                     
-                    if(!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) 
+                    if(!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
                         throw new Error(`Arquivo ${fileExt.toUpperCase()} inválido ou vazio`);
+                    }
                 } else if(isExcelType) {
                     // Processar qualquer formato Excel
                     const data = new Uint8Array(e.target.result);
-                    if(!data || data.length === 0) 
+                    if(!data || data.length === 0) {
                         throw new Error('Arquivo vazio ou corrompido');
+                    }
 
+                    console.log(`Processando como arquivo Excel (${fileExt})`);
+                    
                     // Configuração robusta para diferentes formatos Excel
                     workbook = XLSX.read(data, { 
-                        type:       'array',
-                        raw:        true, // Mantém os dados brutos
-                        cellText:   false, // Não converte para texto ainda
-                        cellDates:  true,
-                        cellNF:     false,
-                        codepage:   65001, // UTF-8
+                        type: 'array',
+                        raw: true, // Mantém os dados brutos
+                        cellText: false, // Não converte para texto ainda
+                        cellDates: true,
+                        cellNF: false,
+                        codepage: 65001, // UTF-8
                         // Opções para lidar com células mescladas
                         cellStyles: true,
                         sheetStubs: true, // Incluir células vazias
-                        defval:     null, // Valor padrão para células vazias
+                        defval: null, // Valor padrão para células vazias
                         // Opções para diferentes formatos Excel
-                        password:   "", // Para arquivos protegidos (vazio = sem senha)
-                        WTF:        false // Modo de compatibilidade
+                        password: "", // Para arquivos protegidos (vazio = sem senha)
+                        WTF: false // Modo de compatibilidade
                     });
 
-                    if(!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) 
+                    if(!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
                         throw new Error(`Arquivo Excel (${fileExt}) inválido ou sem planilhas`);
+                    }
                 } else {
                     throw new Error(`Formato de arquivo não reconhecido: ${fileExt}`);
                 }
                 
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                if(!firstSheet) 
+                if(!firstSheet) {
                     throw new Error('Primeira planilha está vazia ou inválida');
+                }
                 
                 // Converter planilha para JSON lidando com células mescladas
                 let allData = XLSX.utils.sheet_to_json(firstSheet, { 
-                    header:     1,
-                    raw:        false,
-                    blankrows:  true, // Incluir linhas em branco para manter estrutura
+                    header: 1,
+                    raw: false,
+                    blankrows: true, // Incluir linhas em branco para manter estrutura
                     skipHidden: false,
-                    defval:     '', // Usar string vazia para células vazias
-                    dateNF:     'dd/mm/yyyy',
-                    encoding:   'ISO-8859-1'
+                    defval: '', // Usar string vazia para células vazias
+                    dateNF: 'dd/mm/yyyy',
+                    encoding: 'ISO-8859-1'
                 });
+
+                console.log('Dados brutos lidos do arquivo (com células mescladas):', allData);
 
                 // Processar células mescladas - propagar valores das células mescladas
                 if(firstSheet['!merges']) {
+                    console.log(' Detectadas células mescladas:', firstSheet['!merges']);
+                    
                     // Para cada região mesclada, propagar o valor da primeira célula para todas as células da região
                     firstSheet['!merges'].forEach(merge => {
                         const startRow = merge.s.r;
-                        const endRow   = merge.e.r;
+                        const endRow = merge.e.r;
                         const startCol = merge.s.c;
-                        const endCol   = merge.e.c;
+                        const endCol = merge.e.c;
                         
                         // Obter o valor da primeira célula da região mesclada
-                        const firstCellRef   = XLSX.utils.encode_cell({r: startRow, c: startCol});
+                        const firstCellRef = XLSX.utils.encode_cell({r: startRow, c: startCol});
                         const firstCellValue = firstSheet[firstCellRef] ? firstSheet[firstCellRef].v : '';
                         
                         if(firstCellValue) {
+                            console.log(`� Propagando valor "${firstCellValue}" da célula mesclada ${firstCellRef}`);
                             
                             // Propagar para todas as linhas e colunas afetadas no array allData
                             for (let row = startRow; row <= endRow; row++) {
@@ -509,11 +580,12 @@ function readFileData(file) {
                         }
                     });
                     
+                    console.log('Dados após processar células mescladas:', allData.slice(0, 10));
                 }
 
                 // Detectar automaticamente onde está o cabeçalho (lidando com células mescladas)
                 let headerRowIndex = -1;
-                let headers        = [];
+                let headers = [];
                 
                 // Procurar por uma linha que contenha termos de cabeçalho esperados
                 for (let i = 0; i < allData.length; i++) {
@@ -537,21 +609,38 @@ function readFileData(file) {
                             return cellStr;
                         });
                         
+                        console.log(`Cabeçalho detectado na linha ${i}:`, headers);
+                        console.log('Conteúdo da linha:', row);
+                        
+                        // Debug das colunas identificadas
+                        headers.forEach((header, index) => {
+                            if(header) {
+                                console.log(`Coluna ${index}: "${header}"`);
+                            }
+                        });
                         break;
                     }
                 }
 
-                if(headerRowIndex === -1) 
+                if(headerRowIndex === -1) {
                     throw new Error('Não foi possível detectar automaticamente o cabeçalho do arquivo. Verifique se o arquivo contém colunas como SALA, CURSO, PROFESSOR, etc.');
+                }
 
                 // Extrair dados após o cabeçalho (similar ao slice no Node.js)
                 const dataRows = allData.slice(headerRowIndex + 1);
+                console.log(`Processando ${dataRows.length} linhas de dados após o cabeçalho`);
+                console.log('Primeiras 3 linhas de dados brutos:', dataRows.slice(0, 3));
 
                 // Mapear dados em objetos (lidando com células mescladas)
                 const mappedData = dataRows
                     .filter(row => {
                         // Incluir linhas que tenham pelo menos uma célula com conteúdo
                         const hasContent = Array.isArray(row) && row.some(cell => cell && String(cell).trim() !== '');
+                        if(!hasContent && dataRows.indexOf(row) < 5) {
+                            console.log(` Linha ${dataRows.indexOf(row) + 1} filtrada (sem conteúdo):`, row);
+                        } else if(hasContent && dataRows.indexOf(row) < 5) {
+                            console.log(` Linha ${dataRows.indexOf(row) + 1} aprovada:`, row);
+                        }
                         return hasContent;
                     })
                     .map((row, index) => {
@@ -560,8 +649,7 @@ function readFileData(file) {
                             
                             // Garantir que a linha tenha o mesmo comprimento dos headers
                             const normalizedRow = [...row];
-
-                            while(normalizedRow.length < headers.length) {
+                            while (normalizedRow.length < headers.length) {
                                 normalizedRow.push('');
                             }
                             
@@ -569,28 +657,46 @@ function readFileData(file) {
                                 const cellValue = normalizedRow[colIndex];
                                 // Para células mescladas, usar o valor propagado ou string vazia
                                 const finalValue = cellValue && String(cellValue).trim() !== '' ? String(cellValue).trim() : '';
-                                obj[header]      = finalValue;
+                                obj[header] = finalValue;
                             });
                             
                             // Adicionar índice para debug
                             obj._rowIndex = headerRowIndex + 1 + index;
                             return obj;
                         } catch (error) {
+                            console.error('Erro ao mapear linha:', error, row);
                             return null;
                         }
                     })
                     .filter(obj => obj !== null);
 
+                console.log('Primeiros 5 registros mapeados:', mappedData.slice(0, 5));
+
+                // Debug adicional: mostrar estrutura completa dos primeiros registros
+                console.log(' ANÁLISE DETALHADA DA ESTRUTURA:');
+                console.log('Headers detectados:', headers);
+                if(mappedData.length > 0) {
+                    console.log('Primeiro registro completo:', mappedData[0]);
+                    console.log('Chaves disponíveis:', Object.keys(mappedData[0]));
+                    console.log('Valores do primeiro registro:');
+                    Object.keys(mappedData[0]).forEach((key, index) => {
+                        console.log(`  ${index}: "${key}" = "${mappedData[0][key]}"`);
+                    });
+                }
+
                 // Processar dados para preencher campos vazios com valores das linhas anteriores (células mescladas)
+                console.log(' Processando dados para preencher campos de células mescladas...');
                 for (let i = 1; i < mappedData.length; i++) {
-                    const currentRow  = mappedData[i];
+                    const currentRow = mappedData[i];
                     const previousRow = mappedData[i - 1];
                     
                     // Para cada campo, se estiver vazio, tentar usar o valor da linha anterior
                     Object.keys(currentRow).forEach(key => {
                         if(key !== '_rowIndex' && (!currentRow[key] || currentRow[key] === '')) {
-                            if(previousRow[key] && previousRow[key] !== '')
+                            if(previousRow[key] && previousRow[key] !== '') {
                                 currentRow[key] = previousRow[key];
+                                if(i < 3) console.log(`� Preenchendo campo vazio "${key}" com valor "${previousRow[key]}" da linha anterior`);
+                            }
                         }
                     });
                 }
@@ -600,6 +706,14 @@ function readFileData(file) {
                     .map((obj, index) => {
                         // Tentar identificar as colunas por nome (flexível)
                         const findColumn = (patterns, excludePatterns = []) => {
+                            // Debug detalhado apenas para o primeiro registro
+                            if(index === 0) {
+                                console.log(` [Registro ${index + 1}] Procurando coluna para padrões: ${patterns.join(', ')}`);
+                                console.log(` [Registro ${index + 1}] Excluir padrões: ${excludePatterns.join(', ')}`);
+                                console.log(` [Registro ${index + 1}] Objeto disponível:`, obj);
+                                console.log(` [Registro ${index + 1}] Chaves disponíveis:`, Object.keys(obj));
+                            }
+                            
                             for (let pattern of patterns) {
                                 for (let key in obj) {
                                     const keyUpper = key.toUpperCase();
@@ -609,13 +723,17 @@ function readFileData(file) {
                                     const shouldExclude = excludePatterns.some(exclude => 
                                         keyUpper.includes(exclude.toUpperCase())
                                     );
-                                    if(shouldExclude) continue;
+                                    if(shouldExclude) {
+                                        if(index === 0) console.log(`   Excluindo coluna "${key}" (contém: ${excludePatterns.join(', ')})`);
+                                        continue;
+                                    }
                                     
                                     // Busca exata primeiro
                                     if(keyUpper === patternUpper) {
                                         const value = obj[key];
                                         if(value && String(value).trim() !== '') {
-                                            if(index === 0) return String(value).trim();
+                                            if(index === 0) console.log(`   Encontrado por correspondência exata: "${key}" = "${value}"`);
+                                            return String(value).trim();
                                         }
                                     }
                                     
@@ -623,45 +741,64 @@ function readFileData(file) {
                                     if(keyUpper.includes(patternUpper)) {
                                         const value = obj[key];
                                         if(value && String(value).trim() !== '') {
-                                            if(index === 0) return String(value).trim();
+                                            if(index === 0) console.log(`   Encontrado por inclusão: "${key}" = "${value}"`);
+                                            return String(value).trim();
                                         }
                                     }
                                 }
                             }
+                            if(index === 0) console.log(`   Nenhuma coluna encontrada para: ${patterns.join(', ')}`);
                             
                             // Debug extra: se for sala e não encontrou nada, mostrar todas as colunas
                             if(index === 0 && patterns.includes('SALA')) {
+                                console.log('� SALA NÃO ENCONTRADA! Analisando todas as colunas disponíveis:');
                                 Object.keys(obj).forEach((key, idx) => {
-                                    const value      = obj[key];
+                                    const value = obj[key];
                                     const hasContent = value && String(value).trim() !== '';
+                                    console.log(`  ${idx}: "${key}" = "${value}" ${hasContent ? '' : ''}`);
                                 });
                             }
                             
                             return '';
                         };
 
-                        const sala      = findColumn(['SALA', 'ROOM', 'CLASSROOM']);
-                        const curso     = findColumn(['CURSO', 'COURSE']);
-                        const turma     = findColumn(['TURMA', 'CLASS', 'TURNO']);
+                        const sala = findColumn(['SALA', 'ROOM', 'CLASSROOM']);
+                        const curso = findColumn(['CURSO', 'COURSE']);
+                        const turma = findColumn(['TURMA', 'CLASS', 'TURNO']);
                         const professor = findColumn(['PROFESSOR', 'TEACHER', 'DOCENTE']);
-
                         // Para disciplina, tentar vários padrões possíveis
                         const disciplina = findColumn([
-                            'DISCIPLINA',            'SUBJECT', 'MATERIA', 'MATÉRIA', 
-                            'COMPONENTE',            'UNIDADE', 'UC',      'CURRICULAR',
+                            'DISCIPLINA', 'SUBJECT', 'MATERIA', 'MATÉRIA', 
+                            'COMPONENTE', 'UNIDADE', 'UC', 'CURRICULAR',
                             'COMPONENTE CURRICULAR', 'UNIDADE CURRICULAR'
                         ], ['PROFESSOR', 'CURSO', 'COURSE']);
-                        
                         const registro = findColumn(['REGISTRO', 'ID', 'CODIGO', 'CÓDIGO']);
+
+                        // Debug especial: mostrar todos os valores encontrados
+                        if(index < 5) {
+                            console.log(` VALORES ENCONTRADOS ${index + 1}:`, {
+                                sala: `"${sala}" (${typeof sala})`,
+                                curso: `"${curso}" (${typeof curso})`,
+                                turma: `"${turma}" (${typeof turma})`,
+                                professor: `"${professor}" (${typeof professor})`,
+                                disciplina: `"${disciplina}" (${typeof disciplina})`,
+                                registro: `"${registro}" (${typeof registro})`
+                            });
+                        }
 
                         // Fallback: se disciplina não foi encontrada, procurar manualmente
                         let disciplinaFinal = disciplina;
-
-                        if(!disciplinaFinal) {                            
+                        if(!disciplinaFinal) {
+                            if(index === 0) {
+                                console.log(' Procurando disciplina manualmente - TODAS as colunas disponíveis:');
+                                Object.keys(obj).forEach((key, idx) => {
+                                    console.log(`  ${idx}: "${key}" = "${obj[key]}"`);
+                                });
+                            }
+                            
                             // Estratégia 1: Buscar qualquer coluna que não seja sala, curso, turma, professor
                             const knownFields = [sala, curso, turma, professor, registro].filter(f => f);
-
-                            for(let key in obj) {
+                            for (let key in obj) {
                                 const value = obj[key];
                                 if(value && String(value).trim() !== '') {
                                     const valueTrim = String(value).trim();
@@ -669,14 +806,12 @@ function readFileData(file) {
                                     // Se não é nenhum dos campos conhecidos
                                     if(!knownFields.includes(valueTrim)) {
                                         // Verificar se não é código de turma (padrão G + números)
-                                        if(
-                                            !valueTrim.match(/^G\d+/)  && 
+                                        if(!valueTrim.match(/^G\d+/) && 
                                             !valueTrim.match(/^\d+$/) && 
-                                            valueTrim.length > 2
-                                        ) {
+                                            valueTrim.length > 2) {
                                             disciplinaFinal = valueTrim;
-
-                                            if(index === 0) break;
+                                            if(index === 0) console.log(`� Disciplina encontrada por eliminação na coluna "${key}": "${disciplinaFinal}"`);
+                                            break;
                                         }
                                     }
                                 }
@@ -685,24 +820,24 @@ function readFileData(file) {
                             // Estratégia 2: Se ainda não encontrou, pegar a primeira coluna não identificada
                             if(!disciplinaFinal) {
                                 const allKeys = Object.keys(obj);
-
-                                for(let i = 0; i < allKeys.length; i++) {
-                                    const key   = allKeys[i];
+                                for (let i = 0; i < allKeys.length; i++) {
+                                    const key = allKeys[i];
                                     const value = obj[key];
                                     
                                     if(value && String(value).trim() !== '') {
                                         const valueTrim = String(value).trim();
                                         
                                         // Pular campos já identificados
-                                        if(valueTrim  !== sala  && valueTrim !== curso     && 
+                                        if(valueTrim !== sala && valueTrim !== curso && 
                                             valueTrim !== turma && valueTrim !== professor && 
-                                            valueTrim !== registro
-                                        ) {
+                                            valueTrim !== registro) {
+                                            
                                             // Se parece com uma disciplina (não é código)
                                             if(!valueTrim.match(/^(G\d+|\d+|SALA|LAB)$/i) && 
                                                 valueTrim.length > 3) {
                                                 disciplinaFinal = valueTrim;
-                                                if(index === 0) break;
+                                                if(index === 0) console.log(`� Disciplina encontrada por tentativa na coluna "${key}": "${disciplinaFinal}"`);
+                                                break;
                                             }
                                         }
                                     }
@@ -710,45 +845,90 @@ function readFileData(file) {
                             }
                         }
 
+                        // Debug: mostrar mapeamento para os primeiros registros
+                        if(index < 3) {
+                            console.log(`Registro ${index + 1} mapeado:`, {
+                                sala, curso, turma, professor, 
+                                disciplina: disciplinaFinal, 
+                                registro,
+                                objetoOriginal: obj,
+                                chaves: Object.keys(obj)
+                            });
+                            
+                            // Debug específico para disciplina
+                            if(!disciplinaFinal) {
+                                console.log(' Debug disciplina vazia - verificando todas as colunas:');
+                                Object.keys(obj).forEach((key, idx) => {
+                                    const keyUpper = key.toUpperCase();
+                                    const isDisciplinaCol = keyUpper.includes('DISCIPLINA') || keyUpper.includes('MATERIA') || keyUpper.includes('MATÉRIA');
+                                    console.log(`  Coluna ${idx} "${key}": "${obj[key]}" ${isDisciplinaCol ? '← POSSÍVEL DISCIPLINA' : ''}`);
+                                });
+                            } else if(disciplinaFinal === professor) {
+                                console.warn(' Disciplina igual ao professor:', {
+                                    disciplina: disciplinaFinal,
+                                    professor: professor
+                                });
+                            } else if(disciplinaFinal === curso) {
+                                console.warn(' Disciplina igual ao curso:', {
+                                    disciplina: disciplinaFinal,
+                                    curso: curso
+                                });
+                            } else {
+                                console.log(' Disciplina válida encontrada:', disciplinaFinal);
+                            }
+                        }
+
+                        // Debug: mostrar todos os valores de sala para entender o problema
+                        if(index < 5) {
+                            console.log(` Debug Sala ${index + 1}:`, {
+                                sala: sala,
+                                salaType: typeof sala,
+                                salaLength: sala ? sala.length : 0,
+                                salaEmpty: !sala,
+                                salaFalse: sala === 'FALSE',
+                                salaDash: sala === '---',
+                                salaRegex: sala ? /^sala(s)?$/i.test(String(sala).trim()) : false,
+                                salaStartsDash: sala ? String(sala).startsWith('---') : false
+                            });
+                        }
+
                         // Validação mais tolerante da sala
                         const salaStr = String(sala || '').trim();
                         const salaInvalida = !salaStr || 
-                                            salaStr.toUpperCase() === 'FALSE' || 
-                                            salaStr               === ''      ||
-                                            salaStr               === '---'   || 
-                                            /^sala(s)?$/i.test(salaStr)       ||
-                                            salaStr.startsWith('---');
+                                           salaStr === '' ||
+                                           salaStr.toUpperCase() === 'FALSE' || 
+                                           salaStr === '---' || 
+                                           /^sala(s)?$/i.test(salaStr) ||
+                                           salaStr.startsWith('---');
 
-                        if(salaInvalida) return null;
+                        if(salaInvalida) {
+                            if(index < 5) console.log(` Registro ${index + 1} rejeitado por sala inválida: "${sala}" (string: "${salaStr}")`);
+                            return null;
+                        }
+
+                        if(index < 5) console.log(` Registro ${index + 1} aprovado com sala: "${sala}" (string: "${salaStr}")`);
 
                         // Validar disciplina: evitar confusão com curso, professor, etc.
                         if(disciplinaFinal) {
                             // Se disciplina for igual ao curso, procurar a verdadeira disciplina
                             if(disciplinaFinal === curso) {
+                                console.warn(` Disciplina "${disciplinaFinal}" é igual ao curso, procurando disciplina real...`);
                                 disciplinaFinal = '';
                                 
                                 // Buscar em outras colunas por uma disciplina válida
                                 for (let key in obj) {
                                     const keyUpper = key.toUpperCase();
-                                    const value    = obj[key];
+                                    const value = obj[key];
                                     
                                     // Buscar especificamente colunas que parecem ser de disciplina
-                                    if((
-                                        keyUpper.includes('DISCIPLINA') || 
-                                        keyUpper.includes('MATERIA')    || 
-                                        keyUpper.includes('MATÉRIA'))   &&
-                                        !keyUpper.includes('PROFESSOR') && 
-                                        !keyUpper.includes('CURSO')
-                                    ) {
-                                        if(value && 
-                                           String(value).trim() !== '' && 
-                                           value !== professor && 
-                                           value !== sala      && 
-                                           value !== curso     && 
-                                           value !== turma
-                                        ) {
+                                    if((keyUpper.includes('DISCIPLINA') || keyUpper.includes('MATERIA') || keyUpper.includes('MATÉRIA')) &&
+                                        !keyUpper.includes('PROFESSOR') && !keyUpper.includes('CURSO')) {
+                                        
+                                        if(value && String(value).trim() !== '' && 
+                                            value !== professor && value !== sala && value !== curso && value !== turma) {
                                             const valorTrim = String(value).trim();
                                             disciplinaFinal = valorTrim;
+                                            console.log(` Disciplina corrigida: "${disciplinaFinal}" (encontrada na coluna "${key}")`);
                                             break;
                                         }
                                     }
@@ -757,6 +937,7 @@ function readFileData(file) {
                             
                             // Se ainda for igual ao professor, procurar alternativa
                             if(disciplinaFinal === professor) {
+                                console.warn(` Disciplina "${disciplinaFinal}" é igual ao professor, procurando disciplina real...`);
                                 disciplinaFinal = '';
                                 
                                 for (let key in obj) {
@@ -767,6 +948,7 @@ function readFileData(file) {
                                         // Verificar se parece com disciplina (não é número, não é sala)
                                         if(!valorTrim.match(/^(SALA|A\d+|B\d+|C\d+|\d+)$/i) && valorTrim.length > 2) {
                                             disciplinaFinal = valorTrim;
+                                            console.log(` Disciplina corrigida: "${disciplinaFinal}" (encontrada na coluna "${key}")`);
                                             break;
                                         }
                                     }
@@ -784,16 +966,30 @@ function readFileData(file) {
                         ];
                     })
                     .filter(row => row !== null);
+
+                console.log(` RESUMO DO PROCESSAMENTO:`);
+                console.log(`- Linhas brutas após cabeçalho: ${dataRows.length}`);
+                console.log(`- Linhas válidas mapeadas: ${mappedData.length}`);
+                console.log(`- Registros formatados: ${formattedData.length}`);
+                console.log(`- Registros rejeitados: ${mappedData.length - formattedData.length}`);
                 
                 if(formattedData.length === 0) {
+                    console.error('� ERRO: Nenhum registro válido encontrado!');
+                    console.log('Debug completo das últimas etapas:');
+                    console.log('1. Headers detectados:', headers);
+                    console.log('2. Primeira linha de dados:', dataRows[0]);
+                    console.log('3. Primeiro objeto mapeado:', mappedData[0]);
+                    console.log('4. Resultado do processamento:', formattedData);
+                    
                     throw new Error(`Nenhum dado válido encontrado na planilha após detectar cabeçalho. 
-                        Debug: ${dataRows.length} linhas brutas, ${mappedData.length} mapeadas, ${formattedData.length} formatadas.
-                        Verifique se há dados válidos após a linha de cabeçalho.`
-                    );
+Debug: ${dataRows.length} linhas brutas, ${mappedData.length} mapeadas, ${formattedData.length} formatadas.
+Verifique se há dados válidos após a linha de cabeçalho.`);
                 }
 
+                console.log('Primeiros 3 registros formatados:', formattedData.slice(0, 3));
                 resolve(formattedData);
             } catch (error) {
+                console.error('Erro ao processar arquivo:', error);
                 reject(new Error('Erro ao processar o arquivo. Verifique se o formato está correto e se há dados válidos.'));
             }
         };
@@ -829,7 +1025,10 @@ const shifts = [
 // Renderiza as abas de turno
 function renderShiftTabs() {
     const el = document.getElementById('shiftTabs');
-    if(!el) return;
+    if(!el) {
+        console.error('Elemento shiftTabs não encontrado!');
+        return;
+    }
 
     const tabsHTML = shifts.map(t => `
         <button class="tab ${(t.id === activeShift) ? 'active' : ''}" onclick="changeShift('${t.id}')" aria-label="Selecionar turno da ${t.label}">
@@ -837,6 +1036,7 @@ function renderShiftTabs() {
         </button>
     `).join('');
     
+    console.log('Renderizando abas de turno:', tabsHTML);
     el.innerHTML = tabsHTML;
 }
 
@@ -851,6 +1051,8 @@ function switchShift(shift) {
 function updateTable() {
     // Renderizar apenas os dados do turno atual
     renderTable();
+    
+    console.log(' [ADMIN] updateTable executada - tabela renderizada');
 }
 
 // Variável global para o intervalo de atualização da data
@@ -858,14 +1060,20 @@ let dateUpdateInterval;
 
 // Limpar o intervalo quando a página for fechada
 window.addEventListener('unload', function() {
-    if(dateUpdateInterval) clearInterval(dateUpdateInterval);
+    if(dateUpdateInterval) {
+        clearInterval(dateUpdateInterval);
+    }
 });
 
 // Função para carregar dados salvos
 function loadSavedData() {
     // Limpar IDs duplicados antes de tudo
-    cleanDuplicateIds();
-
+    console.log(' [INIT] Limpando IDs duplicados...');
+    const wasCleared = cleanDuplicateIds();
+    if(wasCleared) {
+        console.log(' [INIT] IDs duplicados foram limpos');
+    }
+    
     // Tentar carregar dados no novo formato (por data)
     const newFormatData = localStorage.getItem('allDateShiftData');
     if(newFormatData) {
@@ -880,24 +1088,23 @@ function loadSavedData() {
                             if(!item || typeof item !== 'object') return item;
                             
                             // Garantir que cada registro tenha um ID único
-                            if(!item.id)
-                                item.id = item.room || 
-                                          item.sala || 
-                                          `record_${Math.random().toString(36).substr(2, 9)}`;
+                            if(!item.id) {
+                                item.id = item.room || item.sala || `record_${Math.random().toString(36).substr(2, 9)}`;
+                            }
                             
                             // Se está no formato do professor, adicionar campos do admin
                             if(item.sala && item.professor && !item.room) {
                                 return {
                                     ...item,
-                                    room:           item.sala,
-                                    professorName:  item.professor,
-                                    subject:        item.disciplina,
-                                    course:         item.curso,
-                                    turmaNumber:    item.turma,
+                                    room: item.sala,
+                                    professorName: item.professor,
+                                    subject: item.disciplina,
+                                    course: item.curso,
+                                    turmaNumber: item.turma,
                                     withdrawalTime: item.horaRetirada,
-                                    returnTime:     item.horaDevolucao,
-                                    status:         item.horaRetirada  && !item.horaDevolucao ? 'em_uso' : 
-                                                     item.horaRetirada && item.horaDevolucao  ? 'devolvida' : 'disponivel'
+                                    returnTime: item.horaDevolucao,
+                                    status: item.horaRetirada && !item.horaDevolucao ? 'em_uso' : 
+                                           item.horaRetirada && item.horaDevolucao ? 'devolvida' : 'disponivel'
                                 };
                             }
                             
@@ -922,6 +1129,7 @@ function loadSavedData() {
                 }
             }
             
+            console.log('Dados carregados e ordenados no novo formato:', dataByDateAndShift);
             updateTable();
             return;
         } catch (e) {
@@ -934,6 +1142,7 @@ function loadSavedData() {
     if(oldFormatData) {
         try {
             const oldData = JSON.parse(oldFormatData);
+            console.log('Migrando dados do formato antigo...');
             
             // Migrar dados antigos para a data atual
             dataByDateAndShift[selectedDate] = {
@@ -946,6 +1155,7 @@ function loadSavedData() {
             localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
             updateTable();
         } catch (e) {
+            console.error('Erro ao migrar dados antigos:', e);
             dataByDateAndShift = {};
         }
     }
@@ -956,6 +1166,8 @@ document.addEventListener('DOMContentLoaded', function() {
     updateCurrentDate();
     dateUpdateInterval = setInterval(updateCurrentDate, 60000); // Atualizar a cada minuto
 
+    // Cada painel mantém sua própria data selecionada independentemente
+
     // Configurar seletor de data
     const dateSelector = document.getElementById('dateSelector');
     if(dateSelector) {
@@ -965,7 +1177,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Evento de mudança de data
         dateSelector.addEventListener('change', function() {
             const oldDate = selectedDate;
-            selectedDate  = this.value;
+            selectedDate = this.value;
+            console.log(`Data alterada de ${oldDate} para ${selectedDate}`);
             
             // Parar sincronização da data anterior
             if(typeof stopSyncDataRealtime === 'function') {
@@ -975,8 +1188,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Verificar se há dados para esta data
-            const dateData  = getDataForDate(selectedDate);
+            const dateData = getDataForDate(selectedDate);
             const shiftData = dateData[activeShift] || [];
+            console.log(`Dados encontrados para ${selectedDate} no turno ${activeShift}:`, shiftData);
+            console.log('Estrutura completa de dados por data:', dataByDateAndShift);
             
             // Carregar dados do Firebase para a nova data
             if(typeof loadAllDataForDate === 'function') {
@@ -987,7 +1202,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             dataByDateAndShift[selectedDate][turno] = dataByDateAndShift[selectedDate][turno].sort((a, b) => {
                                 const professorA = (a.professorName || '').trim();
                                 const professorB = (b.professorName || '').trim();
-
                                 if(!professorA || !professorB) return 0;
                                 return professorA.localeCompare(professorB, 'pt-BR');
                             });
@@ -1011,12 +1225,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Corrigir problema de fuso horário ao exibir a data
             const [year, month, day] = selectedDate.split('-');
-            const formattedDate      = `${day}/${month}/${year}`;
+            const formattedDate = `${day}/${month}/${year}`;
             
             // Contar total de registros em todos os turnos para esta data
             const totalRecords = (dateData['manhã']?.length || 0) + 
-                                 (dateData['tarde']?.length || 0) + 
-                                 (dateData['noite']?.length || 0);
+                               (dateData['tarde']?.length || 0) + 
+                               (dateData['noite']?.length || 0);
             
             showNotification(`Visualizando ${formattedDate} - ${shiftData.length} registros no turno (${totalRecords} total)`, 'info');
         });
@@ -1027,30 +1241,40 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Configurar evento do botão de confirmação de importação
     const confirmImportBtn = document.getElementById('confirmImportShift');
-
     if(confirmImportBtn && !confirmImportBtn.hasAttribute('data-listener-added')) {
         confirmImportBtn.setAttribute('data-listener-added', 'true');
-
         confirmImportBtn.addEventListener('click', async function() {
+            console.log(' Botão de confirmar importação clicado');
+            
             const checkedInput = document.querySelector('input[name="importShift"]:checked');
-            if(!checkedInput) return;
+            if(!checkedInput) {
+                console.warn(' Nenhum turno selecionado');
+                return;
+            }
             
             const selectedShift = checkedInput.value;
+            console.log('� Turno selecionado:', selectedShift);
             
             const modalElement = document.getElementById('shiftSelectionModal');
             if(modalElement && typeof bootstrap !== 'undefined') {
                 const modal = bootstrap.Modal.getInstance(modalElement);
-
-                if(modal) modal.hide();
+                if(modal) {
+                    console.log('� Fechando modal');
+                    modal.hide();
+                }
             }
             
             if(selectedFileForImport) {
+                console.log('� Processando arquivo:', selectedFileForImport.name);
                 await processFileImport(selectedFileForImport, selectedShift);
                 selectedFileForImport = null;
                 
                 // Limpar o input de arquivo para permitir nova importação
                 const fileInput = document.getElementById('fileInput');
-                if(fileInput) fileInput.value = '';
+                if(fileInput) {
+                    fileInput.value = '';
+                    console.log(' Input de arquivo limpo');
+                }
             }
         });
     }
@@ -1058,10 +1282,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Listener para detectar mudanças no localStorage (sincronização entre abas)
     window.addEventListener('storage', function(e) {
         if(e.key === 'allDateShiftData' || e.key === 'allShiftData' || e.key === 'dataUpdateTimestamp') {
+            console.log('[ADMIN] Detectada atualização de dados em outra aba/janela, chave:', e.key);
+            console.log('[ADMIN] Novo valor:', e.newValue);
             
             if(e.key === 'allDateShiftData' && e.newValue) {
                 try {
                     const newData = JSON.parse(e.newValue);
+                    console.log('[ADMIN] Dados brutos recebidos via storage:', newData);
                     
                     // Ordenar dados de todos os turnos alfabeticamente por nome do professor
                     for (let date in newData) {
@@ -1070,9 +1297,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 newData[date][turno] = newData[date][turno].sort((a, b) => {
                                     const professorA = (a.professorName || '').trim();
                                     const professorB = (b.professorName || '').trim();
-
                                     if(!professorA || !professorB) return 0;
-
                                     return professorA.localeCompare(professorB, 'pt-BR');
                                 });
                             }
@@ -1080,11 +1305,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     dataByDateAndShift = newData;
+                    console.log('[ADMIN] Dados atualizados e ordenados:', dataByDateAndShift);
                     
                     renderTable();
                     showNotification('Dados atualizados por outro painel!', 'info');
                 } catch (error) {
-                    console.log(error)
+                    console.error('[ADMIN] Erro ao processar dados do storage:', error);
                 }
             } else {
                 loadSavedData();
@@ -1096,11 +1322,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ==================== CADASTRO DE PROFESSORES ====================
 
-// Abre o modal de cadastro de professor
+/**
+ * Abre o modal de cadastro de professor
+ */
 function openRegisterTeacherModal() {
     const modal = document.getElementById('registerTeacherModal');
-    if(!modal) return;
-
+    if(!modal) {
+        console.error('❌ Modal não encontrado');
+        return;
+    }
     modal.style.display = 'flex';
     setTimeout(() => {
         const nameInput = document.getElementById('tpFullName');
@@ -1108,16 +1338,15 @@ function openRegisterTeacherModal() {
     }, 100);
 }
 
-// Fecha o modal e limpa os campos
+/**
+ * Fecha o modal e limpa os campos
+ */
 function closeRegisterTeacherModal() {
     const modal = document.getElementById('registerTeacherModal');
     if(!modal) return;
-
     modal.style.display = 'none';
-
     const nameInput = document.getElementById('tpFullName');
     const fatsInput = document.getElementById('tpFast');
-
     if(nameInput) nameInput.value = '';
     if(fatsInput) fatsInput.value = '';
 }
@@ -1136,12 +1365,17 @@ if(inputFast) {
     });
 }
 
-// Salva novo professor com sincronização completa
+/**
+ * Salva novo professor com sincronização completa
+ */
 function saveNewTeacher() {
+    console.log('🔄 Cadastrando professor');
+    
     const nameInput = document.getElementById('tpFullName');
     const fatsInput = document.getElementById('tpFast');
     
     if(!nameInput || !fatsInput) {
+        console.error('❌ Campos não encontrados');
         showNotification('Erro: Campos do formulário não encontrados!', 'danger');
         return false;
     }
@@ -1168,6 +1402,7 @@ function saveNewTeacher() {
     try {
         // Obtém os dados atuais do localStorage
         const currentMapping = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
+        console.log('📚 Professores atuais:', Object.keys(currentMapping).length);
 
         // Verificar se o professor já existe pelo nome
         if(currentMapping[name]) {
@@ -1186,6 +1421,7 @@ function saveNewTeacher() {
         // Adicionar professor ao mapeamento
         currentMapping[name] = fats;
         localStorage.setItem('docentesCodprof', JSON.stringify(currentMapping));
+        console.log('✅ Professor salvo no localStorage');
         
         // Atualiza teacherNames para consistência
         const existingTeacherNames = JSON.parse(localStorage.getItem('teacherNames') || '{}');
@@ -1193,28 +1429,47 @@ function saveNewTeacher() {
         localStorage.setItem('teacherNames', JSON.stringify(existingTeacherNames));
         
         // Sincronizar com TeachersData se disponível
-        if(typeof TeachersData !== 'undefined' && TeachersData.addTeacher)
+        if(typeof TeachersData !== 'undefined' && TeachersData.addTeacher) {
             TeachersData.addTeacher(name, fats);
+            console.log('✅ Sincronizado com TeachersData');
+        }
         
         // Sincronizar com teacherPanel se disponível
-        if(typeof window.addNewProfessorToTeacherPanel === 'function')
+        if(typeof window.addNewProfessorToTeacherPanel === 'function') {
             window.addNewProfessorToTeacherPanel(name, fats);
+            console.log('✅ Sincronizado com teacherPanel');
+        }
         
         // Atualizar variável global docentesCodprof
         if(typeof window.docentesCodprof !== 'undefined') {
             window.docentesCodprof[name] = fats;
+<<<<<<< HEAD
 <<<<<<< HEAD:public/src/modules/admin/paineladm.js
+=======
+            console.log('✅ Atualizado em window.docentesCodprof');
+>>>>>>> parent of 7fbd170 (♻️ refactor: Remove logs de debug e padroniza organização de arquivos JavaScript.)
             
             // Salvar no Firestore
+            console.log('🔍 DEBUG: Verificando Firestore...', {
+                funcaoExiste: typeof addOrUpdateTeacherInFirestore === 'function',
+                firestoreExiste: typeof firestore !== 'undefined' && firestore !== null,
+                name: name,
+                fats: fats
+            });
+            
             if(typeof addOrUpdateTeacherInFirestore === 'function') {
+                console.log('💾 Chamando addOrUpdateTeacherInFirestore...');
                 addOrUpdateTeacherInFirestore(name, fats)
                     .then(() => {
+                        console.log('✅ Professor salvo no Firestore com sucesso!');
                         showProfessorSuccessModal(name, fats);
                     })
                     .catch(err => {
+                        console.error('❌ Erro ao salvar no Firestore:', err);
                         showProfessorErrorModal('Erro ao salvar no Firestore: ' + err.message);
                     });
             } else {
+                console.error('❌ Função addOrUpdateTeacherInFirestore não encontrada!');
                 showProfessorErrorModal('Firestore não está disponível. Professor salvo apenas localmente.');
             }
 =======
@@ -1226,6 +1481,7 @@ function saveNewTeacher() {
         window.dispatchEvent(new CustomEvent('teacherAdded', {
             detail: { name, fats, timestamp: new Date().toISOString() }
         }));
+        console.log('✅ Evento disparado');
         
         // Salvar no Firebase (opcional)
         if (typeof database !== 'undefined' && database) {
@@ -1244,12 +1500,16 @@ function saveNewTeacher() {
         // Atualizar interface
         updateTeacherTable();
         closeRegisterTeacherModal();
+        
         showNotification(`Professor "${name}" cadastrado com sucesso!`, 'success');
+        console.log('✅ Cadastro concluído:', { name, fats });
         return true;
+        
     } catch(error) {
-        if(typeof ErrorHandler !== 'undefined')
+        console.error('❌ Erro ao cadastrar professor:', error);
+        if(typeof ErrorHandler !== 'undefined') {
             ErrorHandler.handle(error, 'saveNewTeacher', { name, fats });
-            
+        }
         showNotification('Erro ao cadastrar professor. Verifique os dados e tente novamente.', 'danger');
         return false;
     }
@@ -1258,43 +1518,60 @@ function saveNewTeacher() {
 function initializeAll() {
     // Inicializar mapeamento de professores se não existir
     let storedTeachers = localStorage.getItem('docentesCodprof');
-
     if(!storedTeachers) {
+        console.log(' Inicializando mapeamento docentesCodprof no localStorage...');
         localStorage.setItem('docentesCodprof', JSON.stringify({}));
-    } 
-    else {
+    } else {
         try {
             const parsed = JSON.parse(storedTeachers);
-
-            if(typeof parsed !==  "object" || Array.isArray(parsed))
+            if(typeof parsed !==  "object" || Array.isArray(parsed)) {
                 throw new Error('Formato inválido para docentesCodprof');
-        } catch(error) {
+            }
+            console.log(' Mapeamento docentesCodprof carregado com sucesso:', Object.keys(parsed).length, 'professores');
+        } catch (error) {
+            console.warn(' Mapeamento docentesCodprof inválido, reinicializando...', error);
             localStorage.setItem('docentesCodprof', JSON.stringify({}));
         }
-    }
-    
+    }    // ...existing code...
     // Adicionar evento ao botão "Adicionar" - verificar se está funcionando
     document.addEventListener('DOMContentLoaded', function() {
         // Verificar se o botão existe
         const addButton = document.querySelector('button[title="Adicionar Nova Chave"]');
         
         if(addButton) {
+            console.log('✅ Botão Adicionar encontrado');
             addButton.addEventListener('click', function(e) {
                 e.preventDefault();
+                console.log('🔄 Abrindo modal de cadastro de professor');
                 openRegisterTeacherModal();
             });
         } else {
+            console.warn('⚠️ Botão Adicionar não encontrado!');
             // Buscar por outros seletores possíveis
             const alternativeButton = document.querySelector('[data-action="add-teacher"], .btn-add-teacher, #addTeacherBtn');
-            if(alternativeButton) 
+            if(alternativeButton) {
+                console.log('✅ Botão alternativo encontrado');
                 alternativeButton.addEventListener('click', openRegisterTeacherModal);
+            }
+        }
+        
+        // Verificar se o modal existe
+        const modal = document.getElementById('registerTeacherModal');
+        if(!modal) {
+            console.error('❌ Modal registerTeacherModal não encontrado no DOM!');
+        } else {
+            console.log('✅ Modal de cadastro encontrado');
         }
     });
+    // ...existing code...    // ...existing code...
     function saveNewTeacher() {
+        console.log('🔄 Iniciando cadastro de novo professor');
+        
         const nameInput = document.getElementById('tpFullName');
         const fatsInput = document.getElementById('tpFast');
         
         if(!nameInput || !fatsInput) {
+            console.error('❌ Campos de input não encontrados:', { nameInput, fatsInput });
             showNotification('Erro: Campos do formulário não encontrados!', 'danger');
             return;
         }
@@ -1302,13 +1579,17 @@ function initializeAll() {
         const name = nameInput.value.trim();
         const fats = fatsInput.value.trim();
         
+        console.log('📝 Dados capturados:', { name, fats });
+    
         if(!name || !fats) {
+            console.warn('⚠️ Campos obrigatórios não preenchidos');
             showNotification('Preencha todos os campos obrigatórios!!', 'warning');
             return;
         }
     
         // Validar se o nome tem pelo menos 3 caracteres
         if(name.length < 3) {
+            console.warn('⚠️ Nome muito curto:', name.length);
             showNotification('O nome do professor deve ter pelo menos 3 caracteres.', 'warning');
             return;
         }
@@ -1316,8 +1597,10 @@ function initializeAll() {
         // Valida se o professor já existe
         try {
             const currentMapping = JSON.parse(localStorage.getItem('docentesCodprof') || '{}');
+            console.log('📚 Mapeamento atual:', Object.keys(currentMapping).length, 'professores');
     
             if(currentMapping[name]) {
+                console.warn('⚠️ Professor já existe:', name);
                 showNotification(`O professor "${name}" já está cadastrado no sistema.`, 'warning');
                 return;
             }
@@ -1325,6 +1608,7 @@ function initializeAll() {
             // Verifica se o FAST já está sendo usado por outro professor
             for(const [existingName, existingFast] of Object.entries(currentMapping)) {
                 if(existingFast === fats) {
+                    console.warn('⚠️ FATS já em uso:', { fats, existingName });
                     showNotification(`O FATS <strong>"${fats}"</strong> já está sendo usado pelo professor: <strong>${existingName}</strong>.`, 'warning');
                     return;
                 }
@@ -1333,6 +1617,8 @@ function initializeAll() {
             // Adicionar novo professor
             currentMapping[name] = fats;
             localStorage.setItem('docentesCodprof', JSON.stringify(currentMapping));
+            
+            console.log('✅ Professor cadastrado com sucesso:', { name, fats });
             
             // Disparar evento customizado para notificar outras partes do sistema
             window.dispatchEvent(new CustomEvent('teacherAdded', {
@@ -1344,18 +1630,28 @@ function initializeAll() {
             
             // Fechar o modal e limpar os campos
             closeRegisterTeacherModal();
-
+            
             showNotification(`Professor '<strong>${name}</strong>' cadastrado(a) com sucesso!`, 'success');
+            
             return true;
         } catch(error) {
+            console.error('❌ Erro ao cadastrar professor:', error);
             showNotification('Erro ao cadastrar professor.', 'danger');
             return false;
         }
     }
-};
 
-if(!localStorage.getItem('docentesCodprof')) 
-    localStorage.setItem('docentesCodprof', JSON.stringify({}));
+    };
+    
+    // REMOVIDO: Código legado que causava erro - o salvamento agora é feito dentro de saveNewTeacher()
+    // localStorage.setItem("docentesCodprof", JSON.stringify(docentesCodprof));
+   
+
+    if(!localStorage.getItem('docentesCodprof')) {
+        console.log(' Inicializando mapeamento docentesCodprof no localStorage...');
+        localStorage.setItem('docentesCodprof', JSON.stringify({}));
+    }
+
 
 if(document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
@@ -1363,16 +1659,18 @@ if(document.readyState === 'loading') {
 
         const addButton = document.querySelector('button[title="Adicionar Nova Chave"]');
 
-        if(addButton)
+        if(addButton) {
             addButton.addEventListener('click', openRegisterTeacherModal);
+        }
     });
 } else {
     initializeAll();
     // Adiciona evento ao botão "Adicionar"
     const addButton = document.querySelector('button[title="Adicionar Nova Chave"]');
 
-    if(addButton)
+    if(addButton) {
         addButton.addEventListener('click', openRegisterTeacherModal);
+    }
 }
 
 // Event listener unificado para todos os botões da tabela
@@ -1465,21 +1763,29 @@ function handleSaveButton(e) {
             
             // Mapear índices para campos de dados
             switch(index) {
-                case 0: updatedData.room          = newValue; break;
-                case 1: updatedData.course        = newValue; break;
-                case 2: updatedData.turmaNumber   = newValue; break;
+                case 0: updatedData.room = newValue; break;
+                case 1: updatedData.course = newValue; break;
+                case 2: updatedData.turmaNumber = newValue; break;
                 case 3: updatedData.professorName = newValue; break;
-                case 4: updatedData.subject       = newValue; break;
+                case 4: updatedData.subject = newValue; break;
                 // índices 5-8 são campos não editáveis (horários, status)
             }
+            
             // Atualiza o DOM
             cell.textContent = newValue;
         }
     });
 
+    console.log(' Dados capturados para sincronização:', {
+        rowId: rowId,
+        updatedData: updatedData,
+        hasData: Object.keys(updatedData).length > 0
+    });
+
     // Atualiza os dados compartilhados se há um ID de registro
-    if(rowId && Object.keys(updatedData).length > 0)
+    if(rowId && Object.keys(updatedData).length > 0) {
         updateSharedDataRecord(rowId, updatedData);
+    }
 
     // Faz a célula de ação voltar ao botão Editar
     const actionCell = cells[cells.length - 1];
@@ -1500,6 +1806,8 @@ function handleSaveButton(e) {
 // Função para atualizar um registro específico nos dados compartilhados
 function updateSharedDataRecord(recordId, updatedFields) {
     try {
+        console.log(` Atualizando registro ${recordId} com:`, updatedFields);
+        
         // Encontrar e atualizar o registro nos dados por data e turno
         let recordFound = false;
         
@@ -1507,9 +1815,17 @@ function updateSharedDataRecord(recordId, updatedFields) {
             for(const shift in dataByDateAndShift[date]) {
                 const records = dataByDateAndShift[date][shift];
                 
+                console.log(` Verificando ${date}/${shift}:`, {
+                    recordsType: typeof records,
+                    isArray: Array.isArray(records),
+                    records: records
+                });
+                
                 // Verificar se records é um array
-                if(!Array.isArray(records))
+                if(!Array.isArray(records)) {
+                    console.warn(` records não é um array em ${date}/${shift}:`, records);
                     continue;
+                }
                 
                 const recordIndex = records.findIndex(record => record && record.id === recordId);
                 
@@ -1521,6 +1837,7 @@ function updateSharedDataRecord(recordId, updatedFields) {
                     records[recordIndex].lastEdited = new Date().toISOString();
                     records[recordIndex].editedBy = 'admin';
                     
+                    console.log(` Registro atualizado:`, records[recordIndex]);
                     recordFound = true;
                     
                     // Sincronizar via localStorage
@@ -1528,30 +1845,51 @@ function updateSharedDataRecord(recordId, updatedFields) {
                     
                     // Também atualizar na estrutura allShiftData se existir
                     const currentDateData = dataByDateAndShift[date];
-                    if(currentDateData)
+                    if(currentDateData) {
                         localStorage.setItem('allShiftData', JSON.stringify(currentDateData));
+                    }
                     
                     // Sincronizar via Firebase se disponível
                     if(typeof saveDataToFirebase === 'function') {
+                        // DEBUG: Verificar dados antes de enviar ao Firebase
+                        console.log(' [ADMIN] Edição de registro - Dados antes de enviar ao Firebase:');
+                        console.log(' [ADMIN] - date:', date);
+                        console.log(' [ADMIN] - shift:', shift);
+                        console.log(' [ADMIN] - records length:', records.length);
+                        
                         // Sempre sincronizar com Firebase após atualização, mesmo se o array ficar vazio
                         if(records && Array.isArray(records)) {
+                            console.log(' [ADMIN] Sincronizando atualização com Firebase...', {
+                                date,
+                                shift,
+                                recordsLength: records.length,
+                                recordsContent: records
+                            });
+                            
                             saveDataToFirebase(date, shift, records)
-                                .then(() => {})
-                                .catch(() => {});
+                                .then(() => {
+                                    console.log(` [ADMIN] Dados sincronizados no Firebase para ${date}/${shift}`);
+                                })
+                                .catch(error => {
+                                    console.error(' [ADMIN] Erro ao sincronizar no Firebase:', error);
+                                });
+                        } else {
+                            console.error(' [ADMIN] Dados inválidos - records não é um array:', records);
                         }
                     }
                     
                     // Disparar evento customizado para notificar outras páginas
                     window.dispatchEvent(new CustomEvent('dataUpdated', {
                         detail: {
-                            type:          'recordUpdated',
-                            recordId:      recordId,
+                            type: 'recordUpdated',
+                            recordId: recordId,
                             updatedFields: updatedFields,
-                            date:          date,
-                            shift:         shift,
-                            timestamp:     new Date().toISOString()
+                            date: date,
+                            shift: shift,
+                            timestamp: new Date().toISOString()
                         }
                     }));
+                    
                     break;
                 }
             }
@@ -1560,6 +1898,8 @@ function updateSharedDataRecord(recordId, updatedFields) {
         
         // Se não encontrou na estrutura principal, tentar na estrutura legacy
         if(!recordFound) {
+            console.log(' Tentando encontrar na estrutura legacy allShiftData...');
+            
             const allShiftDataStr = localStorage.getItem('allShiftData');
             if(allShiftDataStr) {
                 try {
@@ -1574,33 +1914,42 @@ function updateSharedDataRecord(recordId, updatedFields) {
                             if(recordIndex !== -1) {
                                 Object.assign(shiftRecords[recordIndex], updatedFields);
                                 shiftRecords[recordIndex].lastEdited = new Date().toISOString();
-                                shiftRecords[recordIndex].editedBy   = 'admin';
+                                shiftRecords[recordIndex].editedBy = 'admin';
                                 
                                 localStorage.setItem('allShiftData', JSON.stringify(allShiftData));
                                 
+                                console.log(` Registro atualizado na estrutura legacy:`, shiftRecords[recordIndex]);
                                 recordFound = true;
                                 
                                 // Disparar evento customizado
                                 window.dispatchEvent(new CustomEvent('dataUpdated', {
                                     detail: {
-                                        type:          'recordUpdated',
-                                        recordId:      recordId,
+                                        type: 'recordUpdated',
+                                        recordId: recordId,
                                         updatedFields: updatedFields,
-                                        shift:         shift,
-                                        timestamp:     new Date().toISOString()
+                                        shift: shift,
+                                        timestamp: new Date().toISOString()
                                     }
                                 }));
+                                
                                 break;
                             }
                         }
                     }
                 } catch (error) {
-                    console.error(error);
+                    console.error(' Erro ao processar allShiftData:', error);
                 }
             }
-        }        
+        }
+        
+        if(!recordFound) {
+            console.warn(` Registro com ID ${recordId} não encontrado em nenhuma estrutura`);
+        }
+        
         return recordFound;
-    } catch(error) {
+        
+    } catch (error) {
+        console.error(' Erro ao atualizar dados compartilhados:', error);
         return false;
     }
 }
@@ -1649,7 +1998,7 @@ document.addEventListener("click", function(e) {
     if(!button) return;
 
     const recordId = button.getAttribute("data-id");
-    const row      = button.closest("tr");
+    const row = button.closest("tr");
     
     if(!recordId || !row) return;
 
@@ -1730,6 +2079,7 @@ function showDeleteConfirmationModal(recordId, row) {
         </div>
     `;    
     document.body.appendChild(modal);
+
     const bootstrapModal = new bootstrap.Modal(modal);
     
     // Event listener para confirmação
@@ -1744,6 +2094,7 @@ function showDeleteConfirmationModal(recordId, row) {
             row.style.cssText = 'transition: all 0.3s ease; transform: translateX(-100%); opacity: 0;';
 
             setTimeout(() => row.remove(), 300);
+            
             bootstrapModal.hide();
         } else {
             showNotification('Erro ao deletar registro!', 'danger');
@@ -1762,79 +2113,6 @@ function showDeleteRoomConfirmationModal(roomId) {
     const modal = document.createElement('div');
 
     const rooms = getRooms();
-    const roomExists = rooms.filter(r => r.id === roomId);
-
-    modal.id = 'deleteRoomConfirmationModal';
-    modal.className = 'modal fade';
-    modal.setAttribute('tabindex', '-1');
-
-    modal.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg d-flex gap-0">
-                <div class="d-flex justify-content-center modal-header bg-danger text-white border-0" style="position: relative;">
-                    <div class="d-flex align-self-center justify-content-center align-items-center position-absolute" style="width: 100px; height: 100px; border-radius: 50%; background-color: #dc3545;">
-                        <i class="bi bi-trash3-fill text-white" style="font-size: 3.5rem;"></i>
-                    </div>
-                    
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4 d-flex flex-column">
-                    <div class="text-center mb-3"></div>
-
-                    <h3 class="text-center mb-2 mt-3" style="color: #323232">
-                        Remover Sala?
-                    </h3>
-
-                    <p class="text-center align-self-center mb-4" style="color: #4D4D4D; width: 378px">
-                        Tem certeza que deseja <strong class="text-light-emphasis">excluir permanentemente</strong> esta sala? Esta ação não pode ser desfeita!
-                    </p>
-
-                    <div class="card bg-light border-0 ">
-                        <div class="card-body p-3">
-                            <h6 class="card-subtitle mb-2 pb-2 text-muted border-1 border-bottom">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Detalhes da Sala
-                            </h6>
-                            <div class="small d-flex flex-column register-details">
-                                <p><strong>Sala:</strong> ${roomExists[0].sala}</p>
-                                <p><strong>Bloco:</strong> ${roomExists[0].bloco}</p>
-                                <p><strong>Numero da sala:</strong> ${roomExists[0].numero || 'sem numeração'}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="modal-body modal-actions border-0 d-flex gap-2">
-                    <button type="button" id="cancel-btn" class="btn" data-bs-dismiss="modal" style="width: 100%;">
-                        Cancelar
-                    </button>
-
-                    <button type="button" class="btn" id="confirmDeleteRoomBtn" style="width: 100%;">
-                        Deletar Registro
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;    
-    document.body.appendChild(modal);
-    const bootstrapModal = new bootstrap.Modal(modal);
-    
-    // Event listener para confirmação
-    modal.querySelector('#confirmDeleteRoomBtn').addEventListener('click', function() {
-        deleteRoom(roomId);
-        bootstrapModal.hide();
-    });
-    
-    // Auto-cleanup
-    modal.addEventListener('hidden.bs.modal', () => modal.remove());
-    bootstrapModal.show();
-}
-
-function showDeleteTeacherConfirmationModal(roomId) {
-    // Criar o modal
-    const modal = document.createElement('div');
-
-    const rooms      = getRooms();
     const roomExists = rooms.filter(r => r.id === roomId);
     // const textRoomNumber = (roomExists[0].numero != 'Sem numeração') ? roomExists[0].numero : 'Sem numeração';
 
@@ -1891,6 +2169,82 @@ function showDeleteTeacherConfirmationModal(roomId) {
         </div>
     `;    
     document.body.appendChild(modal);
+
+    const bootstrapModal = new bootstrap.Modal(modal);
+    
+    // Event listener para confirmação
+    modal.querySelector('#confirmDeleteRoomBtn').addEventListener('click', function() {
+        deleteRoom(roomId);
+        bootstrapModal.hide();
+    });
+    
+    // Auto-cleanup
+    modal.addEventListener('hidden.bs.modal', () => modal.remove());
+    bootstrapModal.show();
+}
+
+function showDeleteTeacherConfirmationModal(roomId) {
+    // Criar o modal
+    const modal = document.createElement('div');
+
+    const rooms = getRooms();
+    const roomExists = rooms.filter(r => r.id === roomId);
+    // const textRoomNumber = (roomExists[0].numero != 'Sem numeração') ? roomExists[0].numero : 'Sem numeração';
+
+    modal.id = 'deleteRoomConfirmationModal';
+    modal.className = 'modal fade';
+    modal.setAttribute('tabindex', '-1');
+
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg d-flex gap-0">
+                <div class="d-flex justify-content-center modal-header bg-danger text-white border-0" style="position: relative;">
+                    <div class="d-flex align-self-center justify-content-center align-items-center position-absolute" style="width: 100px; height: 100px; border-radius: 50%; background-color: #dc3545;">
+                        <i class="bi bi-trash3-fill text-white" style="font-size: 3.5rem;"></i>
+                    </div>
+                    
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 d-flex flex-column">
+                    <div class="text-center mb-3"></div>
+
+                    <h3 class="text-center mb-2 mt-3" style="color: #323232">
+                        Remover Sala?
+                    </h3>
+
+                    <p class="text-center align-self-center mb-4" style="color: #4D4D4D; width: 378px">
+                        Tem certeza que deseja <strong class="text-light-emphasis">excluir permanentemente</strong> esta sala? Esta ação não pode ser desfeita!
+                    </p>
+
+                    <div class="card bg-light border-0 ">
+                        <div class="card-body p-3">
+                            <h6 class="card-subtitle mb-2 pb-2 text-muted border-1 border-bottom">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Detalhes da Sala
+                            </h6>
+                            <div class="small d-flex flex-column register-details">
+                                <p><strong>Sala:</strong> ${roomExists[0].sala}</p>
+                                <p><strong>Bloco:</strong> ${roomExists[0].bloco}</p>
+                                <p><strong>Numero da sala:</strong> ${roomExists[0].numero || 'sem numeração'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-body modal-actions border-0 d-flex gap-2">
+                    <button type="button" id="cancel-btn" class="btn" data-bs-dismiss="modal" style="width: 100%;">
+                        Cancelar
+                    </button>
+
+                    <button type="button" class="btn" id="confirmDeleteRoomBtn" style="width: 100%;">
+                        Deletar Registro
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;    
+    document.body.appendChild(modal);
+
     const bootstrapModal = new bootstrap.Modal(modal);
     
     // Event listener para confirmação
@@ -1931,9 +2285,29 @@ function deleteSharedDataRecord(recordId) {
                 
                 // Sincroniza com o Firebase 
                 if(typeof saveDataToFirebase === 'function') {
+                    // DEBUG: Verificar dados antes de enviar ao Firebase
+                    console.log(' [ADMIN] Exclusão de registro - Dados antes de enviar ao Firebase:');
+                    console.log(' [ADMIN] - date:', date);
+                    console.log(' [ADMIN] - shift:', shift);
+                    console.log(' [ADMIN] - records length:', records.length);
+                    
                     // Sempre sincronizar com Firebase após exclusão, mesmo se o array ficar vazio
-                    if(records && Array.isArray(records))
-                        saveDataToFirebase(date, shift, records).then(() => {}).catch(() => {});
+                    if(records && Array.isArray(records)) {
+                        console.log(' [ADMIN] Sincronizando exclusão com Firebase...', {
+                            date,
+                            shift,
+                            recordsLength: records.length,
+                            recordsContent: records
+                        });
+                        
+                        saveDataToFirebase(date, shift, records).then(() => {
+                            console.log(' [ADMIN] Exclusão sincronizada com Firebase com sucesso!');
+                        }).catch(error => {
+                            console.error(' [ADMIN] Erro ao sincronizar exclusão no Firebase:', error);
+                        });
+                    } else {
+                        console.error(' [ADMIN] Dados inválidos - records não é um array:', records);
+                    }
                 }
                 
                 // Notificar outras telas
@@ -2001,10 +2375,8 @@ function showMensageConfirmationModal(nameTeacher, fats) {
     
     // Cria o modal
     const modal = document.createElement('div');
-    
-    modal.id        = 'messageConfirmationModal';
+    modal.id = 'messageConfirmationModal';
     modal.className = 'modal fade';
-
     modal.setAttribute('tabindex', '-1');
     modal.setAttribute('aria-hidden', 'true');
 
@@ -2076,7 +2448,7 @@ window.addEventListener('dataUpdated', function(event) {
 
 // Atualizar contadores da tabela
 function updateTableCounters() {
-    const visibleRows  = document.querySelectorAll('#tableBody tr:not([style*="display: none"])').length;
+    const visibleRows = document.querySelectorAll('#tableBody tr:not([style*="display: none"])').length;
     const counterBadge = document.querySelector('.record-counter');
 
     if(counterBadge) counterBadge.textContent = visibleRows;
@@ -2104,8 +2476,7 @@ function logout() {
 
 function login(){
     const username = document.getElementById('username').value;
-    const senha    = document.getElementById('senha').value;
-
+    const senha = document.getElementById('senha').value;
     if(username === 'admin' && senha === 'adm@123'){
         localStorage.setItem('adminLoggedIn', 'true');
         document.getElementById('overlay').style.display = 'none';
@@ -2123,9 +2494,11 @@ function login(){
 
 // Botão cancelar (voltar para a tela anterior FUNCIONANDOOOO)
 function cancel(){
-    window.history.length > 1 
-        ? window.history.back() 
-        : window.location.href = 'teacherPanel.html'
+    if(window.history.length > 1) {
+        window.history.back();
+    } else {
+        window.location.href = 'teacherPanel.html';
+    }
 }
 
 // Array que irá armazenar os dados importados
@@ -2134,9 +2507,9 @@ let mockData = [];
 // Função para obter o badge de status
 function getStatusBadge(status) {
     const variants = {
-        'em_uso':     { variant: 'em-uso',     label: 'Em Uso'     },
-        'devolvida':  { variant: 'devolvida',  label: 'Devolvida'  },
-        'retirada':   { variant: 'retirada',   label: 'Retirada'   },
+        'em_uso':     { variant: 'em-uso',     label: 'Em Uso' },
+        'devolvida':  { variant: 'devolvida',  label: 'Devolvida' },
+        'retirada':   { variant: 'retirada',   label: 'Retirada' },
         'disponivel': { variant: 'disponivel', label: 'Disponível' }
     };
     
@@ -2203,31 +2576,38 @@ function updateCurrentDate() {
         const now = new Date();
         const formattedDate = now.toLocaleDateString('pt-BR', {
             weekday: 'long',
-            year:    'numeric',
-            month:   'long',
-            day:     'numeric'
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
         const formattedTime = now.toLocaleTimeString('pt-BR', {
-            hour:   '2-digit',
+            hour: '2-digit',
             minute: '2-digit'
         });
         dateElement.textContent = `${formattedDate} - ${formattedTime}`;
     }
 }
 
-// Função de para renderizar a tabela
+// // Função de para renderizar a tabela
 function renderTable() {
+    console.log('Renderizando dados do turno:', activeShift);
     const container = document.getElementById('shiftContent');
+    const manualAllocationsContainer = document.getElementById('manualAllocationsTableBody');
     
-    if(!container) return;
+    if(!container) {
+        console.error('Elemento shiftContent não encontrado');
+        return;
+    }
     
     updateCurrentDate();
     
     let shiftData = getCurrentShiftData();
     
-    if(!Array.isArray(shiftData))
+    if(!Array.isArray(shiftData)) {
+        console.warn('Dados do turno não são um array:', activeShift);
         shiftData = [];
-        
+    }
+    
     // Filtro, normalização e ordenação
     const validData = shiftData
     
@@ -2236,8 +2616,9 @@ function renderTable() {
     .sort((a, b) => (a.professorName || '').localeCompare(b.professorName || '', 'pt-BR'));
     
     const shiftCapitalized = activeShift.charAt(0).toUpperCase() + activeShift.slice(1);
-    const formattedDate    = formatDate(selectedDate);
-    container.innerHTML    = generateTableHTML(validData, shiftCapitalized, formattedDate);
+    const formattedDate = formatDate(selectedDate);
+    
+    container.innerHTML = generateTableHTML(validData, shiftCapitalized, formattedDate);
 }
 
 // Função de validação
@@ -2253,16 +2634,16 @@ function isValidRecord(item) {
 function normalizeRecord(item) {
     const normalized = {
         ...item,
-        course:         getFirstValidValue(item, ['course', 'curso'])                           || '',
-        turmaNumber:    getFirstValidValue(item, ['turmaNumber', 'turma'])                      || '',
-        returnTime:     getFirstValidValue(item, ['returnTime', 'horaDevolucao'])               || '',
-        withdrawalTime: getFirstValidValue(item, ['withdrawalTime', 'horaRetirada'])            || '',
-        subject:        getFirstValidValue(item, ['subject', 'disciplina', 'materia'])          || '',
-        room:           getFirstValidValue(item, ['room', 'sala', 'roomName', 'classroom'])     || '',
-        professorName:  getFirstValidValue(item, ['professorName', 'professor', 'teacherName']) || '',
-        status:         item.status || determineStatus(item),
-        id:             item.id     || generateId(item),
-        shift:          item.shift  || activeShift
+        room: getFirstValidValue(item, ['room', 'sala', 'roomName', 'classroom']) || '',
+        professorName: getFirstValidValue(item, ['professorName', 'professor', 'teacherName']) || '',
+        course: getFirstValidValue(item, ['course', 'curso']) || '',
+        subject: getFirstValidValue(item, ['subject', 'disciplina', 'materia']) || '',
+        turmaNumber: getFirstValidValue(item, ['turmaNumber', 'turma']) || '',
+        withdrawalTime: getFirstValidValue(item, ['withdrawalTime', 'horaRetirada']) || '',
+        returnTime: getFirstValidValue(item, ['returnTime', 'horaDevolucao']) || '',
+        status: item.status || determineStatus(item),
+        id: item.id || generateId(item),
+        shift: item.shift || activeShift
     };    
     return normalized;
 }
@@ -2278,11 +2659,10 @@ function getFirstValidValue(obj, fields) {
 // Função de determinação do status (em uso, devolvida ou disponível)
 function determineStatus(record) {
     const hasWithdrawal = getFirstValidValue(record, ['withdrawalTime', 'horaRetirada']);
-    const hasReturn     = getFirstValidValue(record, ['returnTime', 'horaDevolucao']);
+    const hasReturn = getFirstValidValue(record, ['returnTime', 'horaDevolucao']);
     
     if(hasWithdrawal && hasReturn) return 'devolvida';
     if(hasWithdrawal) return 'em_uso';
-
     else return 'disponivel';
 }
 
@@ -2306,7 +2686,7 @@ function setupDropdownToggle(dropdownElement) {
     if(!dropdownElement) return;
     
     const selected = dropdownElement.querySelector('.selected');
-    const options  = dropdownElement.querySelector('.options');
+    const options = dropdownElement.querySelector('.options');
     
     if(!selected || !options) return;
     
@@ -2347,24 +2727,26 @@ function setupDropdownToggle(dropdownElement) {
 
 // Ao usuário clicar fora o dropdown é fechado
 document.addEventListener('click', function() {
-    
+
     document.querySelectorAll('.options').forEach(options => {
-        const selected     = options.parentElement.querySelector('.selected');
+        const selected = options.parentElement.querySelector('.selected');
         const dropdownItem = options.closest('.drop-down-item');
 
         options.classList.remove('show');
 
-        if(selected)
+        if(selected) {
             selected.classList.remove('active');
-        if(dropdownItem)
+        }
+        if(dropdownItem) {
             dropdownItem.classList.remove('dropdown-active');
+        }
     });
 });
 
 function searchTeachers(e) {
     const tableContainer = document.getElementById('teachersTable');
-    const valorInput     = e.target.value.toLowerCase();
-    const teachers       = getStoredTeachers();
+    const valorInput = e.target.value.toLowerCase();
+    const teachers = getStoredTeachers();
 
     // Verificar se o container existe
     if(!tableContainer) return;
@@ -2379,7 +2761,9 @@ function searchTeachers(e) {
     const filteredTeachers = {};
     
     Object.entries(teachers).forEach(([ nome, fats ]) => {
-        if(nome.toLowerCase().startsWith(valorInput)) filteredTeachers[nome] = fats;
+        if(nome.toLowerCase().startsWith(valorInput)) {
+            filteredTeachers[nome] = fats;
+        }
     });
 
     // Valida se há resultados para o valor digitado
@@ -2431,7 +2815,7 @@ const STORAGE_KEYS = {
 };
 
 const TABLE_CONFIG = {
-    MAIN_TABLE_COLUMNS:    10, // Updated column count
+    MAIN_TABLE_COLUMNS: 10, // Updated column count
     TEACHER_TABLE_COLUMNS: 3
 };
 
@@ -2466,11 +2850,9 @@ function saveTeachers(teachers) {
 
 // Main Table Generation Functions
 function generateTableHTML(validData, shiftCapitalized, formattedDate) {
-    if(     
-        !Array.isArray(validData)            || 
-        typeof shiftCapitalized !== 'string' || 
-        typeof formattedDate    !== 'string'
-    ) return generateErrorHTML('Erro ao gerar tabela: parâmetros inválidos');
+    if(!Array.isArray(validData) || typeof shiftCapitalized !== 'string' || typeof formattedDate !== 'string') {
+        return generateErrorHTML('Erro ao gerar tabela: parâmetros inválidos');
+    }
 
     const rows = validData.length === 0 
         ? generateEmptyRow(shiftCapitalized, formattedDate)
@@ -2528,12 +2910,17 @@ function generateEmptyRow(shiftCapitalized, formattedDate) {
 }
 
 // Geração de linha de tabela com dados
-function generateTableRow(record) {    
+function generateTableRow(record) {
+    // Debug para alocações manuais
+    if(record.tipo === 'manual_allocation') {
+        console.log(' [DEBUG] Gerando linha para alocação manual:', { id: record.id, sala: record.sala, bloco: record.bloco, numero: record.numero, professor: record.professor });
+    }
+    
     // Para alocações manuais, concatenar bloco + sala + número
     let room;
     if(record.tipo === 'manual_allocation') {
-        const bloco  = record.bloco  || '';
-        const sala   = record.sala   || record.room || '';
+        const bloco = record.bloco || '';
+        const sala = record.sala || record.room || '';
         const numero = record.numero || '';
         
         // Formatar: "Bloco Sala Número" ou variações dependendo do que está disponível
@@ -2548,12 +2935,12 @@ function generateTableRow(record) {
         room = record.room || record.sala || '-';
     }
     
-    const course         = record.course         || record.curso         || '-';
-    const turma          = record.turmaNumber    || record.turma         || '-';
-    const professor      = record.professorName  || record.professor     || '-';
-    const subject        = record.subject        || record.disciplina    || record.materia || '-';
-    const withdrawalTime = record.withdrawalTime || record.horaRetirada  || '-';
-    const returnTime     = record.returnTime     || record.horaDevolucao || '-';
+    const course = record.course || record.curso || '-';
+    const turma = record.turmaNumber || record.turma || '-';
+    const professor = record.professorName || record.professor || '-';
+    const subject = record.subject || record.disciplina || record.materia || '-';
+    const withdrawalTime = record.withdrawalTime || record.horaRetirada || '-';
+    const returnTime = record.returnTime || record.horaDevolucao || '-';
     
     return `
         <tr data-record-id="${record.id}" data-id="${record.id}">
@@ -2626,12 +3013,12 @@ function generateErrorHTML(message) {
 
 // Funções de geração de tabela do professor
 function generateTeacherTableHTML(teachersData = null) {
-    const teachers    = teachersData || getStoredTeachers();
+    const teachers = teachersData || getStoredTeachers();
     const hasTeachers = Object.keys(teachers).length > 0;
     
     const rows = hasTeachers 
         ? Object.entries(teachers)
-            .sort(([nameA], [nameB]) => nameA.localeCompare(nameB))
+            .sort(([nameA], [nameB]) => nameA.localeCompare(nameB)) // remover se necessário
             .map(([nome, fats]) => generateTeacherRow(nome, fats))
             .join('')
         : generateEmptyTeacherRow();
@@ -2685,7 +3072,7 @@ function generateEmptyTeacherRow() {
 function generateTeacherRow(nome, fats) {
     if(!nome || nome.trim() === '') return generateErrorRow('Nome do professor inválido');
 
-    const teacherId   = sanitizeId(nome);
+    const teacherId = sanitizeId(nome);
     const escapedName = escapeHtml(nome);
     const escapedFats = escapeHtml(String(fats || ''));
     
@@ -2744,7 +3131,10 @@ let teacherManagerState = {
 function updateTeacherTable(teachersData = null) {
     const tableContainer = document.getElementById('teachersTable');
 
-    if(!tableContainer) return false;
+    if(!tableContainer) {
+        console.warn('teachersTable element not found');
+        return false;
+    }
 
     try {
         teacherManagerState.teachers = teachersData || getStoredTeachers();
@@ -2752,6 +3142,7 @@ function updateTeacherTable(teachersData = null) {
         addTeacherEventListeners();
         return true;
     } catch(error) {
+        console.error('Error updating teacher table:', error);
         tableContainer.innerHTML = generateErrorHTML('Erro ao carregar tabela de professores');
         return false;
     }
@@ -2759,7 +3150,11 @@ function updateTeacherTable(teachersData = null) {
 
 function updateTeacherTableBody(teachersData = null) {
     const tbody = document.getElementById('teacherTableBody');
-    if(!tbody) return false;
+
+    if(!tbody) {
+        console.warn('teacherTableBody element not found');
+        return false;
+    }
 
     try {
         teacherManagerState.teachers = teachersData || getStoredTeachers();
@@ -2777,6 +3172,7 @@ function updateTeacherTableBody(teachersData = null) {
         addTeacherEventListeners();
         return true;
     } catch(error) {
+        console.error('Erro:', error);
         tbody.innerHTML = generateErrorRow('Erro ao carregar professores.');
         return false;
     }
@@ -2824,10 +3220,10 @@ function startEditTeacher(teacherName) {
     const row = document.querySelector(`tr[data-teacher-name="${teacherName}"]`);
     if(!row) return false;
     
-    const fatsText        = row.querySelector('.fats-badge');
-    const nameText        = row.querySelector('.teacher-name');
-    const fatsCell        = row.querySelector('.fats-badge-cell');
-    const nameCell        = row.querySelector('.teacher-name-cell');
+    const fatsText = row.querySelector('.fats-badge');
+    const nameText = row.querySelector('.teacher-name');
+    const fatsCell = row.querySelector('.fats-badge-cell');
+    const nameCell = row.querySelector('.teacher-name-cell');
     const editDeleteGroup = row.querySelector('.edit-delete-group');
     const saveCancelGroup = row.querySelector('.save-cancel-group');
 
@@ -2873,11 +3269,10 @@ function saveEditTeacher(teacherName) {
     const nameInput = row.querySelector('.teacher-name-cell input');
     const fatsInput = row.querySelector('.fats-badge-cell input');
 
-    if(!nameInput || !fatsInput) 
-        return false;
+    if(!nameInput || !fatsInput) return false;
 
-    const newName      = nameInput.value.trim();
-    const newFats      = fatsInput.value.trim().toUpperCase();
+    const newName = nameInput.value.trim();
+    const newFats = fatsInput.value.trim().toUpperCase();
     const originalName = nameInput.getAttribute('data-original');
 
     // Valida as entradas
@@ -2902,20 +3297,24 @@ function saveEditTeacher(teacherName) {
 
     try {
         // Atualiza os dados dos professores
-        if(newName !== originalName)
+        if(newName !== originalName) {
             delete teacherManagerState.teachers[originalName];
+        }
         
         teacherManagerState.teachers[newName] = newFats;
 
         // Salva os dados no localStorage
-        if(!saveTeachers(teacherManagerState.teachers)) 
+        if(!saveTeachers(teacherManagerState.teachers)) {
             throw new Error('Erro ao salvar no localStorage!');
+        }
 
         // Atualiza a tabela
         updateTeacherTableBody();
-
+        
+        console.log('Professor atualizado com sucesso:', { originalName, newName, newFats });
         return true;
     } catch(error) {
+        console.error('Erro ao salvar professor:', error);
         showNotification('Erro ao salvar professor. Tente novamente!', 'danger');
         return false;
     }
@@ -2926,38 +3325,44 @@ function cancelEditTeacher() {
 }
 
 function deleteTeacher(teacherName) {
-    if(!confirm(`Tem certeza que deseja excluir o professor "${teacherName}"?`))
+    if(!confirm(`Tem certeza que deseja excluir o professor "${teacherName}"?`)) {
         return false;
+    }
 
     try {
         delete teacherManagerState.teachers[teacherName];
         
-        if(!saveTeachers(teacherManagerState.teachers))
+        if(!saveTeachers(teacherManagerState.teachers)) {
             throw new Error('Erro ao salvar no localStorage!');
+        }
 
         updateTeacherTableBody();
+        console.log(`Professor "${teacherName}" removido(a) com sucesso!`);
+
         return true;
     } catch(error) {
+        console.error('Erro ao remover professor:', error);
         alert('Erro ao remover professor. Tente novamente!');
+
         return false;
     }
 }
 
 function hiddenDefaultOptions() {
-    document.getElementById('shiftContent').style.display       = 'none';
-    document.getElementById('showTeacherBtn').style.display     = 'none';
-    document.getElementById('import-files-btn').style.display   = 'none';
+    document.getElementById('shiftContent').style.display = 'none';
+    document.getElementById('showTeacherBtn').style.display = 'none';
+    document.getElementById('import-files-btn').style.display = 'none';
     document.getElementById('show-data-dropdown').style.display = 'none';
-    document.getElementById('goBackToKeysTable').style.display  = 'flex';
+    document.getElementById('goBackToKeysTable').style.display = 'flex';
     document.getElementById('dateSelector').classList.add('disabled');
 }
 
 function showDefaultOptions() {
-    document.getElementById('shiftContent').style.display       = 'block';
-    document.getElementById('showTeacherBtn').style.display     = 'block';
-    document.getElementById('import-files-btn').style.display   = 'block';
+    document.getElementById('shiftContent').style.display = 'block';
+    document.getElementById('showTeacherBtn').style.display = 'block';
+    document.getElementById('import-files-btn').style.display = 'block';
     document.getElementById('show-data-dropdown').style.display = 'flex';
-    document.getElementById('goBackToKeysTable').style.display  = 'none';
+    document.getElementById('goBackToKeysTable').style.display = 'none';
     document.getElementById('dateSelector').classList.remove('disabled');
 }
 
@@ -2971,13 +3376,14 @@ function showTeacherTable() {
     tableContainer.classList.remove('d-none');
 
     hiddenDefaultOptions()
-    document.getElementById('shiftTabs').style.display            = 'none';
+    document.getElementById('shiftTabs').style.display = 'none';
     document.getElementById('register-room-option').style.display = 'none';
     
     // Visibilidade da barra de pesquisas
     document.getElementById('search-bar').classList.add('d-flex');
     document.getElementById('search-bar').classList.remove('d-none');
     
+
     teacherManagerState.isActive = true;
 }
 
@@ -2991,7 +3397,7 @@ function hideTeacherTable() {
     tableContainer.classList.add('d-none');
     
     showDefaultOptions();
-    document.getElementById('shiftTabs').style.display            = 'flex';
+    document.getElementById('shiftTabs').style.display = 'flex';
     document.getElementById('register-room-option').style.display = 'flex';
     // Visibilidade da barra de pesquisas
     document.getElementById('search-bar').classList.remove('d-flex');
@@ -3050,6 +3456,7 @@ function generateUniqueRecordId() {
         attempts++;
     } while (existingIds.has(newId) && attempts < 100);
     
+    console.log(' [DEBUG] ID gerado para alocação manual:', newId);
     return newId;
 }
 
@@ -3060,13 +3467,13 @@ function cleanDuplicateIds() {
     
     for (const date in allData) {
         for (const shift in allData[date]) {
-            if (Array.isArray(allData[date][shift])) {
+            if(Array.isArray(allData[date][shift])) {
                 const seenIds = new Set();
                 const cleanArray = [];
                 
                 allData[date][shift].forEach(record => {
-                    if (!record.id || !seenIds.has(record.id)) {
-                        if (!record.id) {
+                    if(!record.id || !seenIds.has(record.id)) {
+                        if(!record.id) {
                             record.id = generateUniqueRecordId();
                             console.log(' [CLEAN] ID criado para registro sem ID:', record.id);
                         }
@@ -3083,7 +3490,7 @@ function cleanDuplicateIds() {
         }
     }
     
-    if (cleaned) {
+    if(cleaned) {
         localStorage.setItem('allDateShiftData', JSON.stringify(allData));
         dataByDateAndShift = allData;
         console.log(' [CLEAN] Dados limpos e salvos');
@@ -3126,14 +3533,17 @@ function createRoomRow(room) {
 
 // Função para o processamento do cadastro das salas
 function handleRoomRegistration() {
-    const salaInput   = document.getElementById('roomName');
-    const blocoInput  = document.getElementById('blockName');
+    const salaInput = document.getElementById('roomName');
+    const blocoInput = document.getElementById('blockName');
     const numeroInput = document.getElementById('roomNumber');
 
-    if(!salaInput || !blocoInput || !numeroInput) return;
+    if(!salaInput || !blocoInput || !numeroInput) {
+        console.error('Form elements not found');
+        return;
+    }
 
-    const sala   = salaInput.value.trim().toUpperCase();
-    const bloco  = blocoInput.value.trim();
+    const sala = salaInput.value.trim().toUpperCase();
+    const bloco = blocoInput.value.trim();
     const numero = numeroInput.value.trim();
     
     // Validação dos campos obrigatórios
@@ -3174,15 +3584,16 @@ function handleRoomRegistration() {
     
     // Cria um objeto da nova sala
     const newRoom = {
-        id:     generateRoomId(),
-        sala:   sala,
-        bloco:  "Bloco " + bloco,
+        id: generateRoomId(),
+        sala: sala,
+        bloco: "Bloco " + bloco,
         numero: numero
     };
     
     // Salva os dados no localstorage
     const rooms = getRooms();
     rooms.push(newRoom);
+    
     saveRooms(rooms);
     
     // Recarrega a tabela das salas
@@ -3199,8 +3610,8 @@ function openRoomRegistrationModal() {
 // Função que oculta e limpa o modal de cadastro de novas salas
 function closeRoomRegistrationModal() {
     document.getElementById('roomRegistrationModal').style.display = 'none';
-    document.getElementById('roomName').value   = '';
-    document.getElementById('blockName').value  = '';
+    document.getElementById('roomName').value = '';
+    document.getElementById('blockName').value = '';
     document.getElementById('roomNumber').value = '';
 }
 
@@ -3250,7 +3661,7 @@ function createEditRoomRow(room) {
 // Função para editar sala
 function editRoom(roomId) {
     const rooms = getRooms();
-    const room  = rooms.find(r => r.id === roomId);
+    const room = rooms.find(r => r.id === roomId);
 
     if(!room) return;
 
@@ -3260,13 +3671,13 @@ function editRoom(roomId) {
 
 // Função para salvar sala
 function saveRoom(roomId) {
-    const salaInput   = document.getElementById(`edit-sala-${roomId}`);
-    const blocoInput  = document.getElementById(`edit-bloco-${roomId}`);
+    const salaInput = document.getElementById(`edit-sala-${roomId}`);
+    const blocoInput = document.getElementById(`edit-bloco-${roomId}`);
     const numeroInput = document.getElementById(`edit-numero-${roomId}`);
     
     const newData = {
-        sala:   salaInput.value.trim(),
-        bloco:  blocoInput.value.trim(),
+        sala: salaInput.value.trim(),
+        bloco: blocoInput.value.trim(),
         numero: numeroInput.value.trim() || ''
     };
 
@@ -3284,24 +3695,25 @@ function saveRoom(roomId) {
 }
 
 // Função para cancelar edição
-function cancelEdit() {
+function cancelEdit(roomId) {
     loadRoomsTable(); // apenas recarrega a tabela original
 }
 
 // Função para excluir sala
 function deleteRoom(roomId) {
-    const rooms         = getRooms();
+    const rooms = getRooms();
     const filteredRooms = rooms.filter(r => r.id !== roomId);
 
     showNotification('Sala removida com sucesso!', 'success');
+
     saveRooms(filteredRooms);
     loadRoomsTable();    
 }
 
 // Função para carregar e exibir a tabela de salas
 function loadRoomsTable() {
-    const rooms        = getRooms();
-    const tbody        = document.getElementById('roomsTableBody');
+    const rooms = getRooms();
+    const tbody = document.getElementById('roomsTableBody');
     const dropdownData = getDropdownData();
 
     document.getElementById('total-registered-rooms').innerHTML = dropdownData.length;
@@ -3360,18 +3772,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Função para lidar com ações de chave
 function handleKeyAction(recordId, currentStatus) {
+    console.log(' [DEBUG] Procurando registro ID:', recordId, 'Status:', currentStatus);
+    
     // Encontrar o registro no turno atual da data selecionada
     let currentData = getCurrentShiftData();
     
     // Garantir que currentData é um array
-    if(!Array.isArray(currentData)) currentData = [];
-
+    if(!Array.isArray(currentData)) {
+        currentData = [];
+    }
+    
+    console.log(' [DEBUG] Dados do turno atual:', currentData.length, 'registros');
+    currentData.forEach((r, index) => {
+        console.log(` [DEBUG] Registro ${index}:`, { id: r.id, sala: r.sala, professor: r.professor, status: r.status });
+    });
+    
     // Buscar com comparação estrita de string
-    let record     = currentData.find(r => String(r.id) === String(recordId));
+    let record = currentData.find(r => String(r.id) === String(recordId));
     let targetData = currentData; // Array onde o registro foi encontrado
     
     // Se não encontrou no turno atual, procurar em todos os dados da variável global
     if(!record) {
+        console.log(' [DEBUG] Não encontrado no turno atual, procurando globalmente...');
         // Garantir que dataByDateAndShift está atualizada
         dataByDateAndShift = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
         
@@ -3381,6 +3803,7 @@ function handleKeyAction(recordId, currentStatus) {
                 if(Array.isArray(shiftData)) {
                     const foundRecord = shiftData.find(r => String(r.id) === String(recordId));
                     if(foundRecord) {
+                        console.log(' [DEBUG] Registro encontrado em', date, shift, ':', foundRecord);
                         record = foundRecord;
                         targetData = shiftData;
                         break;
@@ -3391,17 +3814,22 @@ function handleKeyAction(recordId, currentStatus) {
         }
     }
     
-    if(!record) return;
+    if(!record) {
+        console.error(' [DEBUG] Registro não encontrado:', recordId);
+        return;
+    }
+    
+    console.log(' [DEBUG] Registro encontrado, processando ação...');
 
     const now = new Date();
     const timeString = now.toLocaleTimeString('pt-BR', { 
-        hour:   '2-digit', 
+        hour: '2-digit', 
         minute: '2-digit' 
     });
 
     if(currentStatus === 'em_uso') {
         // Devolver a chave
-        record.status     = 'devolvida';
+        record.status = 'devolvida';
         record.returnTime = timeString;
         
         // Atualizar campos do painel do professor para compatibilidade
@@ -3409,18 +3837,14 @@ function handleKeyAction(recordId, currentStatus) {
         
         // Mostrar notificação Bootstrap
         showNotification(`Chave devolvida por ${record.professorName} às ${record.returnTime}`, 'success');
-    } else if(
-      currentStatus === 'retirada'  || 
-      currentStatus === 'devolvida' || 
-      currentStatus === 'disponivel'
-    ) {
+    } else if(currentStatus === 'retirada' || currentStatus === 'devolvida' || currentStatus === 'disponivel') {
         // Retirar a chave
-        record.status         = 'em_uso';
+        record.status = 'em_uso';
         record.withdrawalTime = timeString;
-        record.returnTime     = '';  // String vazia ao invés de undefined
+        record.returnTime = '';  // String vazia ao invés de undefined
         
         // Atualizar campos do painel do professor para compatibilidade
-        record.horaRetirada  = timeString;
+        record.horaRetirada = timeString;
         record.horaDevolucao = undefined;
         
         // Mostrar notificação Bootstrap
@@ -3430,22 +3854,27 @@ function handleKeyAction(recordId, currentStatus) {
     // Salvar no Firebase para sincronização em tempo real
     if(typeof saveDataToFirebase === 'function') {
         // Encontrar a data e turno corretos para salvar no Firebase
-        let saveDate  = selectedDate;
+        let saveDate = selectedDate;
         let saveShift = activeShift;
         
         // Se o registro foi encontrado em outra data/turno, usar essa informação
         for (const date in dataByDateAndShift) {
             for (const shift in dataByDateAndShift[date]) {
                 if(dataByDateAndShift[date][shift] === targetData) {
-                    saveDate  = date;
+                    saveDate = date;
                     saveShift = shift;
                     break;
                 }
             }
         }
         
-        if(targetData && Array.isArray(targetData) && targetData.length > 0)
-            saveDataToFirebase(saveDate, saveShift, targetData).then(() => {}).catch(() => {});
+        if(targetData && Array.isArray(targetData) && targetData.length > 0) {
+            saveDataToFirebase(saveDate, saveShift, targetData).then(() => {
+                console.log(' [ADMIN] Dados salvos no Firebase após ação de chave');
+            }).catch(error => {
+                console.error(' [ADMIN] Erro ao salvar no Firebase:', error);
+            });
+        }
     }
 
     // Atualizar os dados no localStorage
@@ -3474,9 +3903,9 @@ function showNotification(message, type = 'info') {
     // Criar elemento de notificação
     const notification = document.createElement('div');
 
-    notification.className     = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
     notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    notification.innerHTML     = `
+    notification.innerHTML = `
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar notificação"></button>
     `;
@@ -3486,23 +3915,40 @@ function showNotification(message, type = 'info') {
     
     // Remover automaticamente após 5 segundos
     setTimeout(() => {
-        if(notification.parentNode) notification.remove();
+        if(notification.parentNode) {
+            notification.remove();
+        }
     }, 5000);
 }
 
 // Função principal de inicialização
 function initializePainelAdm() {
+    console.log('Inicializando painel administrativo...');
+    
     // Carregar dados salvos
     loadSavedData();
+    
+    console.log('Dados carregados por data:', dataByDateAndShift);
 
     // Renderizar a interface
+    console.log('Inicializando renderização das abas...');
     renderShiftTabs();
     updateTable();
     initializeDropdowns();
     
     // Inicializar sincronização Firebase se estiver disponível
-    if(typeof initializeFirebaseSync === 'function')
+    if(typeof initializeFirebaseSync === 'function') {
+        console.log('Inicializando sincronização Firebase...');
         initializeFirebaseSync();
+    }
+    
+    // Verificar se as abas foram renderizadas
+    setTimeout(() => {
+        const tabsElement = document.getElementById('shiftTabs');
+        if(tabsElement) {
+            console.log('Conteúdo das abas após renderização:', tabsElement.innerHTML);
+        }
+    }, 200);
 }
 
 // Não inicializar automaticamente - apenas após login
@@ -3512,15 +3958,19 @@ function initializePainelAdm() {
 document.addEventListener('DOMContentLoaded', function() {
     // Adicionar evento de Enter para os campos de login
     const usernameInput = document.getElementById('username');
-    const senhaInput    = document.getElementById('senha');
+    const senhaInput = document.getElementById('senha');
     
     if(usernameInput && senhaInput) {
         usernameInput.addEventListener('keypress', function(e) {
-            if(e.key === 'Enter') senhaInput.focus();
+            if(e.key === 'Enter') {
+                senhaInput.focus();
+            }
         });
         
         senhaInput.addEventListener('keypress', function(e) {
-            if(e.key === 'Enter') login();
+            if(e.key === 'Enter') {
+                login();
+            }
         });
         
         // Focar no primeiro campo quando a página carregar
@@ -3545,8 +3995,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Botão Cancelar do overlay (evita duplicidade se já houver onclick inline)
     const cancelButton = document.getElementById('cancel-btn');
-    if(cancelButton && !cancelButton.getAttribute('onclick'))
+    if(cancelButton && !cancelButton.getAttribute('onclick')) {
         cancelButton.addEventListener('click', cancel);
+    }
 });
 
 // Impede foco/tab no conteúdo fora do overlay e mantém foco em ciclo dentro do popup
@@ -3557,7 +4008,6 @@ function trapFocusInOverlay() {
     document.body.classList.add('overlay-open');
 
     const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-
     const popup = overlay.querySelector('.popup');
     if(!popup) return;
 
@@ -3565,7 +4015,7 @@ function trapFocusInOverlay() {
         .filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1);
 
     const firstEl = focusable[0];
-    const lastEl  = focusable[focusable.length - 1];
+    const lastEl = focusable[focusable.length - 1];
 
     // Força foco inicial
     if(firstEl) firstEl.focus();
@@ -3618,16 +4068,17 @@ function trapFocusInOverlay() {
 // Ativar trapFocus se o overlay iniciar visível (sem login)
 document.addEventListener('DOMContentLoaded', function() {
     const overlay = document.getElementById('overlay');
-    if(overlay && overlay.style.display !== 'none')
+    if(overlay && overlay.style.display !== 'none') {
         trapFocusInOverlay();
+    }
 });
 
 // ==================== MANUAL ALLOCATION FUNCTIONS ====================
 
 // Seleções atuais para alocação manual
 let manualCurrentSelections = {
-    block:      null,
-    room:       null,
+    block: null,
+    room: null,
     roomNumber: null
 };
 
@@ -3646,7 +4097,7 @@ function getUniqueBlocks(rooms) {
 // Função para obter salas únicas para um bloco
 function getUniqueRoomsForBlock(rooms, selectedBlock) {
     const roomsInBlock = rooms.filter(room => room.bloco === selectedBlock);
-    const uniqueRooms  = [...new Set(roomsInBlock.map(room => room.sala))];
+    const uniqueRooms = [...new Set(roomsInBlock.map(room => room.sala))];
     return uniqueRooms.sort();
 }
 
@@ -3654,23 +4105,23 @@ function getUniqueRoomsForBlock(rooms, selectedBlock) {
 function resetAllDropdowns() { 
     // Reseta os selecionados
     manualCurrentSelections = {
-        block:      null,
-        room:       null,
+        block: null,
+        room: null,
         roomNumber: null
     };
     
     // Reseta os "placeholders" do dropdown e os estados
-    document.getElementById('manualValueBlock').innerText      = 'Selecione o bloco';
-    document.getElementById('manualValueRoom').innerText       = 'Selecione a sala';
+    document.getElementById('manualValueBlock').innerText = 'Selecione o bloco';
+    document.getElementById('manualValueRoom').innerText = 'Selecione a sala';
     document.getElementById('manualValueRoomNumber').innerText = 'Selecione o número da sala';
 
     // Reseta o gradiente do dropdown selecionado
-    const blockSelected      = document.querySelector('#manual-block-dropdown .selected');
-    const roomSelected       = document.querySelector('#manual-room-dropdown .selected');
+    const blockSelected = document.querySelector('#manual-block-dropdown .selected');
+    const roomSelected = document.querySelector('#manual-room-dropdown .selected');
     const roomNumberSelected = document.querySelector('#manual-room-number-dropdown .selected');
     
-    if(blockSelected)      blockSelected.classList.remove('gradient');
-    if(roomSelected)       roomSelected.classList.remove('gradient');
+    if(blockSelected) blockSelected.classList.remove('gradient');
+    if(roomSelected) roomSelected.classList.remove('gradient');
     if(roomNumberSelected) roomNumberSelected.classList.remove('gradient');
 
     // Remove all dropdown-active classes
@@ -3685,12 +4136,12 @@ function resetAllDropdowns() {
     roomNumberDropdown.classList.add('invisible');
 
     // Limpar conteúdo das opções
-    const blockOptions      = document.querySelector('#manual-block-dropdown .options');
-    const roomOptions       = document.querySelector('#manual-room-dropdown .options');
+    const blockOptions = document.querySelector('#manual-block-dropdown .options');
+    const roomOptions = document.querySelector('#manual-room-dropdown .options');
     const roomNumberOptions = document.querySelector('#room-number-dropdown .options');
     
-    if(blockOptions)      blockOptions.innerHTML      = '';
-    if(roomOptions)       roomOptions.innerHTML       = '';
+    if(blockOptions) blockOptions.innerHTML = '';
+    if(roomOptions) roomOptions.innerHTML = '';
     if(roomNumberOptions) roomNumberOptions.innerHTML = '';
 
     // Preenche novamente o primeiro dropdown
@@ -3709,9 +4160,10 @@ function getUniqueRoomNumbersForRoom(rooms, selectedBlock, selectedRoom) {
 // Função que preenche o dropdown de blocos para alocação manual
 function populateManualBlockDropdown() {
     const blockOptions = document.getElementById('manual-block-options');
+    
     if(!blockOptions) return;
 
-    const rooms  = getDropdownData();
+    const rooms = getDropdownData();
     const blocks = getUniqueBlocks(rooms);
 
     blockOptions.innerHTML = blocks.map(block => `
@@ -3728,8 +4180,8 @@ function populateManualBlockDropdown() {
             }
             
             // Atualiza as seleções
-            manualCurrentSelections.block      = selectedBlock;
-            manualCurrentSelections.room       = null;
+            manualCurrentSelections.block = selectedBlock;
+            manualCurrentSelections.room = null;
             manualCurrentSelections.roomNumber = null;
             
             // Atualiza a UI
@@ -3753,9 +4205,10 @@ function populateManualBlockDropdown() {
 // Função que preenche o dropdown de salas para alocação manual
 function populateManualRoomDropdown(selectedBlock) {
     const roomOptions = document.getElementById('manual-room-dropdown-op');
+    
     if(!roomOptions) return;
 
-    const rooms        = getDropdownData();
+    const rooms = getDropdownData();
     const roomsInBlock = getUniqueRoomsForBlock(rooms, selectedBlock);
 
     roomOptions.innerHTML = roomsInBlock.map(room => `
@@ -3774,8 +4227,8 @@ function populateManualRoomDropdown(selectedBlock) {
             }
             
             // Atualiza as seleções
+            manualCurrentSelections.room = selectedRoom;
             manualCurrentSelections.roomNumber = null;
-            manualCurrentSelections.room       = selectedRoom;
             
             // Atualiza a UI
             document.getElementById('manualValueRoom').textContent = selectedRoom;
@@ -3793,13 +4246,13 @@ function populateManualRoomDropdown(selectedBlock) {
 
 // Função que preenche o dropdown de números de sala para alocação manual
 function populateManualRoomNumberDropdown(selectedBlock, selectedRoom) {
-    const roomNumberOptions  = document.getElementById('manual-room-number-op');
+    const roomNumberOptions = document.getElementById('manual-room-number-op');
     const roomNumberDropdown = document.getElementById('manual-room-number-dropdown');
-    const roomNumberValue    = document.getElementById('manualValueRoomNumber');
+    const roomNumberValue = document.getElementById('manualValueRoomNumber');
     
     if(!roomNumberOptions) return;
 
-    const rooms       = getDropdownData();
+    const rooms = getDropdownData();
     const roomNumbers = getUniqueRoomNumbersForRoom(rooms, selectedBlock, selectedRoom);
 
     if(roomNumbers.length === 0) {
@@ -3835,9 +4288,9 @@ function populateManualRoomNumberDropdown(selectedBlock, selectedRoom) {
 // Função que exibe a tabela de alocações manuais
 function showManualAllocationsTable() {
     // Ocultar outras tabelas
-    document.getElementById('shiftContent').style.display  = 'none';
+    document.getElementById('shiftContent').style.display = 'none';
     document.getElementById('teachersTable').style.display = 'none';
-    document.getElementById('roomsTable').style.display    = 'none';
+    document.getElementById('roomsTable').style.display = 'none';
     
     // Mostrar tabela de alocações manuais
     document.getElementById('manualAllocationsTable').style.display = 'block';
@@ -3845,7 +4298,7 @@ function showManualAllocationsTable() {
     hiddenDefaultOptions();
     document.getElementById('shiftTabs').classList.add('disabled');
     document.getElementById('register-teacher-option').style.display = 'none';
-    document.getElementById('register-room-option').style.display    = 'none';
+    document.getElementById('register-room-option').style.display = 'none';
 
     // Carregar dados da tabela
     loadManualAllocationsTable();
@@ -3854,12 +4307,12 @@ function showManualAllocationsTable() {
 // Função para ocultar a tabela de alocações manuais
 function hideManualAllocationsTable() {
     document.getElementById('manualAllocationsTable').style.display = 'none';
-    document.getElementById('shiftContent').style.display           = 'block';
+    document.getElementById('shiftContent').style.display = 'block';
     document.getElementById('shiftTabs').classList.remove('disabled');
     
     // Mostra as opções de registro que foram ocultadas
     document.getElementById('register-teacher-option').style.display = 'flex';
-    document.getElementById('register-room-option').style.display    = 'flex';
+    document.getElementById('register-room-option').style.display = 'flex';
     
     // Mostra as opções padrão
     showDefaultOptions();
@@ -3877,34 +4330,43 @@ function loadManualAllocationsTable() {
         const allDateShiftData = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
         let manualAllocations = [];
         
+        console.log(' [DEBUG] Carregando alocações manuais...');
+        console.log(' [DEBUG] allDateShiftData:', allDateShiftData);
         
         Object.keys(allDateShiftData).forEach(date => {
             Object.keys(allDateShiftData[date]).forEach(shift => {
                 const shiftData = allDateShiftData[date][shift];
+                console.log(` [DEBUG] Processando ${date} - ${shift}:`, shiftData);
                 
                 // Verificar se é um array ou objeto
                 if(Array.isArray(shiftData)) {
                     // Se for array, iterar diretamente
                     shiftData.forEach(record => {
-                        if(record && record.tipo === 'manual_allocation')
+                        if(record && record.tipo === 'manual_allocation') {
+                            console.log(' [DEBUG] Alocação manual encontrada:', record);
                             manualAllocations.push(record);
+                        }
                     });
                 } else if(shiftData && typeof shiftData === 'object') {
                     // Se for objeto, iterar pelas chaves
                     Object.keys(shiftData).forEach(recordKey => {
                         const record = shiftData[recordKey];
-                        if(record && record.tipo === 'manual_allocation')
+                        if(record && record.tipo === 'manual_allocation') {
+                            console.log(' [DEBUG] Alocação manual encontrada (objeto):', record);
                             manualAllocations.push(record);
+                        }
                     });
                 }
             });
         });
+        
+        console.log(' [DEBUG] Total de alocações manuais encontradas:', manualAllocations.length);
 
         // Ordenar por data e depois por turno
         manualAllocations.sort((a, b) => {
-            if(a.dataAlocacao !== b.dataAlocacao)
+            if(a.dataAlocacao !== b.dataAlocacao) {
                 return new Date(a.dataAlocacao) - new Date(b.dataAlocacao);
-
+            }
             const shiftOrder = { 'manhã': 1, 'tarde': 2, 'noite': 3 };
             return (shiftOrder[a.periodo] || 4) - (shiftOrder[b.periodo] || 4);
         });
@@ -3925,12 +4387,11 @@ function loadManualAllocationsTable() {
 
         tableBody.innerHTML = manualAllocations.map(allocation => {
             // Formatar sala completa: "Bloco Sala Número"
-            const bloco  = allocation.bloco  || '';
-            const sala   = allocation.sala   || '';
+            const bloco = allocation.bloco || '';
+            const sala = allocation.sala || '';
             const numero = allocation.numero || '';
             
             let salaCompleta;
-
             if(bloco && sala && numero) {
                 salaCompleta = `${bloco} ${sala} ${numero}`;
             } else if(bloco && sala) {
@@ -3958,6 +4419,7 @@ function loadManualAllocationsTable() {
             `;
         }).join('');
     } catch(error) {
+        console.error('Erro ao carregar alocações manuais:', error);
         tableBody.innerHTML = `
             <tr>
                 <td colspan="9" class="text-center text-danger py-4">
@@ -3971,12 +4433,16 @@ function loadManualAllocationsTable() {
 
 // Função para deletar uma alocação manual
 function deleteManualAllocation(allocationId, dataAlocacao, periodo) {
-    if(!confirm('Tem certeza que deseja excluir esta alocação manual?'))
+    if(!confirm('Tem certeza que deseja excluir esta alocação manual?')) {
         return;
+    }
 
     try {
         // Atualizar a variável global dataByDateAndShift
         dataByDateAndShift = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
+        
+        console.log(' [DEBUG] Excluindo alocação:', allocationId, 'de', dataAlocacao, periodo);
+        console.log(' [DEBUG] Dados antes da exclusão:', dataByDateAndShift[dataAlocacao]?.[periodo]);
         
         if(dataByDateAndShift[dataAlocacao] && dataByDateAndShift[dataAlocacao][periodo]) {
             const shiftData = dataByDateAndShift[dataAlocacao][periodo];
@@ -3988,10 +4454,13 @@ function deleteManualAllocation(allocationId, dataAlocacao, periodo) {
             } else if(typeof shiftData === 'object') {
                 // Se for objeto, iterar e remover pela chave
                 Object.keys(shiftData).forEach(key => {
-                    if(shiftData[key] && shiftData[key].id === allocationId)
+                    if(shiftData[key] && shiftData[key].id === allocationId) {
                         delete shiftData[key];
+                    }
                 });
             }
+            
+            console.log(' [DEBUG] Dados após exclusão:', dataByDateAndShift[dataAlocacao][periodo]);
             
             // Salvar na estrutura global e localStorage
             localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
@@ -3999,26 +4468,38 @@ function deleteManualAllocation(allocationId, dataAlocacao, periodo) {
             
             // Sincronizar com o Firebase
             const updatedShiftData = dataByDateAndShift[dataAlocacao][periodo];
+            console.log(' [ALOCAÇÃO MANUAL] Sincronizando exclusão com Firebase...');
+            console.log(' [DEBUG] Dados para sincronizar:', updatedShiftData);
             
             if(typeof saveDataToFirebase === 'function') {
                 // Converter objeto para array se necessário
                 let dataToSync = updatedShiftData;
-                if(!Array.isArray(updatedShiftData) && typeof updatedShiftData === 'object')
+                if(!Array.isArray(updatedShiftData) && typeof updatedShiftData === 'object') {
                     dataToSync = Object.values(updatedShiftData).filter(item => item != null);
+                }
                 
-                saveDataToFirebase(dataAlocacao, periodo, dataToSync).then(() => {}).catch(error => {
+                saveDataToFirebase(dataAlocacao, periodo, dataToSync).then(() => {
+                    console.log(' [ALOCAÇÃO MANUAL] Exclusão sincronizada com Firebase com sucesso!');
+                }).catch(error => {
+                    console.error(' [ALOCAÇÃO MANUAL] Erro ao sincronizar exclusão no Firebase:', error);
                     showNotification('Alocação excluída localmente, mas houve erro na sincronização com o servidor.', 'warning');
                 });
+            } else {
+                console.warn(' [ALOCAÇÃO MANUAL] Função saveDataToFirebase não disponível - exclusão apenas local');
             }
             
             // Se for a data atual sendo visualizada, atualizar a tabela principal
-            if(dataAlocacao === selectedDate) renderTable();
+            if(dataAlocacao === selectedDate) {
+                renderTable();
+            }
         }
         
         // Recarregar a tabela de alocações manuais
         loadManualAllocationsTable();
         showNotification('Alocação manual excluída com sucesso!', 'success');
+        
     } catch (error) {
+        console.error('Erro ao excluir alocação manual:', error);
         showNotification('Erro ao excluir alocação manual.', 'error');
     }
 }
@@ -4038,14 +4519,15 @@ function capitalizeFirst(str) {
 
 // Função para obter texto dos turnos disponíveis
 function getAvailableShiftsText(currentShift) {
-    const allShifts    = ['manhã', 'tarde', 'noite'];
-    const shiftOrder   = { 'manhã': 1, 'tarde': 2, 'noite': 3 };
+    const allShifts = ['manhã', 'tarde', 'noite'];
+    const shiftOrder = { 'manhã': 1, 'tarde': 2, 'noite': 3 };
     const currentOrder = shiftOrder[currentShift];
     
     const availableShifts = allShifts.filter(shift => shiftOrder[shift] >= currentOrder);
     
-    if(availableShifts.length === 0)
+    if(availableShifts.length === 0) {
         return 'nenhum (todos os turnos já passaram)';
+    }
     
     return availableShifts.join(', ');
 }
@@ -4062,7 +4544,7 @@ function openManualAllocationModal() {
 function setupManualDropdownInteractions() {
     // Dropdown de blocos
     const blockDropdown = document.querySelector('#manual-block-dropdown .selected');
-    const blockOptions  = document.querySelector('#manual-block-dropdown .options');
+    const blockOptions = document.querySelector('#manual-block-dropdown .options');
     
     if(blockDropdown && blockOptions) {
         blockDropdown.addEventListener('click', function(e) {
@@ -4074,7 +4556,7 @@ function setupManualDropdownInteractions() {
     
     // Dropdown de salas
     const roomDropdown = document.querySelector('#manual-room-dropdown .selected');
-    const roomOptions  = document.querySelector('#manual-room-dropdown .options');
+    const roomOptions = document.querySelector('#manual-room-dropdown .options');
     
     if(roomDropdown && roomOptions) {
         roomDropdown.addEventListener('click', function(e) {
@@ -4086,7 +4568,7 @@ function setupManualDropdownInteractions() {
     
     // Dropdown de números de sala
     const roomNumberDropdown = document.querySelector('#manual-room-number-dropdown .selected');
-    const roomNumberOptions  = document.querySelector('#manual-room-number-dropdown .options');
+    const roomNumberOptions = document.querySelector('#manual-room-number-dropdown .options');
     
     if(roomNumberDropdown && roomNumberOptions) {
         roomNumberDropdown.addEventListener('click', function(e) {
@@ -4096,6 +4578,8 @@ function setupManualDropdownInteractions() {
         });
     }
 
+    
+    
     // Fechar dropdowns quando clicar fora
     document.addEventListener('click', function() {
         document.querySelectorAll('#manualAllocationModal .selected').forEach(dropdown => {
@@ -4109,13 +4593,13 @@ function setupManualDropdownInteractions() {
 
 // Função que oculta e limpa o modal de alocação manual
 function closeManualAllocationModal() {
-    document.getElementById('manualAllocationDate').value          = '';
-    document.getElementById('manualAllocationShift').value         = '';
     document.getElementById('manualAllocationModal').style.display = 'none';
+    document.getElementById('manualAllocationDate').value = '';
+    document.getElementById('manualAllocationShift').value = '';
     
     // Resetar dropdowns
-    document.getElementById('manualValueRoom').textContent       = 'Selecione a sala';
-    document.getElementById('manualValueBlock').textContent      = 'Selecione o bloco';
+    document.getElementById('manualValueBlock').textContent = 'Selecione o bloco';
+    document.getElementById('manualValueRoom').textContent = 'Selecione a sala';
     document.getElementById('manualValueRoomNumber').textContent = 'Selecione o número da sala';
     
     // Ocultar dropdowns dependentes
@@ -4123,41 +4607,44 @@ function closeManualAllocationModal() {
     document.getElementById('manual-room-number-dropdown').classList.add('invisible');
     
     // Limpar campos opcionais
-    document.getElementById('manualCourseName').value    = '';
-    document.getElementById('manualObservations').value  = '';
     document.getElementById('manualProfessorName').value = '';
+    document.getElementById('manualObservations').value = '';
+    document.getElementById('manualCourseName').value = '';
 
     showDefaultOptions();
     document.getElementById('register-teacher-option').style.display = 'flex';
-    document.getElementById('register-room-option').style.display    = 'flex';
+    document.getElementById('register-room-option').style.display = 'flex';
     document.getElementById('shiftTabs').classList.remove('disabled');
     
     // Resetar seleções
     manualCurrentSelections = {
-        block:      null,
-        room:       null,
+        block: null,
+        room: null,
         roomNumber: null
     };
 }
 
 // Função para o processamento da alocação manual
 async function handleManualAllocation() {
-    const dataInput        = document.getElementById('manualAllocationDate');
-    const turnoInput       = document.getElementById('manualAllocationShift');
-    const professorInput   = document.getElementById('manualProfessorName');
-    const cursoInput       = document.getElementById('manualCourseName');
+    const dataInput = document.getElementById('manualAllocationDate');
+    const turnoInput = document.getElementById('manualAllocationShift');
+    const professorInput = document.getElementById('manualProfessorName');
+    const cursoInput = document.getElementById('manualCourseName');
     const observacoesInput = document.getElementById('manualObservations');
 
-    if(!dataInput || !turnoInput) return;
+    if(!dataInput || !turnoInput) {
+        console.error('Required form elements not found');
+        return;
+    }
 
     const dataAlocacao = dataInput.value.trim();
-    const turno        = turnoInput.value.toLowerCase().trim();
-    const sala         = manualCurrentSelections.room;
-    const bloco        = manualCurrentSelections.block;
-    const numero       = manualCurrentSelections.roomNumber || '';
-    const professor    = professorInput   ? professorInput.value.trim()   : '';
-    const curso        = cursoInput       ? cursoInput.value.trim()       : '';
-    const observacoes  = observacoesInput ? observacoesInput.value.trim() : '';
+    const turno = turnoInput.value.toLowerCase().trim();
+    const sala = manualCurrentSelections.room;
+    const bloco = manualCurrentSelections.block;
+    const numero = manualCurrentSelections.roomNumber || '';
+    const professor = professorInput ? professorInput.value.trim() : '';
+    const curso = cursoInput ? cursoInput.value.trim() : '';
+    const observacoes = observacoesInput ? observacoesInput.value.trim() : '';
 
     // Validação dos campos obrigatórios
     if(!dataAlocacao || dataAlocacao === '') {
@@ -4181,13 +4668,22 @@ async function handleManualAllocation() {
     }
     
     // Validação da data e turno
-    const today        = new Date();
-    const dateParts    = dataAlocacao.split('-');
+    const today = new Date();
+    
+    // Criar data selecionada de forma mais robusta para evitar problemas de fuso horário
+    // O campo de data HTML retorna "YYYY-MM-DD", vamos criar a data localmente
+    const dateParts = dataAlocacao.split('-');
     const selectedDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
     
     // Resetar as horas para comparar apenas as datas
     today.setHours(0, 0, 0, 0);
     selectedDate.setHours(0, 0, 0, 0);
+    
+    // Debug: verificar os valores das datas
+    console.log('� [DEBUG] Data string recebida:', dataAlocacao);
+    console.log('� [DEBUG] Data de hoje:', today.toLocaleDateString('pt-BR'));
+    console.log('� [DEBUG] Data selecionada:', selectedDate.toLocaleDateString('pt-BR'));
+    console.log('� [DEBUG] Comparação selectedDate < today:', selectedDate < today);
     
     // Não permitir alocações em datas anteriores à hoje
     if(selectedDate < today) {
@@ -4197,9 +4693,9 @@ async function handleManualAllocation() {
     
     // Se for a data atual, verificar se o turno é válido (atual ou posterior)
     if(selectedDate.getTime() === today.getTime()) {
-        const currentShift       = getCurrentShiftByTime();
-        const shiftOrder         = { 'manhã': 1, 'tarde': 2, 'noite': 3 };
-        const currentShiftOrder  = shiftOrder[currentShift];
+        const currentShift = getCurrentShiftByTime();
+        const shiftOrder = { 'manhã': 1, 'tarde': 2, 'noite': 3 };
+        const currentShiftOrder = shiftOrder[currentShift];
         const selectedShiftOrder = shiftOrder[turno];
         
         if(selectedShiftOrder < currentShiftOrder) {
@@ -4224,6 +4720,7 @@ async function handleManualAllocation() {
     }
     
     // Removida validação de 1 caractere para bloco pois agora usa dropdown com dados existentes
+    
     if(numero && numero.length > 10) {
         showNotification('Número da sala não pode ter mais de 10 caracteres.', 'warning');
         return;
@@ -4246,35 +4743,40 @@ async function handleManualAllocation() {
     
     // Cria um objeto de alocação manual no mesmo formato dos registros normais
     const manualAllocation = {
-        id:            generateUniqueRecordId(), // Usar função específica para registros
-        sala:          sala,
-        professor:     professor   || 'Alocação Manual',
-        curso:         curso       || 'Alocação Manual',
-        disciplina:    observacoes || 'Alocação manual de sala',
-        turma:         '-',
-        horaRetirada:  null,         // Não há horário de retirada ainda - será preenchido quando o professor retirar
+        id: generateUniqueRecordId(), // Usar função específica para registros
+        
+        // Campos principais para compatibilidade com o sistema
+        sala: sala,
+        professor: professor || 'Alocação Manual',
+        curso: curso || 'Alocação Manual',
+        disciplina: observacoes || 'Alocação manual de sala',
+        turma: '-',
+        horaRetirada: null, // Não há horário de retirada ainda - será preenchido quando o professor retirar
         horaDevolucao: null,
-        status:        'disponivel', // Status disponível para que o professor possa "retirar" a chave
-        // Campos adicionais para o formato admin
-        room:           sala,
-        professorName:  professor   || 'Alocação Manual',
-        course:         curso       || 'Alocação Manual',
-        subject:        observacoes || 'Alocação manual de sala',
-        turmaNumber:    '-',
+        status: 'disponivel', // Status disponível para que o professor possa "retirar" a chave
+        
+        // Campos adicionais para o formato admin (compatibilidade dupla)
+        room: sala,
+        professorName: professor || 'Alocação Manual',
+        course: curso || 'Alocação Manual',
+        subject: observacoes || 'Alocação manual de sala',
+        turmaNumber: '-',
         withdrawalTime: null, // Não há horário de retirada ainda
-        returnTime:     null,
+        returnTime: null,
         
         // Campos específicos de alocação manual
-        bloco:        bloco,
-        numero:       numero,
-        tipo:         'manual_allocation',
+        bloco: bloco,
+        numero: numero,
+        tipo: 'manual_allocation',
         dataAlocacao: dataAlocacao,
-        periodo:      turno,
-        motivo:       observacoes || 'Alocação manual de sala',
-        observacoes:  observacoes || 'Alocação manual de sala',
+        periodo: turno,
+        motivo: observacoes || 'Alocação manual de sala',
+        observacoes: observacoes || 'Alocação manual de sala',
         dataRegistro: new Date().toISOString(),
-        timestamp:    Date.now()
+        timestamp: Date.now()
     };
+    
+    console.log(' [DEBUG] Alocação manual criada com ID:', manualAllocation.id, 'para sala:', manualAllocation.sala);
     
     // Integrar com o sistema principal de dados por data/turno
     try {
@@ -4282,39 +4784,53 @@ async function handleManualAllocation() {
         try {
             dataByDateAndShift = JSON.parse(localStorage.getItem('allDateShiftData') || '{}');
         } catch (e) {
+            console.warn('Erro ao ler allDateShiftData, criando novo objeto:', e);
             dataByDateAndShift = {};
         }
         
         // Garantir que a estrutura da data existe
-        if(!dataByDateAndShift[dataAlocacao]) 
-            dataByDateAndShift[dataAlocacao] = {}
-
+        if(!dataByDateAndShift[dataAlocacao]) {
+            dataByDateAndShift[dataAlocacao] = {};
+        }
+        
+        // IMPORTANTE: Buscar dados do Firebase antes de adicionar a nova alocação
+        // Isso garante que não sobrescreveremos alocações existentes que ainda não foram sincronizadas para o localStorage
+        console.log(' [ALOCAÇÃO MANUAL] Verificando dados existentes no Firebase...');
+        
         // Verificar se já existem dados no localStorage para esta data/turno
         const hasLocalData = dataByDateAndShift[dataAlocacao][turno] && Array.isArray(dataByDateAndShift[dataAlocacao][turno]) && dataByDateAndShift[dataAlocacao][turno].length > 0;
         
         if(hasLocalData) {
+            console.log(` [ALOCAÇÃO MANUAL] Dados locais encontrados (${dataByDateAndShift[dataAlocacao][turno].length} registros). Adicionando nova alocação...`);
             // Se já temos dados locais, assumimos que estão sincronizados
             dataByDateAndShift[dataAlocacao][turno].push(manualAllocation);
         } else {
+            console.log(' [ALOCAÇÃO MANUAL] Sem dados locais. Buscando dados do Firebase...');
+            
             // Tentar buscar dados do Firebase antes de criar um array vazio
             if(typeof loadDataFromFirebase === 'function') {
                 try {
                     const firebaseData = await loadDataFromFirebase(dataAlocacao, turno);
+                    console.log(` [ALOCAÇÃO MANUAL] Dados do Firebase carregados: ${firebaseData ? firebaseData.length : 0} registros`);
                     
                     // Se o Firebase retornou dados, usar esses dados como base
                     if(firebaseData && Array.isArray(firebaseData) && firebaseData.length > 0) {
+                        console.log(` [ALOCAÇÃO MANUAL] Usando ${firebaseData.length} registros existentes do Firebase`);
                         dataByDateAndShift[dataAlocacao][turno] = [...firebaseData];
                         dataByDateAndShift[dataAlocacao][turno].push(manualAllocation);
                     } else {
                         // Firebase não tem dados, criar array com apenas a nova alocação
+                        console.log(' [ALOCAÇÃO MANUAL] Firebase sem dados. Criando novo array com a alocação.');
                         dataByDateAndShift[dataAlocacao][turno] = [manualAllocation];
                     }
                 } catch (error) {
+                    console.warn(' [ALOCAÇÃO MANUAL] Erro ao buscar dados do Firebase:', error);
                     // Em caso de erro, criar array com apenas a nova alocação
                     dataByDateAndShift[dataAlocacao][turno] = [manualAllocation];
                 }
             } else {
                 // Se a função de carregar do Firebase não está disponível, criar array com a nova alocação
+                console.log(' [ALOCAÇÃO MANUAL] loadDataFromFirebase não disponível. Inicializando array com a nova alocação...');
                 dataByDateAndShift[dataAlocacao][turno] = [manualAllocation];
             }
         }
@@ -4323,15 +4839,27 @@ async function handleManualAllocation() {
         localStorage.setItem('allDateShiftData', JSON.stringify(dataByDateAndShift));
         localStorage.setItem('dataUpdateTimestamp', Date.now().toString());
         
+        console.log(' [ALOCAÇÃO MANUAL] Dados salvos na estrutura principal:');
+        console.log('   - Data:', dataAlocacao);
+        console.log('   - Turno:', turno);
+        console.log('   - Total de registros no turno:', dataByDateAndShift[dataAlocacao][turno].length);
+        console.log('   - Alocação adicionada:', manualAllocation);
+        
         // Salvar no Firebase se disponível
-        if(typeof saveDataToFirebase === 'function')
-            saveDataToFirebase(dataAlocacao, turno, dataByDateAndShift[dataAlocacao][turno]).then(() => {}).catch(() => {});
+        if(typeof saveDataToFirebase === 'function') {
+            console.log(' [ALOCAÇÃO MANUAL]: Salvando no Firebase...');
+            saveDataToFirebase(dataAlocacao, turno, dataByDateAndShift[dataAlocacao][turno]).then(() => {
+                console.log(' [ALOCAÇÃO MANUAL]: Dados salvos no Firebase com sucesso!');
+            }).catch(error => {
+                console.error(' [ALOCAÇÃO MANUAL]: Erro ao salvar no Firebase:', error);
+            });
+        }
         
         // Disparar evento para atualizar outras interfaces
         window.dispatchEvent(new CustomEvent('shiftDataUpdated', { 
             detail: { 
                 shift: turno, 
-                data:  dataByDateAndShift 
+                data: dataByDateAndShift 
             } 
         }));
         
@@ -4339,8 +4867,17 @@ async function handleManualAllocation() {
         showNotification(`Alocação manual registrada com sucesso para ${formatDate(dataAlocacao)} - ${capitalizeFirst(turno)}!`, 'success');
         
         // Se a alocação foi feita para a data atual sendo visualizada, atualizar a tabela
-        if(dataAlocacao === selectedDate) renderTable();
+        if(dataAlocacao === selectedDate) {
+            console.log(' [ALOCAÇÃO MANUAL] Atualizando tabela pois a alocação foi feita para a data atual');
+            renderTable();
+        } else {
+            console.log('� [ALOCAÇÃO MANUAL] Alocação feita para data diferente da atual. Visualize a data', dataAlocacao, 'para ver a alocação');
+        }
+        
+        console.log(' Alocação Manual Integrada:', manualAllocation);
+        
     } catch (error) {
+        console.error('Erro ao salvar alocação manual:', error);
         showNotification('Erro ao salvar alocação manual. Tente novamente.', 'error');
     }
 }

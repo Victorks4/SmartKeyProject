@@ -6,14 +6,17 @@
 (function() {
     'use strict';
     
-    // Detecta se o dispositivo é móvel usando múltiplas técnicas
+    /**
+     * Detecta se o dispositivo é móvel usando múltiplas técnicas
+     * @returns {boolean} true se for dispositivo móvel
+     */
     function isMobileDevice() {
         // Verifica user agent
-        const userAgent  = navigator.userAgent || navigator.vendor || window.opera;
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
         const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|tablet/i;
         
         // Verifica se é touch device
-        const isTouchDevice = ('ontouchstart' in window)     || 
+        const isTouchDevice = ('ontouchstart' in window) || 
                               (navigator.maxTouchPoints > 0) || 
                               (navigator.msMaxTouchPoints > 0);
         
@@ -29,7 +32,7 @@
      */
     function createBlockOverlay() {
         const overlay = document.createElement('div');
-        overlay.id        = 'mobile-block-overlay';
+        overlay.id = 'mobile-block-overlay';
         overlay.innerHTML = `
             <div class="mobile-block-content">
                 <div class="mobile-block-icon">
@@ -52,47 +55,52 @@
         document.body.classList.add('mobile-blocked');
     }
     
-    // Desabilita todos os scripts existentes
+    /**
+     * Desabilita todos os scripts existentes
+     */
     function disableScripts() {
         // Previne execução de event listeners
         const originalAddEventListener = EventTarget.prototype.addEventListener;
         EventTarget.prototype.addEventListener = function(type, listener, options) {
             // Permite apenas eventos internos do navegador
-            if(this === window && type === 'load') 
+            if(this === window && type === 'load') {
                 return originalAddEventListener.call(this, type, listener, options);
+            }
+            // Bloqueia todos os outros eventos
+            console.warn(`[Mobile Blocker] Event listener bloqueado: ${type}`);
             return;
         };
         
         // Bloqueia clicks
-        document.addEventListener('click', (e) => {
+        document.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
         }, true);
         
         // Bloqueia submits
-        document.addEventListener('submit', (e) => {
+        document.addEventListener('submit', function(e) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
         }, true);
         
         // Bloqueia inputs
-        document.addEventListener('input', (e) => {
+        document.addEventListener('input', function(e) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
         }, true);
         
         // Bloqueia teclas
-        document.addEventListener('keydown', (e) => {
+        document.addEventListener('keydown', function(e) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
         }, true);
         
         // Bloqueia touch events
-        document.addEventListener('touchstart', (e) => {
+        document.addEventListener('touchstart', function(e) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
@@ -103,13 +111,15 @@
             const interactiveElements = document.querySelectorAll('button, input, select, textarea, a');
             interactiveElements.forEach(element => {
                 element.style.pointerEvents = 'none';
-                element.style.opacity       = '0.6';
+                element.style.opacity = '0.6';
                 element.setAttribute('disabled', 'disabled');
             });
         });
     }
     
-    // Adiciona estilos CSS para o overlay de bloqueio
+    /**
+     * Adiciona estilos CSS para o overlay de bloqueio
+     */
     function injectStyles() {
         const style = document.createElement('style');
         style.textContent = `
@@ -245,21 +255,30 @@
         document.head.appendChild(style);
     }
     
-    // Inicializa o bloqueio para dispositivos móveis
+    /**
+     * Inicializa o bloqueio para dispositivos móveis
+     */
     function initMobileBlocker() {
         if(isMobileDevice()) {
+            console.warn('[Mobile Blocker] Dispositivo móvel detectado - Bloqueando funcionalidades');
+            
             // Injeta estilos
             injectStyles();
+            
             // Desabilita scripts e eventos
             disableScripts();
             
             // Cria overlay quando o DOM estiver pronto
-            document.readyState === 'loading' 
-                ? document.addEventListener('DOMContentLoaded', createBlockOverlay) 
-                : createBlockOverlay();
+            if(document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', createBlockOverlay);
+            } else {
+                createBlockOverlay();
+            }
             
             return true;
         }
+        
+        console.log('[Mobile Blocker] Dispositivo desktop detectado - Funcionalidades habilitadas');
         return false;
     }
     
@@ -268,7 +287,7 @@
     
     // Previne que outros scripts ignorem o bloqueio
     Object.defineProperty(window, 'isMobileBlocked', {
-        writable:     false,
+        writable: false,
         configurable: false
     });
     

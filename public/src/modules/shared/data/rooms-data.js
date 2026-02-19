@@ -120,9 +120,11 @@ const RoomsData = {
         try {
           existing = JSON.parse(storedRaw);
           if(!Array.isArray(existing)) {
+            console.warn('Dados de salas corrompidos, resetando...');
             existing = [];
           }
         } catch (parseError) {
+          console.error('Erro ao parsear dados de salas:', parseError);
           existing = [];
         }
       }
@@ -159,6 +161,8 @@ const RoomsData = {
     } catch (error) {
       if(typeof ErrorHandler !== 'undefined') {
         ErrorHandler.handle(error, 'RoomsData.ensureRoomsSeeded');
+      } else {
+        console.error('Erro ao mesclar salas no localStorage:', error);
       }
 
       // Fallback
